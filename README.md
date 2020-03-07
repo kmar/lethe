@@ -28,8 +28,9 @@ note: experimental, work in progress, there will most likely be bugs => use at y
 	* better documentation, more samples/libs
 
 hello world (makes use of Terry A. Davis' (RIP) implied printf for expressions starting with a string literal):
-
+```cpp
 		void main()
 		{
 			"Hello, world!\n";
 		}
+```

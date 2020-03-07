@@ -54,13 +54,13 @@
 
 <a id="enum_type"></a>
 #### enums
-
+```cpp
 	enum MyEnum
 	{
 		A,
 		B
 	}
-
+```
 enums are always of type int and enum items injected directly into enclosing scope. scoped enums have to be emulated with namespaces. 
 
 <a id="string_type"></a>
@@ -68,20 +68,20 @@ enums are always of type int and enum items injected directly into enclosing sco
 **string** is an internal data type (reference counted copy-on-write) in UTF-8 format.
 
 Individual bytes can be indexed as bytes of type char. This is of course wrong for Unicode characters where one has to handle multi-byte sequences manually.
-
+```cpp
 "this is a string literal"
-
+```
 _triple quotes can be used to produce a raw string literal:_
-
+```cpp
 """this is a raw string literal"""
-
+```
 <a id="name_type"></a>
 #### names
 **name** is global unique string stored as a 32-bit integer (this may change in the future to 64-bit)  
 internally they are used for class names but are exposed to the scripting language  
- 
+```cpp
 'this is a name literal'
-
+```
 <a id="struct_type"></a>
 #### structs
 **struct** is a lightweight, POD-like data type. it can contain methods but has no vtable, so all methods are _final_.  
@@ -89,7 +89,7 @@ they are not objects so structs don't work with pointers or delegates
 
 structs also have a unique ability to act as arrays if all its members are of the same type with empty base struct  
 this is very useful for vectors:
-
+```cpp
 	struct my_vector
 	{
 		float x, y, z;
@@ -99,9 +99,9 @@ this is very useful for vectors:
 
 	my_vector v;
 	v[0] = 42;
-
+```
 simple generics can be used with structs, but no specalization and no inheritance
-
+```cpp
 	struct generic<T>
 	{
 		T x, y;
@@ -111,7 +111,7 @@ simple generics can be used with structs, but no specalization and no inheritanc
 
 	generic<int> ivec2;
 	ivec2.x = 33;
-
+```
 <a id="class_type"></a>
 #### classes
 **class** is a heavyweight, heap-allocated data type. it has implied vtable and all methods not marked as final are virtual by default
@@ -143,7 +143,7 @@ vtable method is virtual and can be overridden
 #### pointers
 Lethe doesn't use garbage collection so class instances (objects) are held in smart pointers.  
 two types of smart pointers are available: strong pointers (default) and weak pointers:
-
+```cpp
 	class MyClass
 	{
 		int x;
@@ -156,23 +156,23 @@ two types of smart pointers are available: strong pointers (default) and weak po
 	mc.x += 3;
 	// mcw is a weak pointer to MyClass
 	weak MyClass mcw = mc;
-
+```
 weak pointers must be converted to strong pointers before we can dereference the underlying object:
-
+```cpp
 	MyClass locked = mcw;
 	locked.x *= 10;
-
+```
 alternatively (using auto):
-
+```cpp
 	auto locked = mcw;
 	locked.x *= 10;
-
+```
 smart pointers are implemented as intrusive. in order to reduce reference counting pressure, smart pointers passed by value are virtually converted raw pointers.  
 
 a third type is supported, unsafe raw pointer (bypasses reference counting)
-
+```cpp
 	raw auto raw_ptr = mcw;
-
+```
 there's also a special numeric type `pointer` aliasing the integer type necessary to hold native pointers. it can be used to store wrapped C++ objects.
 
 <a id="array_type"></a>
@@ -180,31 +180,31 @@ there's also a special numeric type `pointer` aliasing the integer type necessar
 Lethe supports two types or arrays (static and dynamic) and a reference-only type (array reference/view).
 dynamic arrays are allocated on heap and are basically identical to std::vector in C++.
 internally a dynamic array consist of data pointer, int size and int capacity (in elements) 
-
+```cpp
 	int[5] my_static_array = {1,2,3,4,5};
 	int my_static_array_1[5] = {1,2,3,4,5};
 	int my_static_array_2[] = {1,2,3,4,5};
 	int[] my_static_array_3 = {1,2,3,4,5};
 	array<int> my_dynamic_array;
-
+```
 array references are special and deserve native support in the language:
-
+```cpp
 	int[] my_array_ref;
 	my_array_ref = my_static_array;
 	int[] my_slice = my_dynamic_array.slice(2, 4);
-
+```
 internally, an array reference is represented as data pointer and size
 
 native properties can be used to determine array size:
-
+```cpp
 	my_array_ref.size
 	my_dynamic_array.size
 	my_static_array.size
-
+```
 <a id="func_type"></a>
 #### function pointers / delegates
 function pointers simply hold a pointer to non-methods
-
+```cpp
 	void function(int x) my_func;
 	
 	void test(int x)
@@ -218,14 +218,14 @@ function pointers simply hold a pointer to non-methods
 		// prints "testing...123"
 		my_func(123);
 	}
-
+```
 they must be checked for null before calling, the same holds for delegates (unless you're 100% sure it can't be null of course)  
 this may change in the future so that the check is automatic, doing nothing if null (or simply returning default value), but it would prevent catching null function pointers
-
+```cpp
 	if (my_func_ptr) my_func_ptr()
-
+```
 a delegate points to a method within object, they need classes to work. they can only be bound from within a method of an object to bind to:
-
+```cpp
 	void delegate() dg;
 	
 	class A
@@ -246,13 +246,13 @@ a delegate points to a method within object, they need classes to work. they can
 	A a = new A;
 	a.init();
 	dg();
-
+```
 delegates are internally represented as two pointers, raw instance pointer (this may change to weak pointer in the future; but this way it's faster and easier) and method pointer.  
 the method pointer is also used to encode vtable index for virtual methods  
 in the above example, init binds dg to virtual method `test` (meaning vtable index is stored instead of method pointer). if instead
-
+```cpp
 	dg = A::test;
-
+```
 then dg would bind to A::test directly, storing method code pointer.
 
 <a id="operators"></a>
@@ -294,10 +294,10 @@ note that pre/post increment doesn't work with floating point types and += style
 	* **goto**/**label:** similar to C++ with some restrictions, can only target labels in same/parent scope,
 can't skip over variable declarations
 * variable declarations, pretty much standard:
-
+```cpp
 		int myvar;
 		string mystring = "abcd";
-
+```
 * expressions, also nothing special
 	* function calls **func(..)**
 * blocks **{** .. **}**
