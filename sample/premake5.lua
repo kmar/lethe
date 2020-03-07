@@ -1,5 +1,7 @@
 workspace "lethe_sample"
 
+cppdialect "c++11"
+
 exceptionhandling("off")
 rtti("off")
 
