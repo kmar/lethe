@@ -1,0 +1,11 @@
+.vs/
+bin/
+obj/
+*.vcxproj
+*.sln
+*.filters
+*.exe
+*.dll
+*.vcxproj.user
+*.make
+Makefile
