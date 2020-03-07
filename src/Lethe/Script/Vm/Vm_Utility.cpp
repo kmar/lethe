@@ -501,6 +501,7 @@ ExecResult Vm::CallGlobalDestructors()
 
 ExecResult Vm::RuntimeException(const Instruction *iptr, const char *msg)
 {
+	stack->programCounter = Int(iptr - prog->instructions.GetData());
 	auto cstk = GetCallStack(iptr);
 	String fullmsg = msg;
 

@@ -169,7 +169,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 						skipBreakCall = true;
 				}
 
-				if (res < EXEC_BREAKPOINT)
+				if (res < EXEC_EXCEPTION)
 				{
 					if (!noBreakMode)
 						stack->breakExecution = false;
@@ -177,7 +177,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 					return res;
 				}
 
-				hitBreakpoint = res == EXEC_BREAKPOINT;
+				hitBreakpoint = res == EXEC_BREAKPOINT || res == EXEC_EXCEPTION;
 
 				if (hitBreakpoint)
 				{
