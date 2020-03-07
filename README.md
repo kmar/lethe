@@ -16,6 +16,7 @@ note: experimental, work in progress, there will most likely be bugs => use at y
 
 * features:
 	* unsafe
+	* no function overloads
 	* no exceptions
 	* no garbage collector (uses intrusive reference counting)
 	* no REPL
