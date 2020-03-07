@@ -14,10 +14,8 @@
 #endif
 
 // helper macros to simplify checks where a bool call fails
-#define LETHE_RET_FALSE(x) do { if (!(x)) return 0; } while(0)
-#define LETHE_RET_TRUE(x) do { if ((x)) return 1; } while(0)
-#define LETHE_LOG_FALSE(x) do { if (!(x)) lethe::Log("`%s` failed at line %d in %s", #x, __LINE__, __FILE__); } while(0)
-#define LETHE_RET_FALSE_MSG(x, msg) do { if (!(x)) { lethe::Log(msg); return 0; } } while(0)
+#define LETHE_RET_FALSE(x) do { if (!(x)) return 0; } while(false)
+#define LETHE_RET_TRUE(x) do { if ((x)) return 1; } while(false)
 
 // allow the possibility of building a dynamic library
 #if defined(_WIN32) && defined(LETHE_DYNAMIC)

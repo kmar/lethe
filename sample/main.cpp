@@ -1,4 +1,4 @@
-#include "Lethe/Lethe.h"
+#include <Lethe/Lethe.h>
 
 #include <stdio.h>
 #include <cmath>
@@ -309,9 +309,18 @@ int main()
 	ok = ok && engine.Link();
 
 	if (!ok)
+	{
+		lethe::Done();
 		return -1;
+	}
 
 	auto ctx = engine.CreateContext();
+
+	ctx->onRuntimeError = [](const char *msg)
+	{
+		// here we can route runtime errors (debug mode) elsewhere
+		(void)msg;
+	};
 
 	// run global static constructor (=static init)
 	ctx->RunConstructors();
