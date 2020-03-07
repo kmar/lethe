@@ -5,10 +5,13 @@
 #include <stdlib.h>
 
 #if LETHE_OS_WINDOWS
-#ifndef NOMINMAX
-#	define NOMINMAX
-#endif
-#include <Windows.h>
+#	ifndef NOMINMAX
+#		define NOMINMAX
+#	endif
+#	include <Windows.h>
+#else
+#	include <sys/mman.h>
+#	include <unistd.h>
 #endif
 
 namespace lethe
