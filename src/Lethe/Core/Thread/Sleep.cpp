@@ -1,5 +1,6 @@
 #include "../Sys/Platform.h"
 #include "Sleep.h"
+#include "../Sys/Assert.h"
 
 #if defined(LETHE_OS_WINDOWS)
 #	include <windows.h>
