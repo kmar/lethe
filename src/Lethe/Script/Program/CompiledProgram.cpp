@@ -47,7 +47,7 @@ const String &ErrorHandler::AddString(const StringRef &sr) const
 		return *ci;
 
 	stringTable.Add(sr);
-	return AddString(sr);
+	return stringTable.GetKey(stringTable.GetSize()-1);
 }
 
 // CompiledProgram
