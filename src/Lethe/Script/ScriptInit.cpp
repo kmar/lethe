@@ -26,6 +26,7 @@ void Init(const InitOptions *opts)
 	}
 
 	Platform::Init();
+	Mutex::Init();
 	Timer::Init();
 	CharConv::Init();
 	NameTable::Init();
@@ -41,6 +42,7 @@ void Done()
 	NameTable::Done();
 	CharConv::Done();
 	Timer::Done();
+	Mutex::Done();
 	Platform::Done();
 }
 

@@ -55,6 +55,8 @@ void SpinMutex::Unlock()
 
 // Mutex
 
+LETHE_SINGLETON_INSTANCE(Mutex)
+
 Mutex::Mutex(Recursive, int enabled)
 {
 	enabledFlag = enabled;

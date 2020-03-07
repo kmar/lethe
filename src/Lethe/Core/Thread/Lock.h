@@ -3,6 +3,7 @@
 #include "../Sys/Assert.h"
 #include "../Sys/NoCopy.h"
 #include "Atomic.h"
+#include "../Sys/Singleton.h"
 
 namespace lethe
 {
@@ -26,6 +27,7 @@ public:
 
 class LETHE_API Mutex : NoCopy
 {
+	LETHE_SINGLETON(Mutex)
 protected:
 #if LETHE_OS_WINDOWS
 #	if LETHE_64BIT
