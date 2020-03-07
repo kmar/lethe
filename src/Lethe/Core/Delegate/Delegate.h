@@ -14,7 +14,8 @@ class LETHE_API DelegateBase
 protected:
 	struct LambdaStorageBase : public RefCounted
 	{
-		virtual LambdaStorageBase *Clone() = 0;
+		// pure virtual causes problems with gcc without RTTI it seems
+		virtual LambdaStorageBase *Clone() {return nullptr;};
 		virtual ~LambdaStorageBase() {}
 	};
 

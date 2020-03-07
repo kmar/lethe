@@ -1,5 +1,8 @@
 workspace "lethe_sample"
 
+exceptionhandling("off")
+rtti("off")
+
 configurations {"Debug", "Release"}
 platforms {"x86", "x64", "x86_shared", "x64_shared"}
 
@@ -60,6 +63,9 @@ project "lethe_sample"
 
 	filter "system:windows"
 		links {"winmm"}
+
+	filter "system:not windows"
+		links {"pthread"}
 
 	filter "configurations:Debug"
 		defines{"_DEBUG", "DEBUG"}

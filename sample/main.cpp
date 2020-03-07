@@ -64,7 +64,7 @@ struct bind_std_vector
 		eng.BindNativeFunction(qname + "::~vector",
 			[](lethe::Stack &stk)
 			{
-				static_cast<std::vector<T> *>(stk.GetThis())->~vector<T>();
+				static_cast<std::vector<T> *>(stk.GetThis())->~vector();
 			}
 		);
 
