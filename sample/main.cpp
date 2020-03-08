@@ -276,8 +276,14 @@ int main()
 		printf("Hello, world!\n");
 		printf("125/3=%d\n", div(125, 3));
 		printf("125/3=%d\n", div2(125, 3));
-		// empty loop one billion times
-		for (int i=0; i<1'000'000'000; i++);
+
+		// simple incremental loop one billion times
+		int loops = 0;
+
+		for (int i=0; i<1'000'000'000; i++)
+		{
+			++loops;
+		}
 	}
 
 
@@ -307,7 +313,7 @@ int main()
 		printf("warn(%d) [%d:%d %s] %s\n", warnid, loc.line, loc.column, loc.file.Ansi(), msg.Ansi());
 	};
 
-	bool ok = engine.CompileBuffer(source, "my_source_buffer.script");
+	bool ok = engine.CompileBuffer(source, "my_source_buffer.lethe");
 
 	// in debug server mode we want to keep AST so that goto definition works in the debugger
 	ok = ok && engine.Link(test_debug_server ? lethe::LINK_KEEP_COMPILER : 0);
