@@ -22,6 +22,7 @@ note: experimental, work in progress, there will most likely be bugs => use at y
 	* no REPL
 	* no multi-threaded compilation of scripts
 	* optional dumb JIT for x86/x64
+	* [debugger - win/binary only](https://github.com/kmar/lethe_debugger/releases)
 
 * todo:
 	* fix bugs
