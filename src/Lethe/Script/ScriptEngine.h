@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ScriptContext.h"
+#include "DebugServer/DebugServer.h"
 
 namespace lethe
 {
@@ -227,6 +228,13 @@ public:
 	// get current breakpoints
 	Array<ScriptBreakpoint> GetBreakpoints() const;
 
+	// note: may return null
+	DebugServer *GetDebugServer() const {return debugServer.Get();}
+
+	bool CreateDebugServer(String ip = "127.0.0.1", Int port = 27100);
+	bool StartDebugServer();
+	bool StopDebugServer();
+
 	// get number of live script objects
 	Int GetLiveScriptObjectCount() const;
 
@@ -267,6 +275,8 @@ private:
 	FreeIdList freeBreakpoints;
 
 	String internalProg;
+
+	SharedPtr<DebugServer> debugServer;
 
 	void SetupVtbl(void *clsPtr);
 

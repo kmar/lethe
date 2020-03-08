@@ -14,7 +14,7 @@
 
 #include <Lethe/Script/ScriptBaseObject.h>
 
-namespace Core
+namespace lethe
 {
 struct TokenLocation;
 }

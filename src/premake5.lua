@@ -48,6 +48,10 @@ project "lethe"
 	filter "system:windows"
 		links {"winmm"}
 
+	-- mingw needs to link ws2_32
+	filter {"system:windows", "toolset:gcc"}
+		links {"ws2_32"}
+
 	filter "configurations:Debug"
 		defines{"_DEBUG", "DEBUG"}
 		symbols "On"

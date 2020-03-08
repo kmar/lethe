@@ -5,6 +5,9 @@
 
 #include <vector>
 
+// set to true to test debug server
+constexpr bool test_debug_server = false;
+
 void native_div(lethe::Stack &stk)
 {
 	// direct stack access can be used for non-methods
@@ -158,7 +161,7 @@ int main()
 {
 	lethe::Init();
 
-	lethe::ScriptEngine engine(lethe::ENGINE_JIT);
+	lethe::ScriptEngine engine(test_debug_server ? lethe::ENGINE_DEBUG : lethe::ENGINE_JIT);
 
 	const char *source = R"src(
 
@@ -278,7 +281,7 @@ int main()
 	}
 
 
-	)src";
+)src";
 
 	engine.BindNativeFunction("printf", native_printf);
 	engine.BindNativeFunction("div", native_div);
@@ -304,9 +307,10 @@ int main()
 		printf("warn(%d) [%d:%d %s] %s\n", warnid, loc.line, loc.column, loc.file.Ansi(), msg.Ansi());
 	};
 
-	bool ok = engine.CompileBuffer(source, "my_source_buffer");
+	bool ok = engine.CompileBuffer(source, "my_source_buffer.script");
 
-	ok = ok && engine.Link();
+	// in debug server mode we want to keep AST so that goto definition works in the debugger
+	ok = ok && engine.Link(test_debug_server ? lethe::LINK_KEEP_COMPILER : 0);
 
 	if (!ok)
 	{
@@ -316,6 +320,12 @@ int main()
 
 	auto ctx = engine.CreateContext();
 
+	if (test_debug_server)
+	{
+		// set context name to main so that we see it by name in the debugger
+		ctx->SetName("main");
+	}
+
 	ctx->onRuntimeError = [](const char *msg)
 	{
 		// here we can route runtime errors (debug mode) elsewhere
@@ -324,6 +334,23 @@ int main()
 
 	// run global static constructor (=static init)
 	ctx->RunConstructors();
+
+	if (test_debug_server)
+	{
+		engine.CreateDebugServer();
+		auto *dsrv = engine.GetDebugServer();
+
+		if (dsrv)
+		{
+			// we fake ReadScriptFile here by always returning our source buffer
+			dsrv->onReadScriptFile = [source](const lethe::String &)->lethe::String
+			{
+				return source;
+			};
+		}
+
+		engine.StartDebugServer();
+	}
 
 	lethe::PerfWatch pw;
 	pw.Start();
@@ -345,6 +372,9 @@ int main()
 	stk.Pop(1);
 
 	printf("script_div returns %d\n", res);
+
+	if (test_debug_server)
+		engine.StopDebugServer();
 
 	// run global static destructor (=static done)
 	ctx->RunDestructors();

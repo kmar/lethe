@@ -937,4 +937,52 @@ size_t ScriptEngine::GetMemUsageTypes() const
 	return res;
 }
 
+bool ScriptEngine::StartDebugServer()
+{
+	LETHE_RET_FALSE(mode == ENGINE_DEBUG && debugServer);
+
+	auto contexts = GetContexts();
+
+	for (auto &it : contexts)
+		it->onDebugBreak.Set(debugServer.Get(), &DebugServer::OnDebugBreak);
+
+	return debugServer->Start();
+}
+
+bool ScriptEngine::CreateDebugServer(String ip, Int port)
+{
+	LETHE_RET_FALSE(mode == ENGINE_DEBUG);
+	debugServer = new DebugServer(*this, ip, port);
+
+	// sane default
+	debugServer->onReadScriptFile = [](const String &fnm)->String
+	{
+		String res;
+
+		VfsFile vf(fnm);
+
+		if (vf.IsOpen())
+		{
+			Array<Byte> tmp;
+
+			if (vf.ReadAll(tmp, 1))
+			{
+				tmp.Add(0);
+				res = reinterpret_cast<const char *>(tmp.GetData());
+			}
+		}
+
+		return res;
+	};
+
+	return true;
+}
+
+bool ScriptEngine::StopDebugServer()
+{
+	LETHE_RET_FALSE(mode == ENGINE_DEBUG);
+	debugServer.Clear();
+	return true;
+}
+
 }

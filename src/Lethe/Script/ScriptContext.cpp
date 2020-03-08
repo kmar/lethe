@@ -1,7 +1,7 @@
 #include "ScriptContext.h"
 #include "ScriptEngine.h"
 #include "Utils/NativeHelpers.h"
-#include <Lethe/Core/Thread/Sleep.h>
+#include <Lethe/Core/Thread/Thread.h>
 
 namespace lethe
 {

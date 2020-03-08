@@ -28,5 +28,5 @@
 #include "Core/Sys/Platform.cpp"
 #include "Core/Thread/Atomic.cpp"
 #include "Core/Thread/Lock.cpp"
-#include "Core/Thread/Sleep.cpp"
+#include "Core/Thread/Thread.cpp"
 #include "Core/Time/Timer.cpp"
