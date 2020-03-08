@@ -384,7 +384,7 @@ int main()
 	bool ok = engine.CompileBuffer(source, "my_source_buffer.lethe");
 
 	// in debug server mode we want to keep AST so that goto definition works in the debugger
-	ok = ok && engine.Link(test_debug_server ? lethe::LINK_KEEP_COMPILER : 0);
+	ok = ok && engine.Link(test_debug_server ? lethe::LINK_CLONE_AST_FIND_DEFINITION : 0);
 
 	if (!ok)
 	{
