@@ -37,6 +37,11 @@ struct vec
 	float x, y, z;
 };
 
+struct vec_natural_packing
+{
+	float x, y, z;
+};
+
 void native_vec_length(lethe::Stack &stk)
 {
 	lethe::ArgParserMethod ap(stk);
@@ -259,6 +264,16 @@ int main()
 		native noinit float length() const;
 	}
 
+	// structure layout must match native type, careful!
+	// this version doesn't need x, y and z explicitly specified, assuming it will match natural packing in C++ vs lethe
+	// however, struct size and alignment is still required so that lethe can perform a check that packing does indeed match
+	native struct vec_natural_packing
+	{
+		float x;
+		float y;
+		float z;
+	}
+
 	void __init()
 	{
 		"static init\n";
@@ -321,6 +336,9 @@ int main()
 
 		printf("v.length() = %f\n", v.length());
 
+		vec_natural_packing vn = {-1, -2, -3};
+		"vn=%t\n", vn;
+
 		printf("Hello, world!\n");
 		printf("125/3=%d\n", div(125, 3));
 		printf("125/3=%d\n", div2(125, 3));
@@ -340,6 +358,8 @@ int main()
 	engine.BindNativeFunction("printf", native_printf);
 	engine.BindNativeFunction("div", native_div);
 	engine.BindNativeFunction("div2", native_div_2);
+
+	engine.BindNativeStruct("vec_natural_packing", sizeof(vec_natural_packing), alignof(vec_natural_packing));
 
 	auto ns = engine.BindNativeStruct("vec", sizeof(vec), alignof(vec));
 	ns.Member("x", offsetof(vec, x));
