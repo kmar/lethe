@@ -38,20 +38,6 @@ struct LETHE_API Fs
 	static bool Rename(const String &oldfn, const String &newfn);
 	// attributes/permissions
 	static Attributes GetAttributes(const String &fn);
-
-	struct MountedDevice
-	{
-		// display name
-		String name;
-		// path
-		String path;
-	};
-
-	// get mounted devices (=drives on Win)
-	static Array<MountedDevice> GetMountedDevices();
-	// for windows, get Documents and Desktop
-	// returns empty array on other OSes
-	static Array<MountedDevice> GetSpecialFolders();
 };
 
 }
