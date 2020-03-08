@@ -165,6 +165,37 @@ int main()
 
 	const char *source = R"src(
 
+	class A
+	{
+		// default access for classes is public, unlike C++
+		int x;
+		int y;
+
+		// class methods are virtual by default
+		void test()
+		{
+			"A::test() x=%d y=%d\n", x, y;
+		}
+
+		final void nonvirtual()
+		{
+			"A::nonvirtual()\n";
+		}
+	}
+
+	class B : A
+	{
+		void test() override
+		{
+			"B::test()\n";
+			super::test();
+		}
+	}
+
+	class C
+	{
+	}
+
 	// wrapping std:: vector, sort of...
 
 	namespace std
@@ -243,6 +274,23 @@ int main()
 		object o = new object;
 		array<int> iarr;
 		iarr.add(42);
+
+		// A is actually strong pointer to class A
+		A a = new A;
+		// the same goes for B
+		B b = new B;
+
+		a.x = 1;
+		b.x = 2;
+
+		a.test();
+		a.nonvirtual();
+		b.test();
+
+		// the following line assigns null to c, because C and A are incompatible (class RTTI triggers here)
+		C c = a;
+		// %t in format string prints any type (note that for %t, args are passed by value)
+		"c=%t\n", c;
 
 		{
 			std::vector<int> v;
