@@ -162,6 +162,18 @@ struct bind_std_vector
 	}
 };
 
+class direct_native_class : public lethe::ScriptBaseObject
+{
+public:
+
+	lethe::String nativeString = "native_class_string";
+
+	virtual void test()
+	{
+		printf("direct_native_class::test()\n");
+	}
+};
+
 int main()
 {
 	lethe::Init();
@@ -170,15 +182,22 @@ int main()
 
 	const char *source = R"src(
 
-	class A
+	native class direct_native_class
+	{
+		native string nativeString;
+		native void test();
+	}
+
+	class A : direct_native_class
 	{
 		// default access for classes is public, unlike C++
 		int x;
 		int y;
 
 		// class methods are virtual by default
-		void test()
+		void test() override
 		{
+			super::test();
 			"A::test() x=%d y=%d\n", x, y;
 		}
 
@@ -370,6 +389,24 @@ int main()
 
 	bind_std_vector<int>::bind("int", engine);
 	bind_std_vector<lethe::String>::bind("string", engine);
+
+	auto nc = engine.BindNativeClass(
+		"direct_native_class",
+		sizeof(direct_native_class),
+		alignof(direct_native_class),
+		// since ScriptBaseObject overrides new and delete, placement new needs scope resolution (::)
+		[](void *instPtr) {::new(instPtr) direct_native_class;},
+		[](void *instPtr) {static_cast<direct_native_class *>(instPtr)->~direct_native_class();}
+	);
+
+	nc.Member("nativeString", offsetof(direct_native_class, nativeString));
+
+	engine.BindNativeFunction("direct_native_class::test",
+		[](lethe::Stack &stk)
+		{
+			static_cast<direct_native_class *>(stk.GetThis())->test();
+		}
+	);
 
 	engine.onError = [](const lethe::String &msg, const lethe::TokenLocation &loc)
 	{

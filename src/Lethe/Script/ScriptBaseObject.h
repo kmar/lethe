@@ -2,6 +2,7 @@
 
 #include "../Core/Common.h"
 #include "../Core/Sys/Types.h"
+#include "../Core/Classes/ObjectHeap.h"
 
 namespace lethe
 {
@@ -33,7 +34,18 @@ public:
 	{
 	}
 
+	// force vtable
 	inline virtual ~ScriptBaseObject() {}
+
+	void *operator new(size_t sz)
+	{
+		return ObjectHeap::Get().Alloc(sz);
+	}
+
+	void operator delete(void *ptr)
+	{
+		return ObjectHeap::Get().Dealloc(ptr);
+	}
 
 	// class type is disguised in vtbl as -1st pointer
 	void **scriptVtbl;
