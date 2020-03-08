@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstIf : public AstControl
 {
 public:
-	SCRIPT_AST_NODE(AstIf)
+	LETHE_AST_NODE(AstIf)
 
 	typedef AstControl Super;
 

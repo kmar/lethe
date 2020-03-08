@@ -805,7 +805,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 				break;
 			}
 
-#if !SCRIPT_FAST_FLOAT
+#if !LETHE_FAST_FLOAT
 			if (flip && optIns >= OPC_FBEQ)
 				break;
 #endif

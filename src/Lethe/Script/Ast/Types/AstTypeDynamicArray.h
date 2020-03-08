@@ -10,7 +10,7 @@ class LETHE_API AstTypeDynamicArray : public AstTypeArray
 {
 	LETHE_BUCKET_ALLOC(AstTypeDynamicArray)
 public:
-	SCRIPT_AST_NODE(AstTypeDynamicArray)
+	LETHE_AST_NODE(AstTypeDynamicArray)
 
 	enum
 	{

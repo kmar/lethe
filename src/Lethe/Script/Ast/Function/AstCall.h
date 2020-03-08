@@ -10,7 +10,7 @@ class LETHE_API AstCall : public AstNode
 	LETHE_BUCKET_ALLOC(AstCall)
 
 public:
-	SCRIPT_AST_NODE(AstCall)
+	LETHE_AST_NODE(AstCall)
 
 	typedef AstNode Super;
 

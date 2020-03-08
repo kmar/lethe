@@ -9,7 +9,7 @@ class LETHE_API AstEnumItem : public AstText
 {
 	LETHE_BUCKET_ALLOC(AstEnumItem)
 public:
-	SCRIPT_AST_NODE(AstEnumItem)
+	LETHE_AST_NODE(AstEnumItem)
 
 	typedef AstText Super;
 

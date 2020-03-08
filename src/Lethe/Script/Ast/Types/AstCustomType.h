@@ -10,7 +10,7 @@ class LETHE_API AstCustomType : public AstBaseType
 	LETHE_BUCKET_ALLOC(AstCustomType)
 
 public:
-	SCRIPT_AST_NODE(AstCustomType)
+	LETHE_AST_NODE(AstCustomType)
 
 	typedef AstBaseType Super;
 

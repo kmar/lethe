@@ -10,7 +10,7 @@ class LETHE_API AstTypeFuncPtr : public AstFuncBase
 	LETHE_BUCKET_ALLOC(AstTypeFuncPtr)
 
 public:
-	SCRIPT_AST_NODE(AstTypeFuncPtr)
+	LETHE_AST_NODE(AstTypeFuncPtr)
 
 	typedef AstFuncBase Super;
 

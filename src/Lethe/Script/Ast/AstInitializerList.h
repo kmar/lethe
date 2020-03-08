@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstInitializerList : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstInitializerList)
+	LETHE_AST_NODE(AstInitializerList)
 
 	typedef AstNode Super;
 

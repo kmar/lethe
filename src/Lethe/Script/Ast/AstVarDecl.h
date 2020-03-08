@@ -12,7 +12,7 @@ class LETHE_API AstVarDecl : public AstNode
 	LETHE_BUCKET_ALLOC(AstVarDecl)
 
 public:
-	SCRIPT_AST_NODE(AstVarDecl)
+	LETHE_AST_NODE(AstVarDecl)
 
 	typedef AstNode Super;
 

@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstArg : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstArg)
+	LETHE_AST_NODE(AstArg)
 
 	typedef AstNode Super;
 

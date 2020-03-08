@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstUnaryPlus : public AstUnaryOp
 {
 public:
-	SCRIPT_AST_NODE(AstUnaryPlus)
+	LETHE_AST_NODE(AstUnaryPlus)
 
 	typedef AstUnaryOp Super;
 

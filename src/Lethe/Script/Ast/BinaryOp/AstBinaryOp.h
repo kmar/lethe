@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstBinaryOp : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstBinaryOp)
+	LETHE_AST_NODE(AstBinaryOp)
 
 	enum
 	{

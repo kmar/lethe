@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstSizeOf : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstSizeOf)
+	LETHE_AST_NODE(AstSizeOf)
 
 	typedef AstNode Super;
 

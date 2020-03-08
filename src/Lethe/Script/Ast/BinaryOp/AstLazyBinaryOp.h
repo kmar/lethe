@@ -9,7 +9,7 @@ namespace lethe
 class LETHE_API AstLazyBinaryOp : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstLazyBinaryOp)
+	LETHE_AST_NODE(AstLazyBinaryOp)
 
 	typedef AstNode Super;
 

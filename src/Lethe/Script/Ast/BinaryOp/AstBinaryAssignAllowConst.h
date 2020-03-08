@@ -9,7 +9,7 @@ namespace lethe
 class LETHE_API AstBinaryAssignAllowConst : public AstBinaryAssign
 {
 public:
-	SCRIPT_AST_NODE(AstBinaryAssignAllowConst)
+	LETHE_AST_NODE(AstBinaryAssignAllowConst)
 
 	typedef AstBinaryAssign Super;
 

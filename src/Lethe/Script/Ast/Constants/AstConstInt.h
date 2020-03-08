@@ -9,7 +9,7 @@ class LETHE_API AstConstInt : public AstConstant
 {
 	LETHE_BUCKET_ALLOC(AstConstInt)
 public:
-	SCRIPT_AST_NODE(AstConstInt)
+	LETHE_AST_NODE(AstConstInt)
 
 	typedef AstConstant Super;
 

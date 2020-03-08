@@ -9,7 +9,7 @@ class LETHE_API AstTypeAuto : public AstBaseType
 {
 	LETHE_BUCKET_ALLOC(AstTypeAuto)
 public:
-	SCRIPT_AST_NODE(AstTypeAuto)
+	LETHE_AST_NODE(AstTypeAuto)
 
 	typedef AstBaseType Super;
 

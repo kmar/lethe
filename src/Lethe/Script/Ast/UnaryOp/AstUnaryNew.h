@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstUnaryNew : public AstUnaryOp
 {
 public:
-	SCRIPT_AST_NODE(AstUnaryNew)
+	LETHE_AST_NODE(AstUnaryNew)
 
 	enum
 	{

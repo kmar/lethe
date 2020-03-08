@@ -12,7 +12,7 @@ class LETHE_API AstFunc : public AstFuncBase
 	LETHE_BUCKET_ALLOC(AstFunc)
 
 public:
-	SCRIPT_AST_NODE(AstFunc)
+	LETHE_AST_NODE(AstFunc)
 
 	enum
 	{

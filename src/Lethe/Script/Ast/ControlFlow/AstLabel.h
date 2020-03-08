@@ -10,7 +10,7 @@ class LETHE_API AstLabel : public AstText
 	LETHE_BUCKET_ALLOC(AstLabel)
 	friend class AstGoto;
 public:
-	SCRIPT_AST_NODE(AstLabel)
+	LETHE_AST_NODE(AstLabel)
 
 	typedef AstText Super;
 

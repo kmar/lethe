@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstFuncBase : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstFuncBase)
+	LETHE_AST_NODE(AstFuncBase)
 
 	enum
 	{

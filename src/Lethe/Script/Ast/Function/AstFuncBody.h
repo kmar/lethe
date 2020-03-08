@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstFuncBody : public AstBlock
 {
 public:
-	SCRIPT_AST_NODE(AstFuncBody)
+	LETHE_AST_NODE(AstFuncBody)
 
 	typedef AstBlock Super;
 

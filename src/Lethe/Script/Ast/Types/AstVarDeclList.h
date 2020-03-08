@@ -11,7 +11,7 @@ class LETHE_API AstVarDeclList : public AstCustomType
 	LETHE_BUCKET_ALLOC(AstVarDeclList)
 
 public:
-	SCRIPT_AST_NODE(AstVarDeclList)
+	LETHE_AST_NODE(AstVarDeclList)
 
 	typedef AstCustomType Super;
 

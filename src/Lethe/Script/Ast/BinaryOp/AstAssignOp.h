@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstAssignOp : public AstBinaryOp
 {
 public:
-	SCRIPT_AST_NODE(AstAssignOp)
+	LETHE_AST_NODE(AstAssignOp)
 	typedef AstBinaryOp Super;
 
 	AstAssignOp(AstNodeType ntype, const TokenLocation &nloc) : Super(ntype, nloc) {}

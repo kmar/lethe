@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstTypeArrayRef : public AstCustomType
 {
 public:
-	SCRIPT_AST_NODE(AstTypeArrayRef)
+	LETHE_AST_NODE(AstTypeArrayRef)
 
 	enum
 	{

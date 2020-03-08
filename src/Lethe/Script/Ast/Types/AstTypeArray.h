@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstTypeArray : public AstCustomType
 {
 public:
-	SCRIPT_AST_NODE(AstTypeArray)
+	LETHE_AST_NODE(AstTypeArray)
 
 	typedef AstCustomType Super;
 

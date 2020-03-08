@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstCommaOp : public AstNode
 {
 public:
-	SCRIPT_AST_NODE(AstCommaOp)
+	LETHE_AST_NODE(AstCommaOp)
 
 	typedef AstNode Super;
 

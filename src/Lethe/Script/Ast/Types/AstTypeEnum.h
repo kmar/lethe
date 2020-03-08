@@ -11,7 +11,7 @@ class LETHE_API AstTypeEnum : public AstCustomType
 	LETHE_BUCKET_ALLOC(AstTypeEnum)
 
 public:
-	SCRIPT_AST_NODE(AstTypeEnum)
+	LETHE_AST_NODE(AstTypeEnum)
 
 	typedef AstCustomType Super;
 

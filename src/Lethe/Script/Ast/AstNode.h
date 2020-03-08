@@ -252,7 +252,7 @@ private:
 	Queue<const AstNode *> queue;
 };
 
-#define SCRIPT_AST_NODE(cls) \
+#define LETHE_AST_NODE(cls) \
 	protected: cls() {} \
 	public: AstNode *Clone() const override {auto *res = new cls;CopyTo(res);return res;}
 

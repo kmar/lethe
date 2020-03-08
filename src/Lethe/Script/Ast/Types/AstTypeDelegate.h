@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstTypeDelegate : public AstTypeFuncPtr
 {
 public:
-	SCRIPT_AST_NODE(AstTypeDelegate)
+	LETHE_AST_NODE(AstTypeDelegate)
 
 	typedef AstTypeFuncPtr Super;
 

@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstConstUInt : public AstConstant
 {
 public:
-	SCRIPT_AST_NODE(AstConstUInt)
+	LETHE_AST_NODE(AstConstUInt)
 
 	typedef AstConstant Super;
 

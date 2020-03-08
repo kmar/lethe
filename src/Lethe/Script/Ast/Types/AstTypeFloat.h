@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstTypeFloat : public AstBaseType
 {
 public:
-	SCRIPT_AST_NODE(AstTypeFloat)
+	LETHE_AST_NODE(AstTypeFloat)
 
 	typedef AstBaseType Super;
 

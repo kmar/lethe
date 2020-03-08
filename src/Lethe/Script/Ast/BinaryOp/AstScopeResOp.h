@@ -9,7 +9,7 @@ namespace lethe
 class LETHE_API AstScopeResOp : public AstSymbol
 {
 public:
-	SCRIPT_AST_NODE(AstScopeResOp)
+	LETHE_AST_NODE(AstScopeResOp)
 
 	typedef AstSymbol Super;
 

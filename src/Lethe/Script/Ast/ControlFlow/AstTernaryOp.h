@@ -8,7 +8,7 @@ namespace lethe
 class LETHE_API AstTernaryOp : public AstControl
 {
 public:
-	SCRIPT_AST_NODE(AstTernaryOp)
+	LETHE_AST_NODE(AstTernaryOp)
 
 	typedef AstControl Super;
 
