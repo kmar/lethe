@@ -1,4 +1,5 @@
 
+
 # lethe
 a statically typed, unsafe scripting language
 
@@ -16,11 +17,13 @@ note: experimental, work in progress, there will most likely be bugs => use at y
 
 * features:
 	* unsafe
+	* no user-defined conversions
 	* no function overloads
 	* no exceptions
 	* no garbage collector (uses intrusive reference counting)
 	* no REPL
 	* no multi-threaded compilation of scripts
+	* no bytecode serialization
 	* optional dumb JIT for x86/x64
 	* [debugger - win/binary only](https://github.com/kmar/lethe_debugger/releases)
 
