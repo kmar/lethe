@@ -220,13 +220,6 @@ struct Fold1
 	Int opcFold;
 };
 
-/*static const Fold1 opcFold1Table[] =
-{
-	{ OPC_FCMPNZ, OPC_ICMPNZ_BZ },
-	{ OPC_FCMPNZ, OPC_ICMPNZ_BNZ },
-	{ OPC_HALT, OPC_HALT }
-};*/
-
 struct Fold2
 {
 	Int opc0;
@@ -831,33 +824,6 @@ void CompiledProgram::EmitInternal(UInt ins)
 
 		ins &= ~0xff;
 		ins |= opc == OPC_ICMPNZ_BZ ? OPC_IBZ : OPC_IBNZ;
-		break;
-#if 0
-	case OPC_ICMPNZ_BZ:
-	case OPC_ICMPNZ_BNZ:
-		// FIXME: this seems wrong, because it won't handle negative zeroes => disabled
-#if 0
-		for (const Fold1 *f1 = opcFold1Table; num > 0 && f1->opc0 != OPC_HALT; f1++)
-		{
-			// fold FCMPNZ + ICMPNZ_Bx => ICMPNZ_Bx (and similar)
-			// problem: this requires fixups => can't do!...
-			// well not quite, I'd have to remember last fwd jump instruction
-			if (opc != (UInt)f1->opcFold || GetInsType(num-1) != f1->opc0)
-				continue;
-
-			// if last forward jump points here, fix up
-			if (lastForwardJump >= 0 && lastForwardJump + 1 + GetInsImm24(lastForwardJump) == instructions.GetSize())
-			{
-				// we know it's a forward jump over at least 1 ins so no need to check for underflow
-				instructions[lastForwardJump] -= 256;
-			}
-
-			instructions[num-1] = *reinterpret_cast< const Int * >(&ins);
-			return;
-		}
-
-#endif
-#endif
 		break;
 
 	case OPC_LSTORE32:
