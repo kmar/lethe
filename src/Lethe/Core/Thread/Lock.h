@@ -29,50 +29,14 @@ class LETHE_API Mutex : NoCopy
 {
 	LETHE_SINGLETON(Mutex)
 protected:
-#if LETHE_OS_WINDOWS
-#	if LETHE_64BIT
-	static const size_t LOCK_INTERNAL_SIZE = 40;
-#	else
-	static const size_t LOCK_INTERNAL_SIZE = 24;
-#	endif
-	ULong internal[(LOCK_INTERNAL_SIZE + sizeof(ULong)-1) / sizeof(ULong)];
-#else
-#	if LETHE_OS_ANDROID
-#		if LETHE_64BIT
-	static const size_t LOCK_INTERNAL_SIZE = 40;
-#		else
-	static const size_t LOCK_INTERNAL_SIZE = 4;
-#		endif
-#	elif LETHE_OS_OSX || LETHE_OS_IOS
-#			if LETHE_64BIT
-	static const size_t LOCK_INTERNAL_SIZE = 56 + sizeof(long);
-#			else
-	static const size_t LOCK_INTERNAL_SIZE = 40 + sizeof(long);
-#			endif
-#	elif LETHE_OS_BSD
-	static const size_t LOCK_INTERNAL_SIZE = sizeof(void *);
-#	else
-#		if LETHE_CPU_X86
-#			if LETHE_64BIT
-	static const size_t LOCK_INTERNAL_SIZE = 40;
-#			else
-	static const size_t LOCK_INTERNAL_SIZE = 32;
-#			endif
-#		else
-	// FIXME: support more platforms later
-	static const size_t LOCK_INTERNAL_SIZE = 24;
-#		endif
-#	endif
-	ULong internal[(LOCK_INTERNAL_SIZE + sizeof(ULong)-1) / sizeof(ULong)];
-#endif
-	int enabledFlag;
+	void *handle;
 
 public:
 	struct Recursive{};
 
-	explicit Mutex(int enabled = 1);
+	explicit Mutex();
 	// recursive variant - avoid at all costs!
-	explicit Mutex(Recursive, int enabled = 1);
+	explicit Mutex(Recursive);
 	~Mutex();
 
 	bool TryLock();

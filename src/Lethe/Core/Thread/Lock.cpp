@@ -57,94 +57,67 @@ void SpinMutex::Unlock()
 
 LETHE_SINGLETON_INSTANCE(Mutex)
 
-Mutex::Mutex(Recursive, int enabled)
+Mutex::Mutex()
 {
-	enabledFlag = enabled;
-
-	if (!enabled)
-		return;
-
 #if LETHE_OS_WINDOWS
-	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(CRITICAL_SECTION));
-	InitializeCriticalSection((LPCRITICAL_SECTION)internal);
+	handle = malloc(sizeof(CRITICAL_SECTION));
+	InitializeCriticalSection((LPCRITICAL_SECTION)handle);
 #else
-	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(pthread_mutex_t));
+	handle = malloc(sizeof(pthread_mutex_t));
+	pthread_mutex_init((pthread_mutex_t *)handle, 0);
+#endif
+}
 
+Mutex::Mutex(Recursive)
+{
+#if LETHE_OS_WINDOWS
+	handle = malloc(sizeof(CRITICAL_SECTION));
+	InitializeCriticalSection((LPCRITICAL_SECTION)handle);
+#else
+	handle = malloc(sizeof(pthread_mutex_t));
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 
-	pthread_mutex_init((pthread_mutex_t *)internal, &attr);
-#endif
-}
-
-Mutex::Mutex(int enabled)
-{
-	enabledFlag = enabled;
-
-	if (!enabled)
-		return;
-
-#if LETHE_OS_WINDOWS
-	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(CRITICAL_SECTION));
-	InitializeCriticalSection((LPCRITICAL_SECTION)internal);
-#else
-	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(pthread_mutex_t));
-	pthread_mutex_init((pthread_mutex_t *)internal, 0);
+	pthread_mutex_init((pthread_mutex_t *)handle, &attr);
 #endif
 }
 
 Mutex::~Mutex()
 {
 #if defined(LETHE_OS_WINDOWS)
-
-	if (enabledFlag)
-		DeleteCriticalSection((LPCRITICAL_SECTION)internal);
-
+	DeleteCriticalSection((LPCRITICAL_SECTION)handle);
 #else
-
-	if (enabledFlag)
-		pthread_mutex_destroy((pthread_mutex_t *)internal);
-
+	pthread_mutex_destroy((pthread_mutex_t *)handle);
 #endif
+
+	free(handle);
 }
 
 bool Mutex::TryLock()
 {
 #if defined(LETHE_OS_WINDOWS)
-	return !enabledFlag || TryEnterCriticalSection((LPCRITICAL_SECTION)internal) != FALSE;
+	return TryEnterCriticalSection((LPCRITICAL_SECTION)handle) != FALSE;
 #else
-	return !enabledFlag || pthread_mutex_trylock((pthread_mutex_t *)internal) == 0;
+	return pthread_mutex_trylock((pthread_mutex_t *)handle) == 0;
 #endif
 }
 
 void Mutex::Lock()
 {
 #if defined(LETHE_OS_WINDOWS)
-
-	if (LETHE_LIKELY(enabledFlag))
-		EnterCriticalSection((LPCRITICAL_SECTION)internal);
-
+	EnterCriticalSection((LPCRITICAL_SECTION)handle);
 #else
-
-	if (LETHE_LIKELY(enabledFlag))
-		pthread_mutex_lock((pthread_mutex_t *)internal);
-
+	pthread_mutex_lock((pthread_mutex_t *)handle);
 #endif
 }
 
 void Mutex::Unlock()
 {
 #if defined(LETHE_OS_WINDOWS)
-
-	if (LETHE_LIKELY(enabledFlag))
-		LeaveCriticalSection((LPCRITICAL_SECTION)internal);
-
+	LeaveCriticalSection((LPCRITICAL_SECTION)handle);
 #else
-
-	if (LETHE_LIKELY(enabledFlag))
-		pthread_mutex_unlock((pthread_mutex_t *)internal);
-
+	pthread_mutex_unlock((pthread_mutex_t *)handle);
 #endif
 }
 
