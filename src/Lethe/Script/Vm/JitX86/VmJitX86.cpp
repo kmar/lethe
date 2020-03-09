@@ -2905,9 +2905,9 @@ VmJitX86::VmJitX86()
 {
 }
 
-bool VmJitX86::CodeGen(const Vm &)
+bool VmJitX86::CodeGen(CompiledProgram &)
 {
-	return 0;
+	return false;
 }
 
 ExecResult VmJitX86::ExecScriptFunc(Vm &, Int)
