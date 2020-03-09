@@ -1,5 +1,6 @@
 #include "Lock.h"
 #include "../Sys/Platform.h"
+#include <stdlib.h>
 
 #if defined(LETHE_OS_WINDOWS)
 #	include <windows.h>
