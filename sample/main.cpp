@@ -6,7 +6,12 @@
 #include <vector>
 
 // set to true to test debug server
-constexpr bool test_debug_server = false;
+constexpr bool test_debug_server = true;
+
+// ugly macro to echo output to debugger
+#define xprintf(fmt, ...) do {auto tmp = lethe::String::Printf(fmt, __VA_ARGS__); printf("%s", tmp.Ansi()); if (g_dsrv) g_dsrv->SendOutput(tmp);} while(false)
+
+lethe::DebugServer *g_dsrv = nullptr;
 
 void native_div(lethe::Stack &stk)
 {
@@ -28,7 +33,7 @@ void native_div_2(lethe::Stack &stk)
 
 void native_printf(lethe::Stack &stk)
 {
-	printf("%s", lethe::FormatStr(stk).Ansi());
+	xprintf("%s", lethe::FormatStr(stk).Ansi());
 }
 
 // this must match script struct layout
@@ -170,7 +175,7 @@ public:
 
 	virtual void test()
 	{
-		printf("direct_native_class::test()\n");
+		xprintf("direct_native_class::test()\n");
 	}
 };
 
@@ -410,12 +415,12 @@ int main()
 
 	engine.onError = [](const lethe::String &msg, const lethe::TokenLocation &loc)
 	{
-		printf("err [%d:%d %s] %s\n", loc.line, loc.column, loc.file.Ansi(), msg.Ansi());
+		xprintf("err [%d:%d %s] %s\n", loc.line, loc.column, loc.file.Ansi(), msg.Ansi());
 	};
 
 	engine.onWarning = [](const lethe::String &msg, const lethe::TokenLocation &loc, lethe::Int warnid)
 	{
-		printf("warn(%d) [%d:%d %s] %s\n", warnid, loc.line, loc.column, loc.file.Ansi(), msg.Ansi());
+		xprintf("warn(%d) [%d:%d %s] %s\n", warnid, loc.line, loc.column, loc.file.Ansi(), msg.Ansi());
 	};
 
 	bool ok = engine.CompileBuffer(source, "my_source_buffer.lethe");
@@ -450,6 +455,8 @@ int main()
 	{
 		engine.CreateDebugServer();
 		auto *dsrv = engine.GetDebugServer();
+
+		g_dsrv = dsrv;
 
 		if (dsrv)
 		{
@@ -486,15 +493,18 @@ int main()
 	auto res = stk.GetSignedInt(0);
 	stk.Pop(1);
 
-	printf("script_div returns %d\n", res);
+	xprintf("script_div returns %d\n", res);
 
 	if (test_debug_server)
+	{
+		g_dsrv = nullptr;
 		engine.StopDebugServer();
+	}
 
 	// run global static destructor (=static done)
 	ctx->RunDestructors();
 
-	printf("exec took " LETHE_FORMAT_ULONG " usec\n", pw.Stop());
+	xprintf("exec took " LETHE_FORMAT_ULONG " usec\n", pw.Stop());
 
 	lethe::Done();
 
