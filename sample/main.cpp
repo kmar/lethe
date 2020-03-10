@@ -8,8 +8,8 @@
 // set to true to test debug server
 constexpr bool test_debug_server = true;
 
-// ugly macro to echo output to debugger
-#define xprintf(fmt, ...) do {auto tmp = lethe::String::Printf(fmt, __VA_ARGS__); printf("%s", tmp.Ansi()); if (g_dsrv) g_dsrv->SendOutput(tmp);} while(false)
+// ugly unsafe macro to echo output to debugger
+#define xprintf(...) do {auto tmp = lethe::String::Printf(__VA_ARGS__); printf("%s", tmp.Ansi()); if (g_dsrv) g_dsrv->SendOutput(tmp);} while(false)
 
 lethe::DebugServer *g_dsrv = nullptr;
 
