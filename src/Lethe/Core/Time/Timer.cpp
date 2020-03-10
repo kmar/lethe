@@ -141,14 +141,16 @@ bool Timer::Has64BitResolution()
 
 // StopWatch
 
-StopWatch::StopWatch() : deltaTicks(0), running(0)
+StopWatch::StopWatch()
+	: deltaTicks(0)
+	, running(false)
 {
 }
 
 // start stopwatch
 void StopWatch::Start()
 {
-	running = 1;
+	running = true;
 	startTicks = Timer::GetMillisec();
 }
 
@@ -158,7 +160,7 @@ Int StopWatch::Stop()
 	if (running)
 	{
 		deltaTicks = Timer::GetMillisec() - startTicks;
-		running = 0;
+		running = false;
 	}
 
 	return deltaTicks;
@@ -173,7 +175,7 @@ Int StopWatch::Continue()
 		deltaTicks = current - startTicks;
 
 	startTicks = current;
-	running = 1;
+	running = true;
 	return deltaTicks;
 }
 
@@ -196,14 +198,16 @@ Long PerfWatch::GetDelta(ULong s, ULong e)
 	return Long(d);
 }
 
-PerfWatch::PerfWatch() : deltaTicks(0), running(0)
+PerfWatch::PerfWatch()
+	: deltaTicks(0)
+	, running(false)
 {
 }
 
 // start PerfWatch
 void PerfWatch::Start()
 {
-	running = 1;
+	running = true;
 	startTicks = Timer::GetHiCounter();
 }
 
@@ -213,7 +217,7 @@ Long PerfWatch::Stop()
 	if (running)
 	{
 		deltaTicks = GetDelta(startTicks, Timer::GetHiCounter());
-		running = 0;
+		running = false;
 	}
 
 	return deltaTicks;
@@ -228,7 +232,7 @@ Long PerfWatch::Continue()
 		deltaTicks = GetDelta(startTicks, current);
 
 	startTicks = current;
-	running = 1;
+	running = true;
 	return deltaTicks;
 }
 

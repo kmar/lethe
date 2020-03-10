@@ -27,7 +27,12 @@ public:
 	);
 	~DebugServer();
 
+	// start listening for debugger
 	bool Start();
+
+	// wait for debugger to connect, up to msec milliseconds
+	// returns true if connected
+	bool WaitForDebugger(Int msec) const;
 
 	ScriptEngine &GetEngine() const {return *engine;}
 
@@ -63,7 +68,7 @@ private:
 
 	ScriptEngine *engine;
 
-	Mutex clientMutex;
+	mutable Mutex clientMutex;
 	UniquePtr<Thread> serverThread;
 	Array<Socket *> clients;
 	Array<UniquePtr<Thread>> clientThreads;

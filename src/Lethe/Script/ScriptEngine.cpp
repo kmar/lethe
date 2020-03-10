@@ -949,6 +949,13 @@ bool ScriptEngine::StartDebugServer()
 	return debugServer->Start();
 }
 
+bool ScriptEngine::WaitForDebugger(Int msec) const
+{
+	LETHE_RET_FALSE(mode == ENGINE_DEBUG && debugServer);
+
+	return debugServer->WaitForDebugger(msec);
+}
+
 bool ScriptEngine::CreateDebugServer(String ip, Int port)
 {
 	LETHE_RET_FALSE(mode == ENGINE_DEBUG);

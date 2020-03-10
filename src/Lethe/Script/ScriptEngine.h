@@ -235,6 +235,10 @@ public:
 	bool StartDebugServer();
 	bool StopDebugServer();
 
+	// wait for debugger to connect, up to msec milliseconds
+	// returns true if connected
+	bool WaitForDebugger(Int msec) const;
+
 	// get number of live script objects
 	Int GetLiveScriptObjectCount() const;
 

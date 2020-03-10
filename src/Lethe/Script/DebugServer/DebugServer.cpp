@@ -4,6 +4,7 @@
 #include "../ScriptEngine.h"
 
 #include <Lethe/Core/Sys/Fs.h>
+#include <Lethe/Core/Time/Timer.h>
 
 namespace lethe
 {
@@ -134,6 +135,26 @@ bool DebugServer::Start()
 	LETHE_RET_FALSE(!serverThread);
 	StartDebugServer();
 	return true;
+}
+
+bool DebugServer::WaitForDebugger(Int msec) const
+{
+	StopWatch sw;
+	sw.Start();
+
+	do
+	{
+		{
+			MutexLock lock(clientMutex);
+
+			if (!clients.IsEmpty())
+				return true;
+		}
+
+		Thread::Sleep(10);
+	} while (sw.Get() < msec);
+
+	return false;
 }
 
 void DebugServer::StartDebugServer()

@@ -461,6 +461,10 @@ int main()
 		}
 
 		engine.StartDebugServer();
+
+		// assuming the debugger is running, wait for up to 1 second and break main context if successful
+		if (engine.WaitForDebugger(1000))
+			ctx->Break();
 	}
 
 	lethe::PerfWatch pw;
