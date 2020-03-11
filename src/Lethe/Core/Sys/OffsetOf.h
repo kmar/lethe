@@ -10,7 +10,7 @@ namespace lethe
 template <typename T1, typename T2>
 struct offset_of_impl
 {
-	static inline constexpr int offset(T1 T2::*member)
+	static inline int offset(T1 T2::*member)
 	{
 		T2 obj;
 		return (int)size_t(&(obj.*member)) -
@@ -19,7 +19,7 @@ struct offset_of_impl
 };
 
 template <typename T1, typename T2>
-inline constexpr int offset_of(T1 T2::*member)
+inline int offset_of(T1 T2::*member)
 {
 	return offset_of_impl<T1, T2>::offset(member);
 }
