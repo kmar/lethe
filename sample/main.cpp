@@ -386,9 +386,9 @@ int main()
 	engine.BindNativeStruct("vec_natural_packing", sizeof(vec_natural_packing), alignof(vec_natural_packing));
 
 	auto ns = engine.BindNativeStruct("vec", sizeof(vec), alignof(vec));
-	ns.Member("x", offsetof(vec, x));
-	ns.Member("y", offsetof(vec, y));
-	ns.Member("z", offsetof(vec, z));
+	ns.Member("x", lethe::offset_of(&vec::x));
+	ns.Member("y", lethe::offset_of(&vec::y));
+	ns.Member("z", lethe::offset_of(&vec::z));
 
 	engine.BindNativeFunction("vec::length", native_vec_length);
 
@@ -404,7 +404,7 @@ int main()
 		[](void *instPtr) {static_cast<direct_native_class *>(instPtr)->~direct_native_class();}
 	);
 
-	nc.Member("nativeString", offsetof(direct_native_class, nativeString));
+	nc.Member("nativeString", lethe::offset_of(&direct_native_class::nativeString));
 
 	engine.BindNativeFunction("direct_native_class::test",
 		[](lethe::Stack &stk)
