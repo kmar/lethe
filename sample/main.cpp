@@ -6,7 +6,7 @@
 #include <vector>
 
 // set to true to test debug server
-constexpr bool test_debug_server = true;
+constexpr bool test_debug_server = false;
 
 // ugly unsafe macro to echo output to debugger
 #define xprintf(...) do {auto tmp = lethe::String::Printf(__VA_ARGS__); printf("%s", tmp.Ansi()); if (g_dsrv) g_dsrv->SendOutput(tmp);} while(false)
