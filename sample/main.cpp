@@ -177,7 +177,65 @@ public:
 	{
 		xprintf("direct_native_class::test()\n");
 	}
+
+	void exec_test(lethe::ScriptContext &ctx)
+	{
+		// if no script vtable (=native only, call directly)
+		if (!scriptVtbl)
+			test();
+		else
+		{
+			// otherwise issue a script call
+			// note that it's more efficient to cache and use CallMethodByIndex
+			ctx.CallMethod("test", this);
+		}
+	}
 };
+
+void native_spawn(lethe::Stack &stk)
+{
+	lethe::ArgParser ap(stk);
+	// this is the way to return script instances (i.e. add ref count)
+
+	auto &ptr = ap.Get<lethe::SPtr>();
+	ptr = new direct_native_class;
+	// we need to script vtable this way (so that it will merge properly with script RTTI)
+	ptr->scriptVtbl = (void **)stk.GetContext().GetEngine().GetClassVtable("direct_native_class");
+}
+
+void native_spawn2(lethe::Stack &stk)
+{
+	lethe::ArgParser ap(stk);
+	// a nicer version using NewObject on context, but this involves extra script call
+	// this way we can spawn any script class instance
+	ap.Get<lethe::SPtr>() = stk.GetContext().NewObject("direct_native_class");
+}
+
+void native_pass_ptr(lethe::Stack &stk)
+{
+	lethe::ArgParser ap(stk);
+	// unlike result, ass function arguments are passed as raw pointers in lethe (this is to reduce refcounting)
+	// you have to explicitly hold a smart pointer on stack to force refcount
+	auto *obj = ap.Get<lethe::ScriptBaseObject *>();
+	xprintf("obj: %p strong ref: %u\n", obj, obj->strongRefCount);
+}
+
+void test_script_spawn(lethe::ScriptContext *ctx)
+{
+	ctx->GetStack().PushPtr(nullptr);
+	ctx->Call("spawn_script_object");
+
+	lethe::ArgParser ap(ctx->GetStack());
+	lethe::SPtr &result = ap.Get<lethe::SPtr>();
+	auto sptr = result;
+
+	// clean up and pop result
+	result.Clear();
+	ctx->GetStack().Pop(1);
+
+	// and finally execute test method
+	static_cast<direct_native_class *>(sptr.Get())->exec_test(*ctx);
+}
 
 int main()
 {
@@ -223,6 +281,11 @@ int main()
 
 	class C
 	{
+	}
+
+	B spawn_script_object()
+	{
+		return new B;
 	}
 
 	// wrapping std:: vector, sort of...
@@ -308,6 +371,10 @@ int main()
 		"static exit\n";
 	}
 
+	native direct_native_class spawn();
+	native direct_native_class spawn2();
+	native void pass_ptr(direct_native_class cls);
+
 	void main()
 	{
 		object o = new object;
@@ -367,6 +434,14 @@ int main()
 		printf("125/3=%d\n", div(125, 3));
 		printf("125/3=%d\n", div2(125, 3));
 
+		auto spawned = spawn();
+		"spawned: %t\n", spawned;
+
+		auto spawned2 = spawn2();
+		"spawned2: %t\n", spawned2;
+
+		pass_ptr(spawned2);
+
 		// simple incremental loop one billion times
 		int loops = 0;
 
@@ -378,6 +453,10 @@ int main()
 
 
 )src";
+
+	engine.BindNativeFunction("spawn", native_spawn);
+	engine.BindNativeFunction("spawn2", native_spawn2);
+	engine.BindNativeFunction("pass_ptr", native_pass_ptr);
 
 	engine.BindNativeFunction("printf", native_printf);
 	engine.BindNativeFunction("div", native_div);
@@ -476,6 +555,8 @@ int main()
 
 	lethe::PerfWatch pw;
 	pw.Start();
+
+	test_script_spawn(ctx);
 
 	ctx->Call("main");
 
