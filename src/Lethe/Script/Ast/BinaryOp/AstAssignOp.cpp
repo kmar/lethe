@@ -127,6 +127,7 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 		LETHE_RET_FALSE(nodes[IDX_LEFT]->CodeGenRef(p));
 		LETHE_RET_FALSE(nodes[IDX_RIGHT]->CodeGenRef(p));
 
+		leftType.RemoveReference();
 		p.EmitU24(OPC_PSWAP, leftType.GetSize());
 
 		p.PopStackType(1);
