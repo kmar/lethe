@@ -491,22 +491,8 @@ bool CompiledProgram::FixupForwardTarget(Int fwHandle)
 
 	if (!delta && target > jumpOptBase && target == instructions.GetSize()-1 && opc == OPC_BR)
 	{
-		// this is potentially dangerous => emitOptBase/barriers, must investigate
-		if (emitOptBase == instructions.GetSize())
-		{
-			LETHE_ASSERT(barriers.IsEmpty() || barriers.Back() == emitOptBase);
-			emitOptBase--;
-
-			if (!barriers.IsEmpty())
-			{
-				barriers.Back()--;
-
-				if (barriers.GetSize() > 2 && barriers[barriers.GetSize()-2] == barriers.Back())
-					barriers.Pop();
-			}
-		}
-
-		instructions.Pop();
+		// we can't do anything fancy here, i.e. while loop remembers body by index so we can't pop here
+		instructions.Back() = OPC_NOP;
 		// new: don't flush opt for br 0
 		flist.Free(fwHandle);
 		return 1;
@@ -544,7 +530,8 @@ bool CompiledProgram::FixupForwardTarget(Int fwHandle)
 					if (it == num-1)
 						--it;
 
-				instructions.Pop();
+				// we could pop here, but better safe than sorry
+				instructions.Back() = OPC_NOP;
 
 				flippedJump = true;
 			}
