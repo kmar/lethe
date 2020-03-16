@@ -557,6 +557,10 @@ TokenType Lexer::PeekString(Int ch, Token &tok, bool raw)
 				ch = '\b';
 				break;
 
+			case 'f':
+				ch = '\f';
+				break;
+
 			case 'n':
 				ch = '\n';
 				break;
