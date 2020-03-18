@@ -2079,7 +2079,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 			}
 
 			if (nofs != -1)
-				EmitNCall(nofs, reinterpret_cast<void *>(cpool.nFunc[nofs]), true, (Byte)ins == OPC_BMCALL);
+				EmitNCall(nofs, reinterpret_cast<void *>(cpool.nFunc[nofs]), true, (Byte)ins == OPC_BMCALL, (Byte)ins == OPC_BCALL_TRAP);
 		}
 		break;
 

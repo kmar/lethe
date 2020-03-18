@@ -1832,7 +1832,7 @@ void VmJitX86::EmitVCall(Int idx)
 	}
 }
 
-void VmJitX86::EmitNCall(Int offset, void *nfptr, bool builtin, bool method)
+void VmJitX86::EmitNCall(Int offset, void *nfptr, bool builtin, bool method, bool trap)
 {
 	// note: assuming x86 cdecl call ABI preserves esi and edi! (should be true for win/msc and linux/gcc)
 	// update stktop!
@@ -1845,6 +1845,18 @@ void VmJitX86::EmitNCall(Int offset, void *nfptr, bool builtin, bool method)
 
 	if (method)
 		Mov(MemPtr(StackObjectPtr() + 1*Stack::WORD_SIZE), Ebp.ToRegPtr());
+
+	auto doTrap = [trap, this]()
+	{
+		if (trap)
+		{
+			Test(Eax.ToRegPtr(), Eax.ToRegPtr());
+			// jz skip
+			EmitNew(0x74);
+			Emit(0x1);
+			Int3();
+		}
+	};
 
 	if (IsX64)
 	{
@@ -1872,6 +1884,8 @@ void VmJitX86::EmitNCall(Int offset, void *nfptr, bool builtin, bool method)
 		Emit(0x96);
 		Emit32(UInt((offset+2) * Stack::WORD_SIZE + nativeFuncPtr.offset));
 
+		doTrap();
+
 		Mov(Rsp, R14d.ToReg64());
 
 #if !LETHE_OS_WINDOWS
@@ -1886,6 +1900,8 @@ void VmJitX86::EmitNCall(Int offset, void *nfptr, bool builtin, bool method)
 		Emit32((UInt)(UIntPtr)(nfptr));
 		Int adr = code.GetSize() - sizeof(void *);
 		AddFixup(adr, -1, 1);
+
+		doTrap();
 
 		RPop(Eax.ToRegPtr());
 	}

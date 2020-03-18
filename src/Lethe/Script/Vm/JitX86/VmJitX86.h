@@ -371,7 +371,7 @@ private:
 	void EmitCall(Int target);
 	void EmitFCall();
 	void EmitFCallDg();
-	void EmitNCall(Int offset, void *nfptr, bool builtin = 0, bool method = 0);
+	void EmitNCall(Int offset, void *nfptr, bool builtin = 0, bool method = false, bool trap = false);
 	void EmitVCall(Int idx);
 
 	void IToF();
