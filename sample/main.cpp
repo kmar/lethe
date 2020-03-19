@@ -530,6 +530,8 @@ int main()
 	// run global static constructor (=static init)
 	ctx->RunConstructors();
 
+	test_script_spawn(ctx);
+
 	if (test_debug_server)
 	{
 		engine.CreateDebugServer();
@@ -555,8 +557,6 @@ int main()
 
 	lethe::PerfWatch pw;
 	pw.Start();
-
-	test_script_spawn(ctx);
 
 	ctx->Call("main");
 
