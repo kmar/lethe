@@ -72,16 +72,8 @@ bool Compiler::IsValidBreak(bool isCont) const
 
 AstNode *Compiler::ParseNoBreakStatement(Int depth)
 {
-	// this is just so that we can't access for loop scope control variables via resolve
-	// I'm still not sure - maybe it'd be actually cool if we could... (and simpler)
-	auto *oscope = currentScope;
-	currentScope = currentScope->parent;
-
-	auto *res = ParseStatement(depth);
-
-	currentScope = oscope;
-
-	return res;
+	// break scope can access loop scope variables (this is a feature, not a bug)
+	return ParseStatement(depth);
 }
 
 AstNode *Compiler::ParseStatement(Int depth)
