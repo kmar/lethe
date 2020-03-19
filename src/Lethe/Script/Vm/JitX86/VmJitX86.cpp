@@ -2307,7 +2307,7 @@ void VmJitX86::AddInt(Int dofs, Int ofs, void (VmJitX86::*opc)(const RegExpr &, 
 	RegExpr src = GetInt(ofs);
 	RegExpr dst = AllocGprWrite(stackOpt + dofs);
 
-	RegExpr rtop = AllocGpr(stackOpt, 1);
+	RegExpr rtop = AllocGprWrite(stackOpt, 1);
 
 	// add eax, [edi + ofs]
 	(*this.*opc)(rtop, src);
