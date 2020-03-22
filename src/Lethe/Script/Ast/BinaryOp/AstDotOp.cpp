@@ -92,6 +92,12 @@ bool AstDotOp::ResolveNode(const ErrorHandler &e)
 
 	const AstNode *tn = ltarget->GetTypeNode();
 
+	if (tn && tn->type == AST_TYPE_AUTO)
+	{
+		const auto *autotnode = tn->GetTypeNode();
+		tn = autotnode == tn ? nullptr : autotnode;
+	}
+
 	if (!tn)
 		return 1;
 
