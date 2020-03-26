@@ -540,9 +540,6 @@ void AsmX86::Movd(const RegExpr &dst, const RegExpr &src)
 
 void AsmX86::Movq(const RegExpr &dst, const RegExpr &src)
 {
-	if ((dst.IsRegister() && dst.GetSize() == MEM_QWORD) || (src.IsRegister() && src.GetSize() == MEM_QWORD))
-		Movd(dst, src);
-
 	MovxCommon(dst, src, 0xf3, 0x66, 0x7e, 0xd6);
 }
 
