@@ -139,6 +139,7 @@ namespace __int
 	inline noinit int clamp(int value, int minv, int maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
 	inline noinit int sign(int value) {return (value > 0)-(value < 0);}
 }
+
 namespace __uint
 {
 	// bit intrinsics
@@ -151,6 +152,7 @@ namespace __uint
 	inline noinit uint max(uint x, uint y) {return x >= y ? x : y;}
 	inline noinit uint clamp(uint value, uint minv, uint maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
 }
+
 namespace __long
 {
 	inline noinit long abs(long x) {return x >= 0 ? x : -x;}
@@ -159,6 +161,7 @@ namespace __long
 	inline noinit long clamp(long value, long minv, long maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
 	inline noinit int sign(long value) {return (value > 0)-(value < 0);}
 }
+
 namespace __ulong
 {
 	// bit intrinsics
@@ -171,6 +174,7 @@ namespace __ulong
 	inline noinit ulong max(ulong x, ulong y) {return x >= y ? x : y;}
 	inline noinit ulong clamp(ulong value, ulong minv, ulong maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
 }
+
 namespace __float
 {
 	// math
@@ -183,6 +187,9 @@ namespace __float
 	inline noinit float saturate(float value) {return value < cast float 0.0 ? cast float 0.0 : value > cast float 1.0 ? cast float 1.0 : value;}
 	inline noinit float lerp(float a, float b, float t) {return a*(1.0-t) + b*t;}
 	inline noinit int sign(float value) {return (value > cast float 0.0)-(value < cast float 0.0);}
+
+	native noinit float floor(float value);
+	native noinit float ceil(float value);
 
 	native static uint hash(float value);
 }
@@ -199,6 +206,9 @@ namespace __double
 	inline noinit double saturate(double value) {return value < cast double 0.0 ? cast double 0.0 : value > cast double 1.0 ? cast double 1.0 : value;}
 	inline noinit double lerp(double a, double b, double t) {return a*(cast double 1.0-t) + b*t;}
 	inline noinit int sign(double value) {return (value > cast double 0.0)-(value < cast double 0.0);}
+
+	native noinit double floor(double value);
+	native noinit double ceil(double value);
 
 	native static uint hash(double value);
 }

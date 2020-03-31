@@ -2017,8 +2017,8 @@ static void native_decodeUtf8(Stack &stk)
 
 static void objClassNameFromDelegate(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
-	auto sd = ap.Get<lethe::ScriptDelegate>();
+	ArgParser ap(stk);
+	auto sd = ap.Get<ScriptDelegate>();
 	auto &res = ap.Get<Name>();
 	res = Name();
 
@@ -2033,7 +2033,7 @@ static void objClassNameFromDelegate(Stack &stk)
 
 static void natHashFloat(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<Float>();
 	auto &res = ap.Get<UInt>();
@@ -2047,7 +2047,7 @@ static void natHashFloat(Stack &stk)
 
 static void natHashDouble(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<Double>();
 	auto &res = ap.Get<UInt>();
@@ -2059,9 +2059,37 @@ static void natHashDouble(Stack &stk)
 	res = Hash(DoubleToBinary(value));
 }
 
+static void natFloorFloat(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto value = ap.Get<Float>();
+	ap.Get<Float>() = floorf(value);
+}
+
+static void natCeilFloat(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto value = ap.Get<Float>();
+	ap.Get<Float>() = ceilf(value);
+}
+
+static void natFloorDouble(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto value = ap.Get<Double>();
+	ap.Get<Double>() = floor(value);
+}
+
+static void natCeilDouble(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto value = ap.Get<Double>();
+	ap.Get<Double>() = ceil(value);
+}
+
 static void natHashName(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<Name>();
 	auto &res = ap.Get<UInt>();
@@ -2072,7 +2100,7 @@ static void natHashName(Stack &stk)
 
 static void natHashString(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<String>();
 	auto &res = ap.Get<UInt>();
@@ -2082,7 +2110,7 @@ static void natHashString(Stack &stk)
 
 static void natFloatToBinary(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<Float>();
 	auto &res = ap.Get<UInt>();
@@ -2092,7 +2120,7 @@ static void natFloatToBinary(Stack &stk)
 
 static void natFloatFromBinary(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<UInt>();
 	auto &res = ap.Get<Float>();
@@ -2102,7 +2130,7 @@ static void natFloatFromBinary(Stack &stk)
 
 static void natDoubleToBinary(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<Double>();
 	auto &res = ap.Get<ULong>();
@@ -2112,7 +2140,7 @@ static void natDoubleToBinary(Stack &stk)
 
 static void natDoubleFromBinary(Stack &stk)
 {
-	lethe::ArgParser ap(stk);
+	ArgParser ap(stk);
 
 	auto value = ap.Get<ULong>();
 	auto &res = ap.Get<Double>();
@@ -2182,6 +2210,12 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("__double::hash", natHashDouble);
 	p.cpool.BindNativeFunc("__name::hash", natHashName);
 	p.cpool.BindNativeFunc("__string::hash", natHashString);
+
+	// floor/ceil:
+	p.cpool.BindNativeFunc("__float::floor", natFloorFloat);
+	p.cpool.BindNativeFunc("__float::ceil", natCeilFloat);
+	p.cpool.BindNativeFunc("__double::floor", natFloorDouble);
+	p.cpool.BindNativeFunc("__double::ceil", natCeilDouble);
 
 	// float bin conversion:
 	p.cpool.BindNativeFunc("float_from_binary", natFloatFromBinary);
