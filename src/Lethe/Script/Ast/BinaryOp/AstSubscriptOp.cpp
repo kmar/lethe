@@ -101,7 +101,9 @@ AstNode *AstSubscriptOp::GetResolveTarget() const
 bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allowConst, bool derefPtr)
 {
 	// FIXME: better!
-	QDataType qdt = nodes[0]->GetTypeDesc(p);
+	auto qdt = nodes[0]->GetTypeDesc(p);
+
+	const bool nobounds = (qdt.qualifiers & AST_Q_NOBOUNDS) || p.GetUnsafe();
 
 	if (qdt.GetTypeEnum() == DT_STRING)
 	{
@@ -120,7 +122,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 
 		p.Emit(OPC_BCALL + (BUILTIN_GETSTRCHAR << 8));
 
-		if (!p.GetUnsafe())
+		if (!nobounds)
 			p.EmitU24(OPC_RANGE_ICONST, 256);
 
 		p.PopStackType();
@@ -202,7 +204,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 
 	if (dt.type != DT_STATIC_ARRAY)
 	{
-		if (!p.GetUnsafe())
+		if (!nobounds)
 			p.Emit(OPC_LPUSHPTR);
 
 		auto &last = p.instructions.Back();
@@ -215,7 +217,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 		else
 			p.EmitU24(OPC_PLOADPTR_IMM, 0);
 
-		if (!p.GetUnsafe())
+		if (!nobounds)
 		{
 			p.Emit(OPC_LSWAPPTR);
 			p.EmitU24(OPC_PLOAD32_IMM, Stack::WORD_SIZE);
@@ -239,7 +241,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 		if (dt.type == DT_STATIC_ARRAY && (idx < 0 || idx >= dt.arrayDims))
 			return p.Error(this, "constant array index out of range");
 
-		if (dt.type != DT_STATIC_ARRAY && !p.GetUnsafe())
+		if (dt.type != DT_STATIC_ARRAY && !nobounds)
 		{
 			// perform range check now...
 			p.PopStackType();
@@ -264,7 +266,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 		LETHE_RET_FALSE(p.EmitConv(nodes[1],
 								  nodes[1]->GetTypeDesc(p), p.elemTypes[DT_INT]));
 
-		if (dt.type != DT_STATIC_ARRAY && !p.GetUnsafe())
+		if (dt.type != DT_STATIC_ARRAY && !nobounds)
 		{
 			auto top = p.exprStack.Back();
 			p.PopStackType();
@@ -286,7 +288,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 			if (idx < 0 || idx >= dt.arrayDims)
 				return p.Error(this, "constant array index out of range");
 		}
-		else if (!p.GetUnsafe() && dt.type == DT_STATIC_ARRAY)
+		else if (!nobounds && dt.type == DT_STATIC_ARRAY)
 		{
 			// perform range check
 			if (dt.arrayDims >= (1 << 24))

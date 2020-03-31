@@ -63,7 +63,9 @@ enum AstQualifier : ULong
 	AST_Q_AUTO_RANGE_FOR =  (ULong)1 << 40,
 	// nontrivial struct will force to call a ctor before copy (=can't be zero-init constructed)
 	AST_Q_NONTRIVIAL = (ULong)1 << 41,
-	// note: 22 left
+	// don't generate bounds check for this array type
+	AST_Q_NOBOUNDS = (ULong)1 << 42,
+	// note: 21 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

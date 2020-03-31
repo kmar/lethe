@@ -71,6 +71,7 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"inline", TOK_KEY_INLINE},
 	{"defer", TOK_KEY_DEFER},
 	{"nocopy", TOK_KEY_NOCOPY},
+	{"nobounds", TOK_KEY_NOBOUNDS},
 	{"noinit", TOK_KEY_NOINIT},
 	{"typedef", TOK_KEY_TYPEDEF},
 	{"using", TOK_KEY_USING},
