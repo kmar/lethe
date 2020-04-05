@@ -174,6 +174,8 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p)
 
 	Int found = 0;
 
+	StackArray<AstNode *, 64> fixupNodes;
+
 	while (auto *n = iter.Next())
 	{
 		if (n->scopeRef == loopScope)
@@ -183,12 +185,16 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p)
 			bscope->members[iterName] = n;
 
 		if (!found && (n->type == AST_VAR_DECL || n->type == AST_OP_ASSIGN))
-		{
-			delete n->nodes[1];
-			n->nodes[1] = arrClone;
-			arrClone->parent = n;
-			found = 1;
-		}
+			fixupNodes.Add(n);
+	}
+
+	for (Int i=fixupNodes.GetSize()-1; i>=0; i--)
+	{
+		auto *n = fixupNodes[i];
+		delete n->nodes[1];
+		n->nodes[1] = arrClone;
+		arrClone->parent = n;
+		found = 1;
 	}
 
 	initNode->scopeRef = bscope;
