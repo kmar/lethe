@@ -1568,7 +1568,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 			break;
 
 		case OPC_CONV_FTOUI:
-			stk.SetInt(+0, (UInt)(stk.GetFloat(+0)));
+			stk.SetInt(+0, WellDefinedFloatToUnsigned<UInt>(stk.GetFloat(+0)));
 			break;
 
 		case OPC_CONV_FTOD:
@@ -1613,9 +1613,9 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_CONV_DTOUI:
 		{
-			auto val = (UInt)stk.GetDouble(+0);
+			auto val = stk.GetDouble(+0);
 			stk.Pop(Stack::DOUBLE_WORDS);
-			stk.PushInt(val);
+			stk.PushInt(WellDefinedFloatToUnsigned<UInt>(val));
 			break;
 		}
 

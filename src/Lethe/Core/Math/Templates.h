@@ -122,7 +122,7 @@ template< typename T, typename S > static inline void ConstructObjectRange(T *pt
 	while (size > 0)
 	{
 		LETHE_ASSERT(ptr);
-		new(ptr) T;
+		::new(ptr) T;
 		size--;
 		ptr++;
 	}
@@ -606,6 +606,18 @@ static inline void Reverse(T *ptr, const T *top)
 
 	for (size_t i=0; i<len/2; i++)
 		Swap(ptr[i], ptr[len-i-1]);
+}
+
+// well defined cast of floating point to unsigned type
+// behaves as follows: cast abs value to unsigned, then multiply by -1
+// can't do directly because it's UB in C++
+// assumes 2's complement, naturally
+template<typename Unsignedtype, typename FloatType>
+Unsignedtype WellDefinedFloatToUnsigned(FloatType f)
+{
+	auto sign = Sign(f);
+	Unsignedtype res = (Unsignedtype)Abs(f);
+	return sign < 0 ? (Unsignedtype)0-res : res;
 }
 
 }

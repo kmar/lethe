@@ -1058,7 +1058,7 @@ void Opcode_CONV_FTOUL(Stack &stk)
 {
 	auto val = stk.GetFloat(0);
 	stk.Pop(1);
-	stk.PushLong((ULong)val);
+	stk.PushLong(WellDefinedFloatToUnsigned<ULong>(val));
 }
 
 void Opcode_CONV_DTOL(Stack &stk)
@@ -1072,7 +1072,7 @@ void Opcode_CONV_DTOUL(Stack &stk)
 {
 	auto val = stk.GetDouble(0);
 	stk.Pop(Stack::DOUBLE_WORDS);
-	stk.PushLong((ULong)val);
+	stk.PushLong(WellDefinedFloatToUnsigned<ULong>(val));
 }
 
 void Opcode_CONV_STR_TO_AREF(Stack &stk)

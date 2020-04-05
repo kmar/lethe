@@ -63,7 +63,7 @@ static bool IsNiceScale(Int scl)
 
 static void NativeFToUI(Stack &stk)
 {
-	stk.SetInt(0, (UInt)stk.GetFloat(0));
+	stk.SetInt(0, WellDefinedFloatToUnsigned<UInt>(stk.GetFloat(0)));
 }
 
 void VmJitX86::FToUI()
@@ -73,9 +73,9 @@ void VmJitX86::FToUI()
 
 static void NativeDToUI(Stack &stk)
 {
-	auto val = (UInt)stk.GetDouble(0);
+	auto val = stk.GetDouble(0);
 	stk.Pop(Stack::DOUBLE_WORDS);
-	stk.PushInt(val);
+	stk.PushInt(WellDefinedFloatToUnsigned<UInt>(val));
 }
 
 void VmJitX86::DToUI()
@@ -1867,6 +1867,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 						DontFlush _(*this);
 						reg = GetPtrNoAdr(0);
 						SetLocalPtr(0, reg, 1);
+						reg = GetPtrNoAdr(0);
 						Movsxd(reg.ToRegPtr(), reg.ToReg32());
 						nofs = -1;
 						break;
@@ -1878,6 +1879,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 						DontFlush _(*this);
 						reg = GetPtrNoAdr(0);
 						SetLocalPtr(0, reg, 1);
+						reg = GetPtrNoAdr(0);
 						Mov(reg.ToReg32(), reg.ToReg32());
 						nofs = -1;
 						break;
