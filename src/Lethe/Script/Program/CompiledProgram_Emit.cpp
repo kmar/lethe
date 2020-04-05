@@ -40,7 +40,7 @@ UInt CompiledProgram::GenFloatConst(Float fconst)
 		if (GetJitFriendly())
 			cpool.Add(val);
 
-		return ((UInt)val << 8) + OPC_PUSH_FCONST;
+		return ((UInt)(Int)val << 8) + OPC_PUSH_FCONST;
 	}
 
 	// must emit to constant pool
@@ -56,7 +56,7 @@ UInt CompiledProgram::GenDoubleConst(Double dconst)
 		if (GetJitFriendly())
 			cpool.Add(val);
 
-		return ((UInt)val << 8) + OPC_PUSH_DCONST;
+		return ((UInt)(Int)val << 8) + OPC_PUSH_DCONST;
 	}
 
 	// must emit to constant pool
