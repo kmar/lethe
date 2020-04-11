@@ -19,7 +19,6 @@ public:
 	}
 
 	AstNode *ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p) override;
-	AstNode *ConvertConstNode(const DataType &dt, DataTypeEnum dte, const CompiledProgram &p) const;
 	Int ToBoolConstant(const CompiledProgram &p) override;
 };
 

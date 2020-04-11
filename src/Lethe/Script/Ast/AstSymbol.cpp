@@ -20,10 +20,10 @@ namespace lethe
 
 bool AstSymbol::FoldConst(const CompiledProgram &p)
 {
-	auto ctarget = DerefConstant(p);
+	auto *ctarget = DerefConstant(p);
 	LETHE_RET_FALSE(ctarget);
-	QDataType dt = GetTypeDesc(p);
-	auto conv = AstStaticCast<AstConstant *>(ctarget)->ConvertConstNode(ctarget->GetTypeDesc(p).GetType(), dt.GetTypeEnum(), p);
+	auto dt = GetTypeDesc(p);
+	auto *conv = ctarget->ConvertConstNode(ctarget->GetTypeDesc(p).GetType(), dt.GetTypeEnum(), p);
 	LETHE_RET_FALSE(conv);
 	conv->parent = parent;
 	LETHE_VERIFY(parent->ReplaceChild(this, conv));

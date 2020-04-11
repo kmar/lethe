@@ -415,6 +415,7 @@ public:
 
 	// returns null on error, otherwise potentially new node
 	virtual AstNode *ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p);
+	AstNode *ConvertConstNode(const DataType &dt, DataTypeEnum dte, const CompiledProgram &p) const;
 
 	virtual QDataType GetTypeDesc(const CompiledProgram &p) const;
 

@@ -98,7 +98,7 @@ namespace lethe
 	default:;	\
 }
 
-AstNode *AstConstant::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const CompiledProgram &p) const
+AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const CompiledProgram &p) const
 {
 	AstNode *res = nullptr;
 
