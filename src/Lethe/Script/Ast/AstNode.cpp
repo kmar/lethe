@@ -814,7 +814,17 @@ bool AstNode::ValidateMethod(CompiledProgram &p, const NamedScope *nscope, AstNo
 	auto thisScope = nfunc->scopeRef ? nfunc->scopeRef->FindThis() : nullptr;
 
 	if (!thisScope || !thisScope->IsBaseOf(nscope))
+	{
+		// we still want to allow classes that are compatible with any base of this (i.e. state classes),
+		// because state classes cannot add new members/virtual methods
+		if (thisScope && (thisScope->node->qualifiers & AST_Q_STATE) &&
+			thisScope->base && thisScope->base->IsBaseOf(nscope))
+		{
+				return true;
+		}
+
 		return p.Error(this, "foreign method not accessible from here");
+	}
 
 	return true;
 }
