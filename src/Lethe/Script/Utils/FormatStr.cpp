@@ -63,16 +63,23 @@ bool FormatCheckType(DataTypeEnum src, const void *dt)
 	return FormatTypeOk(dst, src);
 }
 
-String FormatInvalid(const String &str)
+void FormatInvalid(StringBuilder &str)
 {
-	return str + "#err_type#";
+	str += "#err_type#";
 }
 
 String FormatStr(const Stack &stk, Int &ofs)
 {
+	ofs = 0;
+	auto sb = FormatStrBuilder(stk, ofs);
+	return sb.Get();
+}
+
+StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
+{
 	StringBuilder res;
-	auto str = stk.GetString(0);
-	ofs = Stack::STRING_WORDS;
+	auto str = stk.GetString(ofs);
+	ofs += Stack::STRING_WORDS;
 	auto numArgs = stk.GetSignedInt(ofs++);
 	(void)numArgs;
 	// okay, we have to format now...
@@ -141,7 +148,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		{
 			// char
 			if (!FormatCheckType(DT_INT, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			WChar tmp[2] = { 0, 0 };
 			tmp[0] = (WChar)stk.GetInt(ofs++);
@@ -155,7 +165,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		{
 			// int/long
 			if (!FormatCheckType(isLong ? DT_LONG : DT_INT, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			fmt = 'd';
 
@@ -182,7 +195,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		{
 			// uint
 			if (!FormatCheckType(isLong ? DT_LONG : DT_INT, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			fmt = 'u';
 
@@ -209,7 +225,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		{
 			// int as hex
 			if (!FormatCheckType(isLong ? DT_LONG : DT_INT, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			fmt = 'x';
 
@@ -235,7 +254,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		case 'g':
 		{
 			if (!FormatCheckType(isLong ? DT_DOUBLE: DT_FLOAT, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			// float/double
 			Double num = isLong ? stk.GetDouble(ofs) : stk.GetFloat(ofs);
@@ -261,7 +283,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		{
 			// string
 			if (!FormatCheckType(DT_STRING, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			auto tmp = stk.GetString(ofs);
 			ofs += Stack::STRING_WORDS;
@@ -274,7 +299,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		case 'n':
 		{
 			if (!FormatCheckType(DT_NAME, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			Name n;
 			n.SetIndex(stk.GetSignedInt(ofs++));
@@ -287,7 +315,10 @@ String FormatStr(const Stack &stk, Int &ofs)
 		case 'p':
 		{
 			if (!FormatCheckType(DT_STRONG_PTR, stk.GetPtr(ofs++)))
-				return FormatInvalid(res.Get());
+			{
+				FormatInvalid(res);
+				return res;
+			}
 
 			auto ptr = stk.GetPtr(ofs++);
 			fmt = 'p';
@@ -319,7 +350,7 @@ String FormatStr(const Stack &stk, Int &ofs)
 			res += *opts++;
 	}
 
-	return res.Get();
+	return res;
 }
 
 void AnalyzeFormatStr(const String &str, Array<DataTypeEnum> &types)
