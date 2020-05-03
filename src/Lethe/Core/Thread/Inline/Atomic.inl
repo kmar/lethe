@@ -239,9 +239,9 @@ template<> inline bool Atomic::CompareAndSwap<Short>(volatile Short &t, Short cm
 
 inline void Atomic::Pause()
 {
-#if LETHE_CPU_X86 && LETHE_COMPILER_MSC
+#if LETHE_CPU_X86 && LETHE_COMPILER_MSC_ONLY
 	_mm_pause();
-#elif LETHE_CPU_X86 && LETHE_COMPILER_NOT_MSC
+#elif LETHE_CPU_X86
 	asm volatile("pause");
 #elif LETHE_CPU_ARM && LETHE_COMPILER_NOT_MSC
 	asm volatile("yield");
