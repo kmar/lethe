@@ -444,7 +444,12 @@ bool AstFunc::CodeGen(CompiledProgram &p)
 			if (isOperator)
 				p.EmitFunc(fname + " " + typeRef.GetName(), this, typeRef.GetName());
 			else
-				p.EmitFunc(fname, this, typeRef.GetName());
+			{
+				if (qualifiers & AST_Q_CTOR)
+					p.EmitFunc(fname + "$ctor", this, typeRef.GetName());
+				else
+					p.EmitFunc(fname, this, typeRef.GetName());
+			}
 
 			startPC = p.instructions.GetSize();
 

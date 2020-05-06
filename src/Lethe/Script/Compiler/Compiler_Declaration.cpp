@@ -426,6 +426,7 @@ AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)
 	if (isCtor)
 	{
 		auto qual = ntype->qualifiers;
+		qual |= AST_Q_CTOR;
 		ntype = NewAstNode<AstTypeVoid>(ntype->location);
 		ts->UngetToken();
 		ntype->qualifiers |= qual;
@@ -816,7 +817,10 @@ AstNode *Compiler::ParseQualifiedDecl(ULong qualifiers, Int depth)
 		UniquePtr<AstNode> tmp;
 
 		if (t.type == TOK_NOT)
+		{
 			tmp = NewAstNode<AstTypeVoid>(t.location);
+			tmp->qualifiers |= AST_Q_DTOR;
+		}
 		else
 			tmp = ParseTypeWithQualifiers(depth+1, qualifiers, true);
 
@@ -1142,10 +1146,6 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 
 		if (decl->type == AST_FUNC)
 		{
-			// force ctor for void S()
-			if (sname == AstStaticCast<AstText *>(decl->nodes[1])->text)
-				decl->qualifiers |= AST_Q_CTOR;
-
 			if (decl->qualifiers & (AST_Q_CTOR | AST_Q_DTOR))
 				if (decl->nodes[AstFunc::IDX_RET]->type != AST_TYPE_VOID)
 					LETHE_RET_FALSE(ExpectPrev(false, "invalid ctor/dtor return type"));
