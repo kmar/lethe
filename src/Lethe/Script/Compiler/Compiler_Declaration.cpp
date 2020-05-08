@@ -275,6 +275,9 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 				auto dimsnode = NewAstNode<AstConstInt>(tnode->location);
 				dimsnode->num.i = init->nodes.GetSize();
 
+				for (auto *it : tmp->nodes)
+					it->parent = tmp;
+
 				delete tnode;
 
 				tmp->nodes.Add(dimsnode);
