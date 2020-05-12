@@ -536,7 +536,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 
 		const auto &nc = *ncls;
 
-		if (!nativeMembers)
+		if (nativeMembers)
 		{
 			dt->size = Max<Int>(dt->size, ncls->size);
 			dt->align = Max<Int>(dt->align, ncls->align);
