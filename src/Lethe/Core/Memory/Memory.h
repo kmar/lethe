@@ -7,27 +7,31 @@
 namespace lethe
 {
 
-// important note: it's undefined if memset/memcpy/memcpy (and I suppose memove as well)
+// important note: it's undefined if memset/memcpy/memcmp (and I suppose memove as well)
 // is being called with null pointer even if size is zero!
 // must fix my program wherever this happens... maybe I'm lucky that I've exceptions off?
 
 inline void MemSet(void *dst, int value, size_t count)
 {
+	LETHE_ASSERT(dst);
 	memset(dst, value, count);
 }
 
 inline void MemCpy(void *dst, const void *src, size_t count)
 {
+	LETHE_ASSERT(dst && src);
 	memcpy(dst, src, count);
 }
 
 inline void MemMove(void *dst, const void *src, size_t count)
 {
+	LETHE_ASSERT(dst && src);
 	memmove(dst, src, count);
 }
 
 inline int MemCmp(const void *src0, const void *src1, size_t count)
 {
+	LETHE_ASSERT(src0 && src1);
 	return memcmp(src0, src1, count);
 }
 

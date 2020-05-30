@@ -404,7 +404,9 @@ void DynamicArray::CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte 
 
 	if (dt.funAssign < 0 || elemCount <= 0)
 	{
-		MemCpy(dst, src, elemCount * dt.size);
+		if (elemCount > 0)
+			MemCpy(dst, src, elemCount * dt.size);
+
 		return;
 	}
 
