@@ -269,6 +269,7 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			tmp->Add(asgn);
 
 			fbody->nodes.InsertIndex(0, tmp);
+			tmp->parent = fbody;
 		};
 
 		for (Int i=snode->nodes.GetSize()-1; i>=2; i--)

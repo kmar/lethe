@@ -1222,7 +1222,8 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			while (pfn && pfn->type != AST_FUNC)
 				pfn = pfn->parent;
 
-			LETHE_RET_FALSE(pfn && pfn->type == AST_FUNC);
+			if (!pfn || pfn->type != AST_FUNC)
+				return p.Error(this, "enclosing function not found");
 
 			if ((pfn->qualifiers & AST_Q_CONST) && !(fn->qualifiers & AST_Q_CONST))
 				return p.Error(this, "cannot call non-const method");
