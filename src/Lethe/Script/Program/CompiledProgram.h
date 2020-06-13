@@ -335,6 +335,18 @@ public:
 
 	HashMap<LocalVarDebugKey, DebugInfoVar> localVars;
 
+	// convert qualified state class name to local state name
+	HashMap<Name, Name> stateToLocalNameMap;
+
+	// this is necessary to fixup state name from base class to new
+	static inline ULong PackNames(Name n0, Name n1)
+	{
+		return ((ULong)n0.GetIndex() << 32) | (UInt)(n1.GetIndex());
+	}
+
+	// Pack(class name, state localName) => new qualified state class name
+	HashMap<ULong, Name> fixupStateMap;
+
 	void StartStackFrame();
 	void EndStackFrame();
 	void StartLocalVarLifeTime(const QDataType &qdt, Int offset, const String &name);

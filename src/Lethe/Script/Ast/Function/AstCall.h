@@ -51,6 +51,8 @@ protected:
 	bool CodeGenCommon(CompiledProgram &p, bool keepRefs, bool derefPtr);
 	bool CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef);
 
+	const AstNode *FindEnclosingFunction() const;
+
 	// find function definition
 	AstNode *FindFunction(String &fname) const;
 	// find special ADL scope for elementary type

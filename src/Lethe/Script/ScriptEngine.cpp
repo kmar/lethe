@@ -124,6 +124,8 @@ __intrinsic class object
 	native final name class_name() const;
 	// get non-state class name
 	native final name nonstate_class_name() const;
+	// this handles class inheritance, so base state class gets mapped to actual state class in derived class
+	native final name fix_state_name(name state_class_name) const;
 	// state helper
 	native static name class_name_from_delegate(void delegate() dg);
 

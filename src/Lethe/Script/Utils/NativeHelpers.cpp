@@ -1761,6 +1761,39 @@ void objGetNonStateClassName(Stack &stk)
 	stk.SetInt(1, objCls->className.GetIndex());
 }
 
+void objFixStateName(Stack &stk)
+{
+	ArgParserMethod ap(stk);
+	auto sname = ap.Get<Name>();
+	auto &res = ap.Get<Name>();
+	res = sname;
+	auto *obj = (BaseObject *)stk.GetThis();
+	auto *objCls = obj->GetScriptClassType();
+
+	// first, find non-state class
+	while (objCls->structQualifiers & AST_Q_STATE)
+		objCls = &objCls->baseType.GetType();
+
+	// extract non-state class name
+	auto clsname = objCls->className;
+
+	auto &prog = stk.GetProgram();
+
+	// convert to local
+	auto iter = prog.stateToLocalNameMap.Find(sname);
+
+	if (iter == prog.stateToLocalNameMap.End())
+		return;
+
+	// and look up
+	auto key = CompiledProgram::PackNames(clsname, iter->value);
+	auto &smap = prog.fixupStateMap;
+
+	auto it = smap.Find(key);
+
+	res = it == smap.End() ? sname : it->value;
+}
+
 void natCallstack(Stack &stk)
 {
 	String res;
@@ -2202,6 +2235,7 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("object::vtable", objSetVtable);
 	p.cpool.BindNativeFunc("object::class_name", objGetClassName);
 	p.cpool.BindNativeFunc("object::nonstate_class_name", objGetNonStateClassName);
+	p.cpool.BindNativeFunc("object::fix_state_name", objFixStateName);
 	p.cpool.BindNativeFunc("object::class_name_from_delegate", objClassNameFromDelegate);
 
 	// callstack:

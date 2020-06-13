@@ -661,6 +661,16 @@ Int AstCall::GenTempCopy(CompiledProgram &p, Int resultBaseOffset, Int resultWor
 	return res;
 }
 
+const AstNode *AstCall::FindEnclosingFunction() const
+{
+	const AstNode *res = this;
+
+	while (res && res->type != AST_FUNC)
+		res = res->parent;
+
+	return res && res->type == AST_FUNC ? res : nullptr;
+}
+
 bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 {
 	/*
@@ -696,26 +706,25 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	const bool isLatent = fdef && (fdef->qualifiers & AST_Q_LATENT) != 0;
 	bool isMethod = fdef && (fdef->qualifiers & AST_Q_METHOD) != 0;
 
-	if (fdef && (fdef->qualifiers & AST_Q_STATE) != 0)
-		return p.Error(this, "state functions cannot be called directly");
+	// we want to allow this as a jump to chain if in state method and if calling non-virtually
+	bool isStateFuncCall = fdef && (fdef->qualifiers & AST_Q_STATE) != 0;
+
+	if (isStateFuncCall)
+	{
+		// only allow from within a state function
+		auto *enclosing = FindEnclosingFunction();
+
+		if (!enclosing || !(enclosing->qualifiers & AST_Q_STATE))
+			return p.Error(this, "state functions cannot be called directly");
+	}
 
 	if (isLatent || isStateBreak)
 	{
 		// emit virtual function with label
-		auto *fscope = p.curScope;
-		NamedScope *foundFuncScope = nullptr;
+		auto *curfunc = FindEnclosingFunction();
 
-		while (fscope && fscope->parent)
-		{
-			if (fscope->type == NSCOPE_FUNCTION)
-				foundFuncScope = fscope;
-
-			fscope = fscope->parent;
-		}
-
-		LETHE_ASSERT(foundFuncScope && foundFuncScope->node && foundFuncScope->node->type == AST_FUNC);
-
-		auto *curfunc = AstStaticCast<AstFunc *>(foundFuncScope->node);
+		if (!curfunc)
+			return p.Error(this, "enclosing function not found");
 
 		if (isLatent && !(curfunc->qualifiers & AST_Q_STATE))
 			return p.Error(this, "latent function can only be called from state functions");
@@ -1217,12 +1226,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			// we need to handle a case here where we call another method from within a method
 
 			// find parent func scope
-			const AstNode *pfn = this;
+			auto *pfn = FindEnclosingFunction();
 
-			while (pfn && pfn->type != AST_FUNC)
-				pfn = pfn->parent;
-
-			if (!pfn || pfn->type != AST_FUNC)
+			if (!pfn)
 				return p.Error(this, "enclosing function not found");
 
 			if ((pfn->qualifiers & AST_Q_CONST) && !(fn->qualifiers & AST_Q_CONST))
@@ -1479,6 +1485,12 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	}
 	else if (isStateBreak && !p.StateBreakScope())
 		return p.Error(this, "state break call failed (recursion via defer?)");
+
+	if (isStateFuncCall)
+	{
+		p.ReturnScope(false);
+		p.Emit(OPC_RET);
+	}
 
 	return true;
 }

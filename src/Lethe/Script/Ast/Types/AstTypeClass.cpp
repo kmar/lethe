@@ -323,6 +323,28 @@ bool AstTypeClass::CodeGenComposite(CompiledProgram &p)
 
 	LETHE_RET_FALSE(Super::CodeGenComposite(p));
 
+	// setup lookup map for nested state classes
+
+	for (auto *it : nodes)
+	{
+		if (it->type != AST_CLASS || !(it->qualifiers & AST_Q_STATE))
+			continue;
+
+		auto sclass = it->GetTypeDesc(p);
+		auto cname = sclass.GetType().name;
+
+		// we need to strip '::' first
+		auto start = cname.ReverseFind(':');
+
+		if (start < 0)
+			continue;
+
+		++start;
+		auto localName = Name(cname.Ansi() + start);
+		p.stateToLocalNameMap[cname] = localName;
+		p.fixupStateMap[CompiledProgram::PackNames(typeRef.ref->name, localName)] = cname;
+	}
+
 	// generate pointer dtors...
 	return ptrTypeRef.ref->GenDtor(p) && weakPtrTypeRef.ref->GenDtor(p);
 }
