@@ -526,7 +526,8 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 
 	if (dt->type == DT_STRUCT)
 		for (auto *it : postponeTypeGen)
-			LETHE_RET_FALSE(it->TypeGen(p));
+			if (!(it->flags & AST_F_LOCK))
+				LETHE_RET_FALSE(it->TypeGen(p));
 
 	dt->attributes = attributes;
 

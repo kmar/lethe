@@ -190,7 +190,8 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 	}
 
 	for (auto *it : postponeTypeGen)
-		LETHE_RET_FALSE(it->TypeGen(p));
+		if (!(it->flags & AST_F_LOCK))
+			LETHE_RET_FALSE(it->TypeGen(p));
 
 	return true;
 }
