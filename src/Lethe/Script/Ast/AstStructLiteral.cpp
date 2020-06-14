@@ -41,7 +41,7 @@ bool AstStructLiteral::CodeGen(CompiledProgram &p)
 
 	if (!rvo)
 	{
-		p.EmitI24(noinit ? OPC_PUSH_RAW : OPC_PUSHZ_RAW, stkSize);
+		p.EmitI24Zero(noinit ? OPC_PUSH_RAW : OPC_PUSHZ_RAW, stkSize);
 		p.EmitCtor(qdt);
 
 		p.PushStackType(qdt);

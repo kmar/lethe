@@ -294,7 +294,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 				bool noinit = (tdesc.qualifiers & AST_Q_NOINIT) != 0 || isCompleteInitializerList;
 				bool zeroInit = tdesc.ZeroInit() || !noinit;
 
-				p.EmitU24(zeroInit ? OPC_PUSHZ_RAW : OPC_PUSH_NOZERO, words);
+				p.EmitU24Zero(zeroInit ? OPC_PUSHZ_RAW : OPC_PUSH_NOZERO, words);
 			}
 
 			if (!(flags & AST_F_NRVO))

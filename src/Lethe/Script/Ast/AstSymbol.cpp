@@ -566,7 +566,7 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 		{
 			bool hasDtor = dt.HasDtor();
 			Int stkSize = (dt.GetSize() + Stack::WORD_SIZE-1)/Stack::WORD_SIZE;
-			p.EmitU24(hasDtor ? OPC_PUSHZ_RAW : OPC_PUSH_RAW, stkSize);
+			p.EmitU24Zero(hasDtor ? OPC_PUSHZ_RAW : OPC_PUSH_RAW, stkSize);
 			// push source adr
 			p.EmitU24(OPC_GLOADADR, frameOfs);
 			// push dest adr
@@ -654,7 +654,7 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 		bool isNonTrivial = dt.HasCtor() && (dt.qualifiers & AST_Q_NONTRIVIAL);
 
 		Int stkSize = (dt.GetSize() + Stack::WORD_SIZE-1)/Stack::WORD_SIZE;
-		p.EmitU24(hasDtor ? OPC_PUSHZ_RAW : OPC_PUSH_RAW, stkSize);
+		p.EmitU24Zero(hasDtor ? OPC_PUSHZ_RAW : OPC_PUSH_RAW, stkSize);
 
 		// we need to call ctor for non-trivial structs
 		if (isNonTrivial)

@@ -163,6 +163,9 @@ public:
 	// special I24 version
 	void EmitI24(Int opc, Int data);
 	void EmitU24(Int opc, Int data);
+	// converts PUSH_RAW into PUSHZ_RAW in debug mode
+	void EmitI24Zero(Int opc, Int data);
+	void EmitU24Zero(Int opc, Int data);
 
 	UInt GenIntConst(Int iconst);
 	UInt GenUIntConst(UInt iconst);

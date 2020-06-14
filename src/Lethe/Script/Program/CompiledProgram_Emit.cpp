@@ -338,6 +338,22 @@ static const Fold3 opcFold3TableSimple[] =
 	{ OPC_HALT, OPC_HALT, OPC_HALT, OPC_HALT }
 };
 
+void CompiledProgram::EmitI24Zero(Int ins, Int offset)
+{
+	if (!GetUnsafe() && ((ins & 255) == OPC_PUSH_RAW))
+	{
+		ins &= ~255;
+		ins |= OPC_PUSHZ_RAW;
+	}
+
+	EmitI24(ins, offset);
+}
+
+void CompiledProgram::EmitU24Zero(Int ins, Int offset)
+{
+	EmitI24Zero(ins, offset);
+}
+
 void CompiledProgram::EmitU24(Int ins, Int data)
 {
 	EmitI24(ins, data);

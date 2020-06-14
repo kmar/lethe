@@ -1112,15 +1112,6 @@ void CompiledProgram::FixupVtbl()
 			ptr[j] = ptr[j] * sizeof(Instruction) + reinterpret_cast<IntPtr>(instructions.GetData());
 		}
 	}
-
-	/*	// DEBUG!!
-		for (const auto &lv : localVars) {
-			lethe::Log("=== local var ===");
-			lethe::Log("name:    %s", lv.value.name.Ansi());
-			lethe::Log("offset:  %d", lv.value.offset);
-			lethe::Log("startPC: %08x", lv.value.startPC);
-			lethe::Log("endPC:   %08x", lv.value.endPC);
-		}*/
 }
 
 void CompiledProgram::FixupVtblJit(const Array<Int> &pcToCode, const Byte *code)

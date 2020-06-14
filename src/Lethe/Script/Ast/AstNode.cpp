@@ -990,7 +990,7 @@ bool AstNode::EmitPtrLoad(const QDataType &dt, CompiledProgram &p)
 
 		// FIXME: stupid stack!!! this is very hacky...
 		if (stkSize > 1)
-			p.EmitU24(hasDtor ? OPC_PUSHZ_RAW : OPC_PUSH_RAW, stkSize-1);
+			p.EmitU24Zero(hasDtor ? OPC_PUSHZ_RAW : OPC_PUSH_RAW, stkSize-1);
 
 		// push source adr
 		p.EmitU24(OPC_LPUSHPTR, stkSize-1);

@@ -934,7 +934,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 			resultZeroed = (forceZeroInit || tdesc.ZeroInit());
 
-			p.EmitU24(resultZeroed ? OPC_PUSHZ_RAW : OPC_PUSH_NOZERO, resultWords);
+			p.EmitU24Zero(resultZeroed ? OPC_PUSHZ_RAW : OPC_PUSH_NOZERO, resultWords);
 
 			p.EmitCtor(tdesc);
 			resType.qualifiers &= ~AST_Q_SKIP_DTOR;
@@ -1358,7 +1358,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 				Swap(oretHandles, p.GetReturnHandles());
 
 				if (!p.IsFastCall() && !p.GetInline())
-					p.EmitI24(OPC_PUSH_RAW, 1);
+					p.EmitI24Zero(OPC_PUSH_RAW, 1);
 
 				// FIXME: this causes lmove opt to break, must investigate later => zeroing for now
 				p.exprStackOfs = 0;// - !p.IsFastCall() * Stack::WORD_SIZE;
