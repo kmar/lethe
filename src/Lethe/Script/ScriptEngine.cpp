@@ -953,9 +953,9 @@ bool ScriptEngine::StartDebugServer()
 {
 	LETHE_RET_FALSE(mode == ENGINE_DEBUG && debugServer);
 
-	auto contexts = GetContexts();
+	auto lcontexts = GetContexts();
 
-	for (auto &it : contexts)
+	for (auto &it : lcontexts)
 		it->onDebugBreak.Set(debugServer.Get(), &DebugServer::OnDebugBreak);
 
 	return debugServer->Start();
