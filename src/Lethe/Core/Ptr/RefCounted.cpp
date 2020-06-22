@@ -27,7 +27,7 @@ void LETHE_NOINLINE RefCounted::CustomDeleteObjectSkeleton() const
 
 RefCounted::CustomDeleterFunc RefCounted::GetCustomDeleter() const
 {
-	return [](const void *ptr){delete reinterpret_cast<const Byte *>(ptr);};
+	return [](const void *ptr){((RefCounted *)ptr)->operator delete((void *)ptr);};
 }
 
 }

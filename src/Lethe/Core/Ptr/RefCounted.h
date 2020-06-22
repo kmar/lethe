@@ -25,6 +25,21 @@ public:
 	inline RefCounted() : strongRefCount(0), weakRefCount(1) {}
 	inline RefCounted(const RefCounted &) : strongRefCount(0), weakRefCount(1) {}
 
+	inline void *operator new(size_t sz)
+	{
+		return new Byte[sz];
+	}
+
+	inline void *operator new(size_t sz, const std::nothrow_t &) throw()
+	{
+		return new(std::nothrow) Byte[sz];
+	}
+
+	inline void operator delete(void *ptr)
+	{
+		return delete[] static_cast<Byte *>(ptr);
+	}
+
 	virtual inline ~RefCounted()
 	{
 		// FIXME: we can't test weakRefCount to 0
