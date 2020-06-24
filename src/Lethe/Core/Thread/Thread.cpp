@@ -43,6 +43,7 @@ static void *ThreadProc(void *param)
 Thread::Thread()
 	: handle(nullptr)
 	, killFlag(0)
+	, completedFlag(0)
 {
 }
 
@@ -97,6 +98,7 @@ void Thread::Kill()
 void Thread::PrivateStartWork()
 {
 	Work();
+	Atomic::Store(completedFlag, 1u);
 }
 
 void Thread::Work()

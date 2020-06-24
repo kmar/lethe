@@ -29,9 +29,13 @@ DebugServer::~DebugServer()
 	if (serverThreadSocket)
 		serverThreadSocket->Close();
 
-	// and clients
-	for (auto *it : clients)
-		it->Close();
+	{
+		MutexLock lock(clientMutex);
+
+		// and clients
+		for (auto *it : clients)
+			it->Close();
+	}
 
 	clientThreads.Clear();
 	serverThread.Clear();
@@ -416,6 +420,11 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			continue;
 		}
 	}
+
+	MutexLock lock(clientMutex);
+	auto idx = clients.FindIndex(usocket.Get());
+	LETHE_ASSERT(idx >= 0);
+	clients.EraseIndex(idx);
 }
 
 void DebugServer::ServerThreadProc()
@@ -442,6 +451,11 @@ void DebugServer::ServerThreadProc()
 			GetEngine().onInfo("debugger connected");
 			MutexLock lock(clientMutex);
 			clients.Add(connected);
+
+			// clean up completed client threads
+			for (Int i=0; i<clientThreads.GetSize(); i++)
+				if (clientThreads[i]->HasCompleted())
+					clientThreads.EraseIndexFast(i--);
 
 			auto *cthread = new Thread;
 

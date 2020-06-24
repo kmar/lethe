@@ -20,6 +20,7 @@ class LETHE_API Thread : NoCopy, public RefCounted
 	void *handle;				// sys-specific handle
 protected:
 	AtomicUInt killFlag;		// killing flag
+	AtomicUInt completedFlag;	// body completed flag
 public:
 	typedef void *Id;
 
@@ -52,6 +53,12 @@ public:
 	inline bool GetKillFlag() const
 	{
 		return Atomic::Load(killFlag) != 0;
+	}
+
+	// true if thread body has completed
+	inline bool HasCompleted() const
+	{
+		return Atomic::Load(completedFlag) != 0;
 	}
 
 	// sleep in ms

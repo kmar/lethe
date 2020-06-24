@@ -40,6 +40,11 @@ public:
 		return delete[] static_cast<Byte *>(ptr);
 	}
 
+	inline void operator delete(void *ptr, const std::nothrow_t &) throw()
+	{
+		return delete[] static_cast<Byte *>(ptr);
+	}
+
 	virtual inline ~RefCounted()
 	{
 		// FIXME: we can't test weakRefCount to 0
