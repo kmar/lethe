@@ -171,7 +171,10 @@ bool AstUnaryOp::CodeGenOperator(CompiledProgram &p)
 	if (left.IsStruct())
 	{
 		auto scope = left.GetType().structScopeRef;
-		LETHE_ASSERT(scope);
+
+		if (!scope)
+			return p.Error(this, "no struct scope");
+
 		op = scope->FindOperator(p, opName, left);
 	}
 

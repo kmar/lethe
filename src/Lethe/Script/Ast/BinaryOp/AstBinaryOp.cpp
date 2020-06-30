@@ -738,14 +738,20 @@ bool AstBinaryOp::CodeGenOperator(CompiledProgram &p)
 	if (left.IsStruct())
 	{
 		auto *scope = left.GetType().structScopeRef;
-		LETHE_ASSERT(scope);
+
+		if (!scope)
+			return p.Error(this, "no struct scope for lhs");
+
 		op = scope->FindOperator(p, opName, left, right);
 	}
 
 	if (right.IsStruct() && &left.GetType() != &right.GetType())
 	{
 		auto *scope = right.GetType().structScopeRef;
-		LETHE_ASSERT(scope);
+
+		if (!scope)
+			return p.Error(this, "no struct scope for rhs");
+
 		auto nop = scope->FindOperator(p, opName, left, right);
 
 		if (!op)
