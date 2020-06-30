@@ -203,6 +203,10 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 		if (targ && targ->type == AST_NPROP_METHOD)
 			return true;
 
+		// this fixes is() call
+		if (targ && (targ->qualifiers & (AST_Q_NATIVE | AST_Q_INTRINSIC | AST_Q_METHOD)) == (AST_Q_NATIVE | AST_Q_INTRINSIC | AST_Q_METHOD))
+			return true;
+
 		auto dt = nodes[IDX_RIGHT]->GetTypeDesc(p);
 		dt.qualifiers |= AST_Q_REFERENCE;
 		p.PopStackType(true);
