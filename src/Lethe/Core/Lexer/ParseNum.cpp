@@ -447,12 +447,11 @@ static Double ParseDoubleFraction(Stream &s, const char **err, Double add = 0)
 	}
 
 	Double res = 0;
-	Double div = 1;
+	Double div = 10;
 
 	do
 	{
-		res *= 10;
-		res += ch - '0';
+		res += (ch - '0') / div;
 		div *= 10;
 		ch = s.GetByte();
 
@@ -476,7 +475,7 @@ static Double ParseDoubleFraction(Stream &s, const char **err, Double add = 0)
 		scl = ParseDoubleExponent(s, err);
 
 	*err = 0;
-	return res * scl / div + add * scl;
+	return res * scl + add * scl;
 }
 
 Double ParseDoubleInternal(Stream &s, const char **err)
