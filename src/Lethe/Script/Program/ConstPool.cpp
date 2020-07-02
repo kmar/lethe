@@ -58,8 +58,8 @@ Int ConstPool::AllocGlobal(const QDataType &dt)
 	return res;
 }
 
-template< typename T >
-Int ConstPool::AddElem(T val, Array<T> &vlist, HashMap<T, Int> &vmap)
+template< typename T, typename U >
+Int ConstPool::AddElem(T val, Array<U> &vlist, HashMap<T, Int> &vmap)
 {
 	Int idx = vmap.FindIndex(val);
 
@@ -119,12 +119,12 @@ Int ConstPool::Add(ULong val)
 
 Int ConstPool::Add(Float val)
 {
-	return AddElem(val, fPool, fPoolMap);
+	return AddElem(HashableFloat<Float>(val), fPool, fPoolMap);
 }
 
 Int ConstPool::Add(Double val)
 {
-	return AddElem(val, dPool, dPoolMap);
+	return AddElem(HashableFloat<Double>(val), dPool, dPoolMap);
 }
 
 Int ConstPool::Add(const String &val)

@@ -16,6 +16,34 @@ class Stack;
 class DataType;
 struct QDataType;
 
+template<typename T>
+struct HashableFloat
+{
+	inline HashableFloat() {}
+
+	// treat negative zero as zero
+	inline HashableFloat(T v)
+		: value (!v  ? (T)0 : v)
+	{
+	}
+
+	inline operator T() const { return value; }
+
+	inline bool operator ==(const HashableFloat& o) const
+	{
+		// this way we can compare NaNs for equality
+		return MemCmp(&value, &o.value, sizeof(value)) == 0;
+	}
+
+	inline bool operator !=(const HashableFloat& o) const
+	{
+		return !(*this == o);
+	}
+
+private:
+	T value;
+};
+
 struct NativeClass
 {
 	// fully qualified name
@@ -119,8 +147,8 @@ public:
 	// align data
 	void Align(Int align);
 
-	HashMap< Float, Int > fPoolMap;
-	HashMap< Double, Int > dPoolMap;
+	HashMap<HashableFloat<Float>, Int> fPoolMap;
+	HashMap<HashableFloat<Double>, Int> dPoolMap;
 	// name => offset
 	HashMap<String, Int> globalVars;
 
@@ -128,14 +156,14 @@ public:
 	mutable AtomicInt liveScriptObjects = 0;
 
 private:
-	HashMap< Byte, Int > bPoolMap;
-	HashMap< UShort, Int > usPoolMap;
-	HashMap< UInt, Int > iPoolMap;
-	HashMap< ULong, Int > lPoolMap;
-	HashMap< String, Int > sPoolMap;
-	HashMap< Name, Int > nPoolMap;
-	HashMap< String, Int > nFunPoolMap;
-	HashMap< String, Int > nClassPoolMap;
+	HashMap<Byte, Int> bPoolMap;
+	HashMap<UShort, Int> usPoolMap;
+	HashMap<UInt, Int> iPoolMap;
+	HashMap<ULong, Int> lPoolMap;
+	HashMap<String, Int> sPoolMap;
+	HashMap<Name, Int> nPoolMap;
+	HashMap<String, Int> nFunPoolMap;
+	HashMap<String, Int> nClassPoolMap;
 
 	// offsets for global baked strings
 	Array<Int> globalBakedStrings;
@@ -143,8 +171,8 @@ private:
 	// maximum data alignment
 	Int dataAlign;
 
-	template< typename T >
-	static Int AddElem(T val, Array<T> &vlist, HashMap<T, Int> &vmap);
+	template< typename T, typename U >
+	static Int AddElem(T val, Array<U> &vlist, HashMap<T, Int> &vmap);
 
 	Int BindNativeClassInternal(const String &cname, Int size, Int align, void (*ctor)(void *inst), void (*dtor)(void *inst), bool isStruct);
 	Int FindNativeClassInternal(const String &cname, bool isStruct) const;
