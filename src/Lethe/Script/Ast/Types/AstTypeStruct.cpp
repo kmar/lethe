@@ -387,6 +387,9 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 		auto *mn = n->nodes[0];
 		auto mtype = mn->GetTypeDesc(p);
 
+		// copy editable qualifier to members
+		mtype.qualifiers |= qualifiers & AST_Q_EDITABLE;
+
 		if (mn->qualifiers & AST_Q_NATIVE)
 			++nativeMembers;
 		else
