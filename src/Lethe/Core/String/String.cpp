@@ -1818,8 +1818,8 @@ UInt Hash(const String &s)
 {
 	if (LETHE_UNLIKELY(!s.data))
 	{
-		// TODO: cache
-		return HashBuffer(0, 0);
+		// equals to HashBuffer(0, 0);
+		return 0x424c5fbfu;
 	}
 
 	LETHE_ASSERT(s.data);
