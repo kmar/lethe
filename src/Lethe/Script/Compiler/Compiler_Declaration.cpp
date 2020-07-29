@@ -218,7 +218,7 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 	if (currentScope->IsLocal())
 		ntype->qualifiers |= AST_Q_LOCAL_INT;
 
-	auto staticVar = ntype->qualifiers & AST_Q_STATIC;
+	auto typeQualifiers = ntype->qualifiers & (AST_Q_STATIC | AST_Q_PRIVATE | AST_Q_PROTECTED);
 
 	UniquePtr<AstNode> res = NewAstNode<AstVarDeclList>(ts->PeekToken().location);
 	Swap(AstStaticCast<AstVarDeclList *>(res.Get())->attributes, attributes);
@@ -313,7 +313,7 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 		if (refFirstInit && idx == 0 && init)
 			vn->flags |= AST_F_REFERENCED;
 
-		vn->qualifiers |= staticVar;
+		vn->qualifiers |= typeQualifiers;
 
 		auto *varNameRef = nname.Get();
 
