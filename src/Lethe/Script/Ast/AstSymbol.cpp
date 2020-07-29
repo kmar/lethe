@@ -323,7 +323,23 @@ bool AstSymbol::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 bool AstSymbol::TypeGen(CompiledProgram &p)
 {
 	if (!target)
-		return p.Error(this, String::Printf("symbol not found: `%s'", text.Ansi()));
+	{
+		auto txt = text;
+		AstNode *reportNode = this;
+
+		if (type == AST_OP_SCOPE_RES && txt.IsEmpty() && !nodes.IsEmpty())
+		{
+			auto *n = nodes.Back();
+
+			if (n->type == AST_IDENT)
+			{
+				txt = AstStaticCast<AstText *>(n)->text;
+				reportNode = n;
+			}
+		}
+
+		return p.Error(reportNode, String::Printf("symbol not found: `%s'", txt.Ansi()));
+	}
 
 	// check accessibility
 	auto *thisScope = scopeRef->FindThis(true);
