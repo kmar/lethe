@@ -122,6 +122,7 @@ private:
 
 	UniquePtr<NamedScope> globalScope;
 	NamedScope *currentScope;
+	AstNode *currentProgram;
 
 	// special scopes for resolving native types
 	NamedScope *nullScope;
@@ -257,6 +258,8 @@ private:
 	AstText *NewAstText(const char *ntext, const TokenLocation &nloc);
 	template< typename T >
 	AstText *NewAstTextRef(StringRef ntext, const TokenLocation &nloc);
+
+	bool ValidateVirtualProp(const AstNode *pfun, bool isGetter);
 
 	// initialize resolve scopes for native types/arrays
 	void InitNativeTypeScopes();

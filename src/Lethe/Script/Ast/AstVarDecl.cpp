@@ -148,6 +148,9 @@ void AstVarDecl::AddLiveRefs(AstNode *n)
 
 bool AstVarDecl::CodeGen(CompiledProgram &p)
 {
+	if (qualifiers & AST_Q_PROPERTY)
+		return true;
+
 	// FIXME: refactor, this code is super-messy with copy-pasted code!!!
 	// should have similar logic for all scopes
 
@@ -422,6 +425,5 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 
 	return false;
 }
-
 
 }

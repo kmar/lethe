@@ -375,8 +375,32 @@ int main()
 	native direct_native_class spawn2();
 	native void pass_ptr(direct_native_class cls);
 
+	struct props
+	{
+		int _x;
+
+		int x:
+		{
+			inline int get() const
+			{
+				return 42;
+			}
+
+			// can be void to prevent assignment-chains
+			inline int set(int value)
+			{
+				"setting x to %t\n", value;
+				_x = value;
+				return value;
+			}
+		}
+	}
+
 	void main()
 	{
+		props proptest;
+		proptest.x += 55;
+
 		object o = new object;
 		array<int> iarr;
 		iarr.add(42);

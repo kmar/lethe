@@ -1,6 +1,7 @@
 #include "AstAssignOp.h"
 #include "../CodeGenTables.h"
 #include "../NamedScope.h"
+#include "../AstSymbol.h"
 #include <Lethe/Script/Ast/Function/AstCall.h>
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Stack.h>
@@ -104,6 +105,23 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 {
 	// FIXME: currently a bit hacky!
 	LETHE_ASSERT(type != AST_OP_ASSIGN);
+
+	auto *rnode = nodes[IDX_LEFT];
+
+	if (rnode->type == AST_OP_DOT)
+		rnode = rnode->nodes[1];
+
+	if (rnode->qualifiers & AST_Q_PROPERTY)
+	{
+		AstBinaryOp binop(type, location);
+		binop.nodes = nodes;
+
+		auto res = AstSymbol::CallPropertySetter(p, nodes[0], &binop);
+
+		binop.nodes.Clear();
+
+		return res;
+	}
 
 	auto leftType = nodes[IDX_LEFT]->GetTypeDesc(p);
 
@@ -415,6 +433,7 @@ bool AstAssignOp::CodeGenCommon(CompiledProgram &p, bool needConv, bool asRef, b
 		return p.Error(this, "incompatible types");
 
 	bool pop = ShouldPop();
+
 	QDataType rhs;
 	Int ssize;
 	bool structOnStack;

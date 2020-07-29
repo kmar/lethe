@@ -107,6 +107,11 @@ bool AstScopeResOp::ResolveNode(const ErrorHandler &)
 	qualifiers |= newNode->qualifiers;
 	flags |= newNode->flags;
 	target = newNode->target;
+
+	// copy property flag from target
+	if (target)
+		qualifiers |= target->qualifiers & AST_Q_PROPERTY;
+
 	symScopeRef = target->scopeRef;
 
 	// copy underlying nodes because of templates

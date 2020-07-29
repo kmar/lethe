@@ -463,6 +463,10 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 			if (!msize)
 				return p.Error(vn, "illegal member type");
 
+			// virtual property?
+			if (mn->qualifiers & AST_Q_PROPERTY)
+				malign = msize = 0;
+
 			Int mofs = 0;
 
 			// handle native members...
@@ -480,7 +484,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 				// native members destroyed by native dtor
 				mtype.qualifiers |= AST_Q_SKIP_DTOR;
 			}
-			else
+			else if (msize)
 			{
 				// align offset
 				ofs   += malign-1;

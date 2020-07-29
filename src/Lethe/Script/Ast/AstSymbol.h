@@ -32,8 +32,13 @@ public:
 
 	bool CanPassByReference(const CompiledProgram &) const override
 	{
-		return true;
+		return (qualifiers & AST_Q_PROPERTY) == 0;
 	}
+
+	bool CallPropertyGetterLocal(CompiledProgram &p);
+	bool CallPropertyGetterViaPtr(CompiledProgram &p, AstNode *root);
+
+	static bool CallPropertySetter(CompiledProgram &p, AstNode *dnode, AstNode *snode);
 
 private:
 	bool Validate(const CompiledProgram &) const;

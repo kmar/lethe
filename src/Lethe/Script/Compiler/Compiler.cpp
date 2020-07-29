@@ -41,6 +41,7 @@ const String &Compiler::AddString(const char *str)
 
 Compiler::Compiler(Threaded, AtomicInt *pstaticInitCtr)
 	: currentScope(nullptr)
+	, currentProgram(nullptr)
 	, nofail(0)
 	, templateAccum(0)
 	, staticInitCounter(0)
@@ -51,7 +52,8 @@ Compiler::Compiler(Threaded, AtomicInt *pstaticInitCtr)
 }
 
 Compiler::Compiler()
-	: currentScope(0)
+	: currentScope(nullptr)
+	, currentProgram(nullptr)
 	, nofail(0)
 	, templateAccum(0)
 	, staticInitCounter(0)
@@ -372,6 +374,7 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 	LETHE_RET_FALSE(CheckDepth(depth));
 	UniquePtr<AstNode> res = NewAstNode<AstProgram>(ts->PeekToken().location);
 	AstNode *cur = res.Get();
+	currentProgram = cur;
 
 	// using namespace stack...
 	Array<NamespaceStack> namespaces;
@@ -748,7 +751,7 @@ bool Compiler::Resolve(bool ignoreErrors)
 	{
 		++resolveSteps;
 
-		auto rres = progList->ResolveAsync(eh);
+		auto rres = progList->Resolve(eh);
 
 		if (rres == AstNode::RES_ERROR)
 		{

@@ -177,7 +177,7 @@ AstNode *NamedScope::FindLabel(const String &sname) const
 	return nullptr;
 }
 
-AstNode *NamedScope::FindSymbol(const String &sname, bool chainbase, bool chainparent) const
+AstNode *NamedScope::FindSymbol(const StringRef &sname, bool chainbase, bool chainparent) const
 {
 	// because of templates
 	if (nameAlias == sname)

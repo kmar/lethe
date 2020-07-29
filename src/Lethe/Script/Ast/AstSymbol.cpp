@@ -4,8 +4,11 @@
 #include "Constants/AstConstant.h"
 #include "Constants/AstConstInt.h"
 #include "Function/AstFunc.h"
+#include "Function/AstCall.h"
 #include "Types/AstTypeClass.h"
 #include "Types/AstTypeInt.h"
+#include "Types/AstTypeVoid.h"
+#include "BinaryOp/AstDotOp.h"
 
 #include "Constants/AstConstName.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
@@ -110,6 +113,11 @@ bool AstSymbol::ResolveNode(const ErrorHandler &e)
 
 		target = sym;
 		target->flags |= AST_F_REFERENCED;
+
+		// copy property flag from target
+		if (target->qualifiers & AST_Q_PROPERTY)
+			qualifiers |= AST_Q_PROPERTY;
+
 		flags |= AST_F_RESOLVED;
 	}
 
@@ -172,6 +180,7 @@ QDataType AstSymbol::GetTypeDesc(const CompiledProgram &p) const
 	}
 
 	res.qualifiers |= qualifiers;
+
 	return res;
 }
 
@@ -180,11 +189,15 @@ bool AstSymbol::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 	LETHE_RET_FALSE(Validate(p));
 
 	LETHE_ASSERT(target);
+
+	if (qualifiers & AST_Q_PROPERTY)
+		return p.Error(this, "can't generate reference to virtual property");
+
 	const NamedScope *lscopeRef = target->scopeRef;
 	QDataType dt = target->GetTypeDesc(p);
 
 	if (!allowConst && dt.IsConst() && !(qualifiers & AST_Q_CAN_MODIFY_CONSTANT))
-		return p.Error(this, "cannot modify constant");
+		return p.Error(this, "cannot modify a constant");
 
 	LETHE_ASSERT(parent);
 
@@ -406,6 +419,9 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 		return true;
 
 	LETHE_RET_FALSE(Validate(p));
+
+	if (qualifiers & AST_Q_PROPERTY)
+		return CallPropertyGetterLocal(p);
 
 	p.SetLocation(location);
 
@@ -708,6 +724,100 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 
 	p.PushStackType(dt);
 	return true;
+}
+
+bool AstSymbol::CallPropertyGetterLocal(CompiledProgram &p)
+{
+	return CallPropertyGetterViaPtr(p, this);
+}
+
+bool AstSymbol::CallPropertyGetterViaPtr(CompiledProgram &p, AstNode *root)
+{
+	LETHE_ASSERT(symScopeRef);
+
+	AstNode *ftarget;
+
+	// inside block to save stack space
+	{
+		StringBuilder sb;
+		sb += "__get_";
+		sb += text;
+		ftarget = symScopeRef->FindSymbol(sb.Get());
+	}
+
+	if (!ftarget || ftarget->type != AST_FUNC)
+		return p.Error(ftarget ? ftarget : this, "property getter not found");
+
+	auto retType = AstStaticCast<AstFunc *>(ftarget)->nodes[AstFunc::IDX_RET]->GetTypeDesc(p);
+	auto wantType = GetTypeDesc(p);
+
+	p.SetLocation(location);
+
+	// synthesize call
+	AstCall tcall(location);
+
+	tcall.nodes.Add(root);
+	tcall.scopeRef = root->scopeRef;
+	tcall.forceFunc = ftarget;
+	tcall.parent = root->parent;
+
+	bool res = tcall.CodeGen(p);
+
+	tcall.nodes.Clear();
+
+	if (res)
+		res = p.EmitConv(this, retType, wantType.GetType());
+
+	return res;
+}
+
+bool AstSymbol::CallPropertySetter(CompiledProgram &p, AstNode *dnode, AstNode *snode)
+{
+	auto *symNode = dnode;
+
+	if (dnode->type == AST_OP_DOT)
+		symNode = dnode->nodes[1];
+
+	if (symNode->type != AST_IDENT)
+		return p.Error(symNode, "not a symbol");
+
+	auto *sym = AstStaticCast<AstSymbol *>(symNode);
+
+	AstNode *ftarget;
+
+	// inside block to save stack space
+	{
+		StringBuilder sb;
+		sb += "__set_";
+		sb += sym->text;
+		ftarget = sym->symScopeRef->FindSymbol(sb.Get());
+	}
+
+	if (!ftarget || ftarget->type != AST_FUNC)
+		return p.Error(ftarget ? ftarget : sym, "property setter not found");
+
+	// synthesize call
+	AstCall tcall(sym->location);
+
+	auto *dot = AstStaticCast<AstDotOp *>(dnode->type == AST_OP_DOT ? dnode : nullptr);
+
+	if (dot)
+		dot->LockProp();
+
+	tcall.nodes.Add(dnode);
+	tcall.nodes.Add(snode);
+	tcall.scopeRef = sym->scopeRef;
+	tcall.forceFunc = ftarget;
+	tcall.parent = dnode->parent;
+
+	bool res = tcall.CodeGen(p);
+
+	if (dot)
+		dot->UnlockProp();
+
+	tcall.nodes.Clear();
+
+	return res;
 }
 
 

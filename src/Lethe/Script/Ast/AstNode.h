@@ -385,9 +385,6 @@ public:
 	ResolveResult ResolveFrom(const ErrorHandler &e, Int fromIdx);
 	bool IsResolved() const;
 
-	ResolveResult ResolveAsync(const ErrorHandler &e);
-	ResolveResult ResolveFromAsync(const ErrorHandler &e, Int fromIdx);
-
 	// is elementary type?
 	virtual bool IsElemType() const;
 	// promote small int types to int, used by ADL validation

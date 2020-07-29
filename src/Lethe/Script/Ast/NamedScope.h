@@ -82,7 +82,7 @@ public:
 	// full recursive scan
 	AstNode *FindSymbolFull(const String &sname, const NamedScope *&nscope, bool baseOnly = false) const;
 	// this one doesn't recurse by default
-	AstNode *FindSymbol(const String &sname, bool chainbase = false, bool chainparent = false) const;
+	AstNode *FindSymbol(const StringRef &sname, bool chainbase = false, bool chainparent = false) const;
 
 	// full recursive scan until function scope
 	AstNode *FindLabel(const String &sname) const;

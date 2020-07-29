@@ -7,6 +7,8 @@ namespace lethe
 
 class LETHE_API AstDotOp : public AstNode
 {
+	LETHE_BUCKET_ALLOC(AstDotOp)
+
 public:
 	LETHE_AST_NODE(AstDotOp)
 
@@ -40,6 +42,12 @@ public:
 	{
 		return nodes[IDX_RIGHT]->CanPassByReference(p);
 	}
+
+	void LockProp();
+	void UnlockProp();
+
+private:
+	Int refPropLock = 0;
 };
 
 

@@ -196,6 +196,20 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 	return res;
 }
 
+bool Compiler::ValidateVirtualProp(const AstNode *pfun, bool isGetter)
+{
+	auto *fn = AstStaticCast<const AstFunc *>(pfun);
+	auto *args = fn->nodes[AstFunc::IDX_ARGS];
+
+	if (args->nodes.GetSize() != !isGetter)
+	{
+		ExpectPrev(false, "invalid argument count for virtual property get/set");
+		return false;
+	}
+
+	return true;
+}
+
 AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &nname, Int depth,
 								bool refFirstInit, bool initOnly)
 {
@@ -301,14 +315,124 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 
 		vn->qualifiers |= staticVar;
 
+		auto *varNameRef = nname.Get();
+
 		vn->Add(nname.Detach());
 
 		if (init)
 			vn->Add(init.Detach());
 
+		auto *vnptr = vn.Get();
+
 		res->Add(vn.Detach());
 		// now stop or continue parsing
 		TokenType ntt = ts->PeekToken().type;
+
+		// : { ... virtual_props ... }
+		// I decided to use extra colon so that I don't close doors to modern C++-style constructor calls, like int i{1};
+		if (ntt == TOK_COLON)
+		{
+			ts->ConsumeToken();
+			ntt = ts->PeekToken().type;
+
+			if (ntt != TOK_LBLOCK)
+			{
+				Expect(false, "`{' expected to start virtual property block");
+				return nullptr;
+			}
+
+			if (currentScope->IsLocal())
+			{
+				ExpectPrev(false, "local virtual properties not supported");
+				return nullptr;
+			}
+
+			// [0] = type, [1+] = var decls
+			if (res->nodes.GetSize() != 2)
+			{
+				ExpectPrev(false, "virtual properties can only be defined for a single variable (parsing restriction)");
+				return nullptr;
+			}
+
+			// virtual property
+			if (vnptr->nodes.GetSize() > 1)
+			{
+				ExpectPrev(false, "virtual properties cannot be initialized");
+				return nullptr;
+			}
+
+			const auto &varNameText = AstStaticCast<AstText *>(varNameRef)->text;
+
+			ts->ConsumeToken();
+
+			for (;;)
+			{
+				if (ts->PeekToken().type == TOK_RBLOCK)
+				{
+					ts->ConsumeToken();
+					break;
+				}
+
+				UniquePtr<AstNode>ftype = ParseType(depth+1);
+				LETHE_RET_FALSE(ftype);
+				UniquePtr<AstNode> fname = ParseName(depth+1);
+				LETHE_RET_FALSE(fname);
+				fname->flags |= AST_F_RESOLVED;
+				auto *ftext = AstStaticCast<AstText *>(fname);
+				StringBuilder sb;
+
+				const bool isGetter = ftext->text == "get";
+
+				if (ftext->text != "get" && ftext->text != "set")
+				{
+					ExpectPrev(false, "virtual property functions must be `set' or `get'");
+					return nullptr;
+				}
+
+				if (ts->PeekToken().type != TOK_LBR)
+				{
+					Expect(false, "expected `('");
+					return nullptr;
+				}
+
+				// build __get_varname etc.
+				sb.AppendFormat("__%s_%s", ftext->text.Ansi(), varNameText.Ansi());
+				ftext->text = AddStringRef(sb.Get());
+				UniquePtr<AstNode> pfun = ParseFuncDecl(ftype, fname, depth+1);
+				LETHE_RET_FALSE(pfun);
+
+				LETHE_RET_FALSE(ValidateVirtualProp(pfun, isGetter));
+
+				if (currentScope->IsComposite() && !(pfun->qualifiers & AST_Q_STATIC))
+				{
+					pfun->qualifiers |= AST_Q_METHOD;
+
+					if (currentScope->type == NSCOPE_CLASS)
+					{
+						// mark non-final class methods as virtual
+						if (!(pfun->qualifiers & AST_Q_FINAL))
+							pfun->qualifiers |= AST_Q_VIRTUAL;
+					}
+				}
+
+				AddScopeMember(ftext->text, pfun);
+
+				auto *tnode = currentScope->node;
+
+				// assume if no current scope node, assume global
+				if (!tnode)
+					tnode = currentProgram;
+
+				tnode->Add(pfun.Detach());
+			}
+
+			// set qualifier flag
+			vnptr->qualifiers |= AST_Q_PROPERTY;
+			// mark type with property
+			res->nodes[0]->qualifiers |= AST_Q_PROPERTY;
+
+			return res.Detach();
+		}
 
 		if (ntt == TOK_SEMICOLON || ntt == TOK_RBR || ntt == TOK_RBLOCK || ntt == TOK_COLON)
 			return res.Detach();

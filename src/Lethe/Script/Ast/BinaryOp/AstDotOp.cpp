@@ -9,6 +9,8 @@
 namespace lethe
 {
 
+LETHE_BUCKET_ALLOC_DEF(AstDotOp)
+
 // AstDotOp
 
 bool AstDotOp::FoldConst(const CompiledProgram &p)
@@ -149,6 +151,19 @@ bool AstDotOp::CodeGen(CompiledProgram &p)
 	AstNode *left = nodes[IDX_LEFT];
 	AstNode *right = nodes[IDX_RIGHT];
 
+	// handle virtual props
+	if (right->qualifiers & AST_Q_PROPERTY)
+	{
+		if (right->type != AST_IDENT)
+			return p.Error(right, "doesn't resolve to virtual property");
+
+		LockProp();
+		auto res = AstStaticCast<AstSymbol *>(right)->CallPropertyGetterViaPtr(p, this);
+		UnlockProp();
+
+		return res;
+	}
+
 	LETHE_RET_FALSE(left->CodeGenRef(p, 1, 1));
 	// ok, we have pointer on top of stack...
 
@@ -197,6 +212,14 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 
 	if (right->type == AST_IDENT)
 	{
+		if (right->qualifiers & AST_Q_PROPERTY)
+		{
+			if (refPropLock)
+				return true;
+
+			return p.Error(right, "cannot generate virtual property reference");
+		}
+
 		auto targ = right->target;
 
 		// handle native method props
@@ -273,5 +296,14 @@ bool AstDotOp::TypeGen(CompiledProgram &p)
 	return true;
 }
 
+void AstDotOp::LockProp()
+{
+	++refPropLock;
+}
+
+void AstDotOp::UnlockProp()
+{
+	--refPropLock;
+}
 
 }

@@ -1,4 +1,5 @@
 #include "AstBinaryAssign.h"
+#include "../AstSymbol.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
 
@@ -37,6 +38,14 @@ bool AstBinaryAssign::CodeGenMaybeConst(CompiledProgram &p, bool allowConst)
 
 bool AstBinaryAssign::CodeGen(CompiledProgram &p)
 {
+	auto *rnode = nodes[0];
+
+	if (rnode->type == AST_OP_DOT)
+		rnode = rnode->nodes[1];
+
+	if (rnode->qualifiers & AST_Q_PROPERTY)
+		return AstSymbol::CallPropertySetter(p, nodes[0], nodes[1]);
+
 	return CodeGenMaybeConst(p, false);
 }
 
