@@ -377,6 +377,7 @@ int main()
 
 	struct props
 	{
+		constexpr int foo = cast int 45.5;
 		int _x;
 
 		int x:
@@ -398,6 +399,7 @@ int main()
 
 	void main()
 	{
+		"props::foo=%t\n", props::foo;
 		props proptest;
 		proptest.x += 55;
 

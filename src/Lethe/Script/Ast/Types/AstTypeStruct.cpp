@@ -18,6 +18,9 @@ bool AstTypeStruct::FoldConst(const CompiledProgram &p)
 {
 	bool res = false;
 
+	if (qualifiers & AST_Q_TEMPLATE)
+		return res;
+
 	if (alignExpr && !alignExpr->IsConstant())
 	{
 		// FIXME: hack!

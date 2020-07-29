@@ -14,7 +14,14 @@ bool AstCast::FoldConst(const CompiledProgram &p)
 	if (!nodes[1]->IsConstant())
 		return res;
 
+	nodes[1]->qualifiers |= AST_Q_NO_WARNINGS;
 	LETHE_RET_FALSE(nodes[1]->ConvertConstTo(GetTypeDesc(p).GetTypeEnum(), p));
+
+	auto *n = nodes[1];
+	nodes.Resize(1);
+
+	LETHE_VERIFY(parent->ReplaceChild(this, n));
+	delete this;
 	return res;
 }
 

@@ -16,7 +16,8 @@ namespace lethe
 
 // AstConstant
 
-#define AST_CONST_CONV_WARN_IF(expr) do {if (dte != DT_BOOL && (expr)) p.Warning(this, "conversion loses precision", WARN_CONV_PRECISION);} while(false)
+#define AST_CONST_CONV_WARN_IF(expr) do {if (dte != DT_BOOL && (expr) && !(qualifiers & AST_Q_NO_WARNINGS)) \
+	p.Warning(this, "conversion loses precision", WARN_CONV_PRECISION);} while(false)
 
 #define AST_CONST_CONV_TO(T, id, src, res, OP)	\
 	switch(src) {	\
