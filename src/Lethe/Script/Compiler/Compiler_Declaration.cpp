@@ -330,7 +330,8 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 
 		// : { ... virtual_props ... }
 		// I decided to use extra colon so that I don't close doors to modern C++-style constructor calls, like int i{1};
-		if (ntt == TOK_COLON)
+		// also, ignored in local scope to avoid clashes with range based for loops
+		if (ntt == TOK_COLON && !currentScope->IsLocal())
 		{
 			ts->ConsumeToken();
 			ntt = ts->PeekToken().type;
@@ -338,12 +339,6 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 			if (ntt != TOK_LBLOCK)
 			{
 				Expect(false, "`{' expected to start virtual property block");
-				return nullptr;
-			}
-
-			if (currentScope->IsLocal())
-			{
-				ExpectPrev(false, "local virtual properties not supported");
 				return nullptr;
 			}
 
