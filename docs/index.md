@@ -10,11 +10,12 @@
 	* character literals
 
 * data types
-	* [null](#null_type) 
+	* [null](#null_type)
 	* [numeric](#numeric_types)
 	* [enum](#enum_type)
 	* [string](#string_type)
 	* [name](#name_type)
+	* [virtual property](#virtual_props)
 	* [struct](#struct_type)
 	* [class](#class_type)
 	* [pointer](#pointer_type)
@@ -38,7 +39,7 @@
 * **bool** (8-bit boolean)
 * **sbyte** (signed 8-bit integer)
 * **byte** (unsigned 8-bit integer)
-	* byte/ubyte would be tempting (consistency), but `byte = unsigned` was a clear choice 
+	* byte/ubyte would be tempting (consistency), but `byte = unsigned` was a clear choice
 * **short** (signed 16-bit integer)
 * **ushort** (unsigned 16-bit integer)
 * **char** (signed 32-bit integer)
@@ -61,7 +62,7 @@
 		B
 	}
 ```
-enums are always of type int and enum items injected directly into enclosing scope. scoped enums have to be emulated with namespaces. 
+enums are always of type int and enum items injected directly into enclosing scope. scoped enums have to be emulated with namespaces.
 
 <a id="string_type"></a>
 #### strings
@@ -77,17 +78,42 @@ _triple quotes can be used to produce a raw string literal:_
 ```
 <a id="name_type"></a>
 #### names
-**name** is global unique string stored as a 32-bit integer (this may change in the future to 64-bit)  
-internally they are used for class names but are exposed to the scripting language  
+**name** is global unique string stored as a 32-bit integer (this may change in the future to 64-bit)
+internally they are used for class names but are exposed to the scripting language
 ```cpp
 'this is a name literal'
 ```
+<a id="virtual_props"></a>
+#### virtual properties
+virtual properties are disguised as member/global variables with custom logic implemented in getters/setters
+```cpp
+struct S
+{
+	// backing store
+	int _vprop;
+
+	// virtual property
+	int vprop:
+	{
+		inline int get() const
+		{
+			return _vprop;
+		}
+		// note: returning void will be faster but we won't be able to chain assignments
+		inline int set(int value)
+		{
+			_vprop = value;
+			return value;
+		}
+	}
+}
+```
 <a id="struct_type"></a>
 #### structs
-**struct** is a lightweight, POD-like data type. it can contain methods but has no vtable, so all methods are _final_.  
-they are not objects so structs don't work with pointers or delegates  
+**struct** is a lightweight, POD-like data type. it can contain methods but has no vtable, so all methods are _final_.
+they are not objects so structs don't work with pointers or delegates
 
-structs also have a unique ability to act as arrays if all its members are of the same type with empty base struct  
+structs also have a unique ability to act as arrays if all its members are of the same type with empty base struct
 this is very useful for vectors:
 ```cpp
 	struct my_vector
@@ -118,7 +144,7 @@ simple generics can be used with structs, but no specalization and no inheritanc
 class instances must be created using the new keyword or passed in externally as pointers
 only single inheritance is support and unlike C++, the default accessibility in a class is public instead of private
 
-delegates also only work with classes 
+delegates also only work with classes
 
 unlike structs, classes cannot be nested
 
@@ -126,7 +152,7 @@ intrinsic class methods:
 
 	final bool is(name base_class_name) const;
 
-simply returns if the class type of an instance is based on class of name base_class_name (there is no _is_ operator, but it should be more flexible as you can test against variables)  
+simply returns if the class type of an instance is based on class of name base_class_name (there is no _is_ operator, but it should be more flexible as you can test against variables)
 note than class name must be fully qualified if namespace is used
 
 	final name class_name() const
@@ -135,13 +161,13 @@ return name of instance class
 
 	void vtable(name new_class_name)
 
-allows to change vtable to compatible class type (must not define any new member variables to succeed)  
-useful to change behavior on the fly; however it's not thread-safe so one should be careful with this.  
+allows to change vtable to compatible class type (must not define any new member variables to succeed)
+useful to change behavior on the fly; however it's not thread-safe so one should be careful with this.
 vtable method is virtual and can be overridden
 
 <a id="pointer_type"></a>
 #### pointers
-Lethe doesn't use garbage collection so class instances (objects) are held in smart pointers.  
+Lethe doesn't use garbage collection so class instances (objects) are held in smart pointers.
 two types of smart pointers are available: strong pointers (default) and weak pointers:
 ```cpp
 	class MyClass
@@ -167,7 +193,7 @@ alternatively (using auto):
 	auto locked = mcw;
 	locked.x *= 10;
 ```
-smart pointers are implemented as intrusive. in order to reduce reference counting pressure, smart pointers passed by value are virtually converted raw pointers.  
+smart pointers are implemented as intrusive. in order to reduce reference counting pressure, smart pointers passed by value are virtually converted raw pointers.
 
 a third type is supported, unsafe raw pointer (bypasses reference counting)
 ```cpp
@@ -179,7 +205,7 @@ there's also a special numeric type `pointer` aliasing the integer type necessar
 #### arrays / array references
 Lethe supports two types or arrays (static and dynamic) and a reference-only type (array reference/view).
 dynamic arrays are allocated on heap and are basically identical to std::vector in C++.
-internally a dynamic array consist of data pointer, int size and int capacity (in elements) 
+internally a dynamic array consist of data pointer, int size and int capacity (in elements)
 ```cpp
 	int[5] my_static_array = {1,2,3,4,5};
 	int my_static_array_1[5] = {1,2,3,4,5};
@@ -206,12 +232,12 @@ native properties can be used to determine array size:
 function pointers simply hold a pointer to non-methods
 ```cpp
 	void function(int x) my_func;
-	
+
 	void test(int x)
 	{
 		printf("testing...%d\n", x);
 	}
-	
+
 	void main()
 	{
 		my_func = test;
@@ -219,7 +245,7 @@ function pointers simply hold a pointer to non-methods
 		my_func(123);
 	}
 ```
-they must be checked for null before calling, the same holds for delegates (unless you're 100% sure it can't be null of course)  
+they must be checked for null before calling, the same holds for delegates (unless you're 100% sure it can't be null of course)
 this may change in the future so that the check is automatic, doing nothing if null (or simply returning default value), but it would prevent catching null function pointers
 ```cpp
 	if (my_func_ptr) my_func_ptr()
@@ -227,14 +253,14 @@ this may change in the future so that the check is automatic, doing nothing if n
 a delegate points to a method within object, they need classes to work. they can only be bound from within a method of an object to bind to:
 ```cpp
 	void delegate() dg;
-	
+
 	class A
 	{
 		void init()
 		{
 			dg = test;
 		}
-	
+
 		void test()
 		{
 			printf("test\n");
@@ -242,13 +268,13 @@ a delegate points to a method within object, they need classes to work. they can
 	}
 
 	...
-	
+
 	A a = new A;
 	a.init();
 	dg();
 ```
-delegates are internally represented as two pointers, raw instance pointer (this may change to weak pointer in the future; but this way it's faster and easier) and method pointer.  
-the method pointer is also used to encode vtable index for virtual methods  
+delegates are internally represented as two pointers, raw instance pointer (this may change to weak pointer in the future; but this way it's faster and easier) and method pointer.
+the method pointer is also used to encode vtable index for virtual methods
 in the above example, init binds dg to virtual method `test` (meaning vtable index is stored instead of method pointer). if instead
 ```cpp
 	dg = A::test;
@@ -319,7 +345,7 @@ can't skip over variable declarations
 * no preprocessor (though it would be really handy for assert)
 * no coroutines, just simple states that require manual support
 
-there's no plan to implement any of those, certainly not exceptions or garbage collection  
+there's no plan to implement any of those, certainly not exceptions or garbage collection
 in fact the primary reason for a new scripting language was state support (similar to what old UnrealScript did), but in the end I simply didn't implement this
 
 <a id="limitations"></a>
