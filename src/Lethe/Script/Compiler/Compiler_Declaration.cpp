@@ -112,6 +112,9 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 
+	if (currentScope->IsComposite())
+		ntype->qualifiers |= structAccess;
+
 	const NamedScope *oldScope = currentScope;
 
 	// arg scope
@@ -217,6 +220,9 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 
 	if (currentScope->IsLocal())
 		ntype->qualifiers |= AST_Q_LOCAL_INT;
+
+	if (currentScope->IsComposite())
+		ntype->qualifiers |= structAccess;
 
 	auto typeQualifiers = ntype->qualifiers & (AST_Q_STATIC | AST_Q_PRIVATE | AST_Q_PROTECTED);
 
@@ -1004,6 +1010,9 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	LETHE_RET_FALSE(CheckDepth(depth));
 	// after struct keyword
 
+	if (currentScope->IsComposite())
+		ntype->qualifiers |= structAccess;
+
 	const auto &at = ts->PeekToken();
 
 	if (at.type == TOK_IDENT && StringRef(at.text) == "alignas")
@@ -1144,6 +1153,10 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	}
 
 	// parse struct body
+
+	// reset struct access qualifiers
+	AccessGuard acg(this, 0);
+
 	for (;;)
 	{
 		const Token &nt = ts->PeekToken();
@@ -1230,6 +1243,36 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			LETHE_RET_FALSE(tdef);
 			ntype->Add(tdef.Detach());
 			continue;
+		}
+
+		// try to parse C++'s public:, private: and so on
+		if (nt.type == TOK_KEY_PUBLIC || nt.type == TOK_KEY_PRIVATE || nt.type == TOK_KEY_PROTECTED)
+		{
+			auto nttype = nt.type;
+
+			ts->ConsumeToken();
+
+			if (ts->PeekToken().type == TOK_COLON)
+			{
+				ts->ConsumeToken();
+
+				switch(nttype)
+				{
+				case TOK_KEY_PRIVATE:
+					structAccess = AST_Q_PRIVATE;
+					break;
+
+				case TOK_KEY_PROTECTED:
+					structAccess = AST_Q_PROTECTED;
+					break;
+
+				default:;
+					structAccess = 0;
+				}
+				continue;
+			}
+			else
+				ts->UngetToken();
 		}
 
 		if (nt.type == TOK_KEY_DEFAULT)

@@ -83,6 +83,26 @@ public:
 private:
 	static const Int MAX_DEPTH = 1024;
 
+	struct AccessGuard
+	{
+		AccessGuard(Compiler *ncomp, ULong nqualifiers)
+			: qualifiers(nqualifiers)
+			, oldStructAccess(ncomp->structAccess)
+			, comp(ncomp)
+		{
+		}
+
+		~AccessGuard()
+		{
+			comp->structAccess = oldStructAccess;
+		}
+
+	private:
+		ULong qualifiers;
+		ULong oldStructAccess;
+		Compiler *comp;
+	};
+
 	struct NamedScopeGuard
 	{
 		NamedScopeGuard()
@@ -123,6 +143,8 @@ private:
 	UniquePtr<NamedScope> globalScope;
 	NamedScope *currentScope;
 	AstNode *currentProgram;
+	// implied struct/class access (private/protected/none=public)
+	ULong structAccess;
 
 	// special scopes for resolving native types
 	NamedScope *nullScope;

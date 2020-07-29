@@ -782,6 +782,9 @@ AstNode *Compiler::ParseTypeDef(Int depth)
 	UniquePtr<AstNode> tmp = ParseType(depth + 1);
 	LETHE_RET_FALSE(tmp);
 
+	if (currentScope->IsComposite())
+		tmp->qualifiers |= structAccess;
+
 	UniquePtr<AstNode> name = ParseName(depth + 1);
 	LETHE_RET_FALSE(name);
 
@@ -813,6 +816,9 @@ AstNode *Compiler::ParseUsing(Int depth)
 
 	UniquePtr<AstNode> tmp = ParseType(depth + 1);
 	LETHE_RET_FALSE(tmp);
+
+	if (currentScope->IsComposite())
+		tmp->qualifiers |= structAccess;
 
 	name->flags |= AST_F_RESOLVED;
 
