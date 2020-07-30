@@ -126,6 +126,8 @@ struct LETHE_API QDataType
 	bool IsLongInt() const;
 	// is func_ptr to method?
 	bool IsMethodPtr() const;
+	// is virtual property?
+	bool IsProperty() const;
 
 	// try to get underlying type for enums, returns nullptr if not an enum
 	const DataType *GetEnumType() const;

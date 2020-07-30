@@ -418,13 +418,15 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 				mtype = mn->GetTypeDesc(p);
 		}
 
-		if (mtype.IsRecursive(typeRef.ref))
+		const bool skipTypegen = mtype.IsProperty() && mtype.ref == typeRef.ref;
+
+		if (!skipTypegen && mtype.IsRecursive(typeRef.ref))
 			return p.Error(mn, String::Printf("recursive member"));
 
 		if (type == AST_CLASS && (qualifiers & AST_Q_STATE) != 0)
 			return p.Error(mn, "state class cannot define new members");
 
-		if (mtype.GetTypeEnum() == DT_NONE || !mtype.GetSize())
+		if (!skipTypegen && (mtype.GetTypeEnum() == DT_NONE || !mtype.GetSize()))
 		{
 			if (!mn->target)
 				return p.Error(mn, "invalid member type");

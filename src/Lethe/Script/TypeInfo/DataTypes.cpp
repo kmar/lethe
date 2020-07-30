@@ -1398,6 +1398,11 @@ bool QDataType::IsMethodPtr() const
 	return GetTypeEnum() == DT_FUNC_PTR && (qualifiers & AST_Q_METHOD);
 }
 
+bool QDataType::IsProperty() const
+{
+	return (qualifiers & AST_Q_PROPERTY) != 0;
+}
+
 const DataType *QDataType::GetEnumType() const
 {
 	if (GetTypeEnum() == DT_ENUM)
