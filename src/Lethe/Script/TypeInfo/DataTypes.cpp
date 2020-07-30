@@ -1416,40 +1416,46 @@ bool QDataType::HasCtor() const
 	DataTypeEnum dte = GetTypeEnum();
 
 	if (qualifiers & AST_Q_CTOR)
-		return 1;
+		return true;
 
-	if (IsReference() || dte < DT_STRING)
-		return 0;
+	if (IsProperty() || IsReference() || dte < DT_STRING)
+		return false;
 
 	// note: dynamic arrays don't need ctor; zero-init will do
 	if (IsArray())
 		return dte == DT_DYNAMIC_ARRAY ? false : ref->elemType.HasCtor();
 
 	for (Int i = 0; ref && i < ref->members.GetSize(); i++)
-	{
 		if (ref->members[i].type.HasCtor())
-			return 1;
-	}
+			return true;
 
 	// TODO: more...
-	return ref ? ref->baseType.HasCtor() : 0;
+	return ref ? ref->baseType.HasCtor() : false;
 }
 
 bool QDataType::IsRecursive(const DataType *rec) const
 {
 	StackArray<QDataType, 64> stack;
+	StackArray<QDataType, 64> processed;
 
 	stack.Add(*this);
 
 	auto tryAdd = [&](const QDataType &qdt)
 	{
 		if (qdt.GetTypeEnum() != DT_NONE)
+		{
+			for (auto &&it : processed)
+				if (it == qdt)
+					return;
+
 			stack.Add(qdt);
+		}
 	};
 
 	while (!stack.IsEmpty())
 	{
 		auto qdt = stack.Back();
+		processed.Add(qdt);
 		stack.Pop();
 
 		auto dte = qdt.GetTypeEnum();
@@ -1476,7 +1482,7 @@ bool QDataType::HasDtor() const
 {
 	DataTypeEnum dte = GetTypeEnum();
 
-	if (qualifiers & AST_Q_SKIP_DTOR)
+	if (qualifiers & (AST_Q_SKIP_DTOR | AST_Q_PROPERTY))
 		return false;
 
 	if ((qualifiers & AST_Q_DTOR) || dte == DT_STRING || dte == DT_STRONG_PTR || dte == DT_WEAK_PTR || dte == DT_CLASS)
