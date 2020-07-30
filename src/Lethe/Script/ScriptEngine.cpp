@@ -732,14 +732,6 @@ bool ScriptEngine::Link(int linkFlags)
 		compileStats.cleanupTime += pw.Stop() / 1000000.0;
 	}
 
-	// remove virtual props from types
-	for (auto &it : program->types)
-	{
-		for (Int i=0; i<it->members.GetSize(); i++)
-			if (it->members[i].type.qualifiers & AST_Q_PROPERTY)
-				it->members.EraseIndex(i--);
-	}
-
 	return true;
 }
 

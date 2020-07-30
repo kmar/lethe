@@ -239,6 +239,14 @@ bool AstTypeStruct::CodeGenComposite(CompiledProgram &p)
 			return p.Error(this, "failed to generate constructors");
 	}
 
+	// it's safe to remove virtual properties from members now
+	// it's necessary for auto-indexed structs to work properly
+	for (Int i=0; i<qdt.ref->members.GetSize(); i++)
+	{
+		if (qdt.ref->members[i].type.qualifiers & AST_Q_PROPERTY)
+			const_cast<DataType *>(qdt.ref)->members.EraseIndex(i--);
+	}
+
 	return true;
 }
 
