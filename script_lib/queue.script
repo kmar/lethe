@@ -70,13 +70,13 @@ struct queue<T>
 	}
 
 	//---------------------------------------------------------------------
-	T front() const
+	inline T front() const
 	{
 		return data[fix_index(0)];
 	}
 
 	//---------------------------------------------------------------------
-	T back() const
+	inline T back() const
 	{
 		return data[fix_index(count-1)];
 	}
