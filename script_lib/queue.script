@@ -129,7 +129,6 @@ struct queue<T>
 	void shrink()
 	{
 		compact();
-		data.resize(count);
 		data.shrink();
 	}
 
@@ -143,6 +142,9 @@ struct queue<T>
 			start = 0;
 			end = count;
 		}
+
+		if (data.size != count)
+			data.resize(count);
 	}
 
 ///////////////////////////////////////////////////////////////////////////////
