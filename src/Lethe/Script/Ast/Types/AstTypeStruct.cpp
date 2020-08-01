@@ -328,7 +328,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 				return p.Error(this, "native struct/class cannot derive from script struct/class");
 		}
 
-		qualifiers |= baseNode->qualifiers & (AST_Q_NOCOPY | AST_Q_SET_ENTRY);
+		qualifiers |= baseNode->qualifiers & AST_Q_NOCOPY;
 
 		AstTypeStruct *sbase = AstStaticCast<AstTypeStruct *>(baseNode);
 

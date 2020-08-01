@@ -329,12 +329,6 @@ public:
 
 	size_t GetMemUsage() const;
 
-	// for set/map emulation
-	inline bool IsSetElemType() const
-	{
-		return (baseType.qualifiers & AST_Q_SET_ENTRY) != 0;
-	}
-
 private:
 	// class inheritance name list for dynamic casts (sorted)
 	mutable StackArray<Name, 16> isa;

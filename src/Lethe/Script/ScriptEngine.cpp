@@ -225,20 +225,6 @@ namespace __string
 	native static uint hash(string value);
 }
 
-// set entry base: (emulating red-black tree using array<>)
-__intrinsic __set_entry struct set_entry
-{
-	enum __node_color
-	{
-		BLACK = 0,
-		RED = 1
-	}
-	private int parent;
-	private int left;
-	private int right;
-	private __node_color color;
-}
-
 // intrinsic support for string and dynamic arrays
 native int __strlen();
 native int __str_trim();
@@ -287,10 +273,6 @@ native int __da_insert_sorted_unique(int elem);
 native void __da_push_heap(int elem);
 native int __da_pop_heap();
 native int __da_slice(int from, int to = -1);
-// predecessor/successor index in map
-native int __da_pred(int idx);
-native int __da_succ(int idx);
-native int __da_begin();
 )#"
 
 #if LETHE_32BIT

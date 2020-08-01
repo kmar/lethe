@@ -153,8 +153,6 @@ enum TokenTypeBase
 	TOK_KEY_INTRINSIC,
 	// __assert to mark assert dummy function
 	TOK_KEY_ASSERT,
-	// __set_entry for set/map emulation
-	TOK_KEY_SET_ENTRY,
 	TOK_KEY_INLINE,
 	TOK_KEY_DEFER,
 	TOK_KEY_NOCOPY,

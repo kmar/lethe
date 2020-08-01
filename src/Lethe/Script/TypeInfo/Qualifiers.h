@@ -38,38 +38,37 @@ enum AstQualifier : ULong
 	// TypeGen helper flag
 	AST_Q_REBUILD_MEMBER_TYPES = 1 << 23,
 	AST_Q_ASSERT	=	1 << 24,
-	AST_Q_SET_ENTRY	=	1 << 25,
-	AST_Q_EDITABLE	=	1 << 26,
-	AST_Q_PLACEABLE	=	1 << 27,
-	AST_Q_LATENT	=	1 << 28,
-	AST_Q_CONSTEXPR =   1 << 29,
-	AST_Q_STATE     =   1 << 30,
-	AST_Q_STATEBREAK =  (ULong)1 << 31,
-	AST_Q_TEMPLATE  =   (ULong)1 << 32,
+	AST_Q_EDITABLE	=	1 << 25,
+	AST_Q_PLACEABLE	=	1 << 26,
+	AST_Q_LATENT	=	1 << 27,
+	AST_Q_CONSTEXPR =   1 << 28,
+	AST_Q_STATE     =   1 << 29,
+	AST_Q_STATEBREAK =  (ULong)1 << 30,
+	AST_Q_TEMPLATE  =   (ULong)1 << 31,
 	// local variable symbol aliased via reference (because of JIT)
-	AST_Q_REF_ALIASED = (ULong)1 << 33,
+	AST_Q_REF_ALIASED = (ULong)1 << 32,
 	// necessary so that return succeeds (virtual assignment to result)
-	AST_Q_CAN_MODIFY_CONSTANT = (ULong)1 << 34,
+	AST_Q_CAN_MODIFY_CONSTANT = (ULong)1 << 33,
 	// tagged instantiated templates
-	AST_Q_TEMPLATE_INSTANTIATED = (ULong)1 << 35,
-	AST_Q_TYPEDEF_LOCK = (ULong)1 << 36,
+	AST_Q_TEMPLATE_INSTANTIATED = (ULong)1 << 34,
+	AST_Q_TYPEDEF_LOCK = (ULong)1 << 35,
 	// used to mark enum class
-	AST_Q_ENUM_CLASS = (ULong)1 << 37,
+	AST_Q_ENUM_CLASS = (ULong)1 << 36,
 	// raw pointer
-	AST_Q_RAW = (ULong)1 << 38,
+	AST_Q_RAW = (ULong)1 << 37,
 	// marking end_state deferred statement
-	AST_Q_NOSTATEBREAK =  (ULong)1 << 39,
+	AST_Q_NOSTATEBREAK =  (ULong)1 << 38,
 	// auto vardecl in range based for, need to infer from comparison instead
-	AST_Q_AUTO_RANGE_FOR =  (ULong)1 << 40,
+	AST_Q_AUTO_RANGE_FOR =  (ULong)1 << 39,
 	// nontrivial struct will force to call a ctor before copy (=can't be zero-init constructed)
-	AST_Q_NONTRIVIAL = (ULong)1 << 41,
+	AST_Q_NONTRIVIAL = (ULong)1 << 40,
 	// don't generate bounds check for this array type
-	AST_Q_NOBOUNDS = (ULong)1 << 42,
+	AST_Q_NOBOUNDS = (ULong)1 << 41,
 	// virtual property
-	AST_Q_PROPERTY = (ULong)1 << 43,
+	AST_Q_PROPERTY = (ULong)1 << 42,
 	// for constant folding to avoid warnings on cast
-	AST_Q_NO_WARNINGS = (ULong)1 << 44,
-	// note: 19 left
+	AST_Q_NO_WARNINGS = (ULong)1 << 43,
+	// note: 20 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

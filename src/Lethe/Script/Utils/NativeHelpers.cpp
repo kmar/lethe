@@ -79,69 +79,6 @@ struct DynamicArray
 	void Reverse(const DataType &dt);
 	void Sort(ScriptContext &ctx, const DataType &dt);
 
-	// special methods for set (red-black tree) emulation
-
-	// colors
-	static const Int BLACK = 0;
-	static const Int RED = 1;
-
-	// direction flags
-	typedef Int Direction;
-	static const Direction LEFT = 0;
-	static const Direction RIGHT = 1;
-
-	struct SetEntry
-	{
-		Int parent;
-		Int left, right;
-		Int color;
-	};
-
-	inline SetEntry &GetNode(const DataType &dt, Int index) const
-	{
-		LETHE_ASSERT(index >= 0 && index < size);
-		return *reinterpret_cast<SetEntry *>(data + index*dt.size);
-	}
-
-	inline Int &GetRoot() const
-	{
-		LETHE_ASSERT(size > 0);
-		return reinterpret_cast<SetEntry *>(data)->parent;
-	}
-
-	inline Int GetChild(const DataType &dt, Int node, const Direction d) const;
-	inline void SetChild(const DataType &dt, Int node, const Direction d, const Int target);
-
-	inline Int GetNodeColor(const DataType &dt, Int node) const;
-	inline Int GetChildColor(const DataType &dt, Int node, const Direction d) const;
-
-	inline Int CompareKeys(const CompareHandle &ch, const DataType &dt, Int node0, Int node1) const;
-
-	void ReindexNode(const DataType &dt, Int oldIndex, Int newIndex);
-	void FreeNode(ScriptContext &ctx, const DataType &dt, Int node);
-
-	Int MinNode(const DataType &dt, Int node) const;
-	Int MaxNode(const DataType &dt, Int node) const;
-	Int Predecessor(const DataType &dt, Int node) const;
-	Int Successor(const DataType &dt, Int node) const;
-
-	Int DeleteFixup(const DataType &dt, Int node);
-
-	Int EraseNode(ScriptContext &ctx, const DataType &dt, Int node, Int &succ);
-
-	void Rotate(const DataType &dt, Int node, const Direction d);
-
-	Int BTInsert(const CompareHandle &ch, const DataType &dt, Int what, Int node, bool replace, bool multi);
-	Int InsertNode(const CompareHandle &ch, const DataType &dt, Int node, bool replace, bool multi);
-
-	Int FindKey(const CompareHandle &ch, const DataType &dt, const void *valuePtr) const;
-
-	Int InsertSet(ScriptContext &ctx, const DataType &dt, const void *valuePtr, bool unique);
-	Int FindSet(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
-	Int EraseSet(ScriptContext &ctx, const DataType &dt, Int index);
-	template<bool lower>
-	Int BoundSet(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
-
 	// element construction
 
 	static void ConstructObjectRange(ScriptContext &ctx, const DataType &dt, Byte *ptr, Int elemCount);
@@ -838,459 +775,6 @@ void DynamicArray::Shrink(ScriptContext &ctx, const DataType &dt)
 	Reallocate(ctx, dt, size);
 }
 
-// set functions
-
-Int DynamicArray::GetChild(const DataType &dt, Int node, const Direction d) const
-{
-	const auto &n = GetNode(dt, node);
-	return d == LEFT ? n.left : n.right;
-}
-
-void DynamicArray::SetChild(const DataType &dt, Int node, const Direction d, const Int target)
-{
-	auto &n = GetNode(dt, node);
-
-	if (d == LEFT)
-		n.left = target;
-	else
-		n.right = target;
-}
-
-Int DynamicArray::GetNodeColor(const DataType &dt, Int node) const
-{
-	return node < 0 ? BLACK : GetNode(dt, node).color;
-}
-
-Int DynamicArray::GetChildColor(const DataType &dt, Int node, const Direction d) const
-{
-	return GetNodeColor(dt, GetChild(dt, node, d));
-}
-
-Int DynamicArray::CompareKeys(const CompareHandle &ch, const DataType &dt, Int node0, Int node1) const
-{
-	return ch.cfun(ch, &GetNode(dt, node0), &GetNode(dt, node1));
-}
-
-void DynamicArray::ReindexNode(const DataType &dt, Int oldIndex, Int newIndex)
-{
-	LETHE_ASSERT(oldIndex >= 0 && newIndex >= 0 && oldIndex != newIndex);
-	LETHE_ASSERT(newIndex < size && oldIndex < size);
-	const auto &n = GetNode(dt, oldIndex);
-
-	if (n.parent >= 0)
-	{
-		auto &p = GetNode(dt, n.parent);
-
-		if (p.left == oldIndex)
-			p.left = newIndex;
-		else
-		{
-			LETHE_ASSERT(p.right == oldIndex);
-			p.right = newIndex;
-		}
-	}
-
-	if (n.left >= 0)
-	{
-		LETHE_ASSERT(GetNode(dt, n.left).parent == oldIndex);
-		GetNode(dt, n.left).parent = newIndex;
-	}
-
-	if (n.right >= 0)
-	{
-		LETHE_ASSERT(GetNode(dt, n.right).parent == oldIndex);
-		GetNode(dt, n.right).parent = newIndex;
-	}
-
-	if (oldIndex == GetRoot())
-		GetRoot() = newIndex;
-}
-
-void DynamicArray::FreeNode(ScriptContext &ctx, const DataType &dt, Int node)
-{
-	if (node + 1 == size)
-	{
-		Pop(ctx, dt);
-		return;
-	}
-
-	Int oldIndex = size - 1;
-	Int newIndex = node;
-
-	ReindexNode(dt, oldIndex, newIndex);
-	EraseUnordered(ctx, dt, node);
-}
-
-Int DynamicArray::MinNode(const DataType &dt, Int node) const
-{
-	if (node < 0)
-		return -1;
-
-	while (GetNode(dt, node).left >= 0)
-		node = GetNode(dt, node).left;
-
-	return node;
-}
-
-Int DynamicArray::MaxNode(const DataType &dt, Int node) const
-{
-	if (node < 0)
-		return -1;
-
-	while (GetNode(dt, node).right >= 0)
-		node = GetNode(dt, node).right;
-
-	return node;
-}
-
-Int DynamicArray::Predecessor(const DataType &dt, Int node) const
-{
-	if (GetNode(dt, node).left >= 0)
-		return MaxNode(dt, GetNode(dt, node).left);
-
-	Int tmp = GetNode(dt, node).parent;
-
-	while (tmp >= 0 && node == GetNode(dt, tmp).left)
-	{
-		node = tmp;
-		tmp = GetNode(dt, node).parent;
-	}
-
-	return tmp;
-}
-
-Int DynamicArray::Successor(const DataType &dt, Int node) const
-{
-	if (GetNode(dt, node).right >= 0)
-		return MinNode(dt, GetNode(dt, node).right);
-
-	Int tmp = GetNode(dt, node).parent;
-
-	while (tmp >= 0 && node == GetNode(dt, tmp).right)
-	{
-		node = tmp;
-		tmp = GetNode(dt, node).parent;
-	}
-
-	return tmp;
-}
-
-Int DynamicArray::DeleteFixup(const DataType &dt, Int node)
-{
-	while (node != GetRoot() && GetNode(dt, node).color == BLACK)
-	{
-		Int p = GetNode(dt, node).parent;
-		LETHE_ASSERT(node == GetNode(dt, p).left || node == GetNode(dt, p).right);
-		Direction d = (node == GetNode(dt, p).left) ? LEFT : RIGHT;
-		Int tmp = GetChild(dt, p, RIGHT^d);
-
-		if (GetNodeColor(dt, tmp) == RED)
-		{
-			GetNode(dt, tmp).color = BLACK;
-			GetNode(dt, p).color = RED;
-			Rotate(dt, p, LEFT^d);
-			tmp = GetChild(dt, p, RIGHT^d);
-		}
-
-		// FIXME: this happens sometimes, not sure if it's ok
-		if (tmp < 0)
-		{
-			node = p;
-			continue;
-		}
-
-		if (GetChildColor(dt, tmp, LEFT) == BLACK && GetChildColor(dt, tmp, RIGHT) == BLACK)
-		{
-			GetNode(dt, tmp).color = RED;
-			node = p;
-			continue;
-		}
-
-		if (GetChildColor(dt, tmp, RIGHT^d) == BLACK)
-		{
-			GetNode(dt, GetChild(dt, tmp, LEFT^d)).color = BLACK;
-			GetNode(dt, tmp).color = RED;
-			Rotate(dt, tmp, RIGHT^d);
-			tmp = GetChild(dt, p, RIGHT^d);
-		}
-
-		GetNode(dt, tmp).color = GetNode(dt, p).color;
-		GetNode(dt, p).color = BLACK;
-		Int rchild = GetChild(dt, tmp, RIGHT^d);
-
-		if (rchild >= 0)
-			GetNode(dt, rchild).color = BLACK;
-
-		Rotate(dt, p, LEFT^d);
-		node = GetRoot();
-	}
-
-	GetNode(dt, node).color = BLACK;
-	return node;
-}
-
-Int DynamicArray::EraseNode(ScriptContext &ctx, const DataType &dt, Int node, Int &succ)
-{
-	const auto &n = GetNode(dt, node);
-	Int tmp = (n.left < 0 || n.right < 0) ? node : Successor(dt, node);
-	Int tmp2 = GetChild(dt, tmp, GetNode(dt, tmp).left >= 0 ? LEFT : RIGHT);
-	Int p = GetNode(dt, tmp).parent;
-
-	// tmp2 can be -1 at this point
-	if (tmp2 >= 0)
-		GetNode(dt, tmp2).parent = p;
-
-	if (p < 0)
-		GetRoot() = tmp2;
-	else
-		SetChild(dt, p, tmp == GetNode(dt, p).left ? LEFT : RIGHT, tmp2);
-
-	if (tmp != node)
-	{
-		if (succ == tmp)
-			succ = node;
-
-		MemSwap(&GetNode(dt, node) + 1, &GetNode(dt, tmp) + 1, dt.size - sizeof(SetEntry));
-	}
-
-	if (tmp2 >= 0 && GetNodeColor(dt, tmp) == BLACK)
-		DeleteFixup(dt, tmp2);
-
-	// tmp is node to be erased
-	FreeNode(ctx, dt, tmp);
-
-	if (size == 1)
-	{
-		// since we only cache root, clear now to make sure size==0 if empty
-		Clear(ctx, dt);
-	}
-
-	return tmp;
-}
-
-void DynamicArray::Rotate(const DataType &dt, Int node, const Direction d)
-{
-	auto &n = GetNode(dt, node);
-	Int tmp = GetChild(dt, node, RIGHT^d);
-	auto &tn = GetNode(dt, tmp);
-	SetChild(dt, node, RIGHT^d, GetChild(dt, tmp, LEFT^d));
-
-	if (GetChild(dt, node, RIGHT^d) >= 0)
-		GetNode(dt, GetChild(dt, node, RIGHT^d)).parent = node;
-
-	tn.parent = n.parent;
-
-	if (n.parent < 0)
-	{
-		LETHE_ASSERT(node == GetRoot());
-		GetRoot() = tmp;
-	}
-	else
-	{
-		if (GetNode(dt, n.parent).left == node)
-			GetNode(dt, n.parent).left = tmp;
-		else
-		{
-			LETHE_ASSERT(GetNode(dt, n.parent).right == node);
-			GetNode(dt, n.parent).right = tmp;
-		}
-	}
-
-	SetChild(dt, tmp, LEFT^d, node);
-	n.parent = tmp;
-}
-
-Int DynamicArray::BTInsert(const CompareHandle &ch, const DataType &dt, Int what, Int node, bool replace, bool multi)
-{
-	LETHE_ASSERT(what >= 0);
-
-	if (node < 0)
-	{
-		GetRoot() = what;
-		return what;
-	}
-
-	int comp = CompareKeys(ch, dt, what, node);
-
-	if (!multi && comp == 0)
-	{
-		// node already inserted => aborting
-		if (replace)
-			MemSwap(&GetNode(dt, what)+1, &GetNode(dt, node)+1, dt.size - sizeof(SetEntry));
-
-		return -node - 1;
-	}
-
-	const Direction d = comp < 0 ? LEFT : RIGHT;
-
-	if (GetChild(dt, node, LEFT^d) < 0)
-	{
-		SetChild(dt, node, LEFT^d, what);
-		GetNode(dt, what).parent = node;
-		return what;
-	}
-
-	return BTInsert(ch, dt, what, GetChild(dt, node, LEFT^d), replace, multi);
-}
-
-Int DynamicArray::InsertNode(const CompareHandle &ch, const DataType &dt, Int node, bool replace, bool multi)
-{
-	Int inres = BTInsert(ch, dt, node, GetRoot(), replace, multi);
-
-	if (inres < 0)
-		return inres;			// already here => aborting
-
-	GetNode(dt, node).color = RED;
-
-	while (node != GetRoot() && GetNodeColor(dt, GetNode(dt, node).parent) == RED)
-	{
-		Int p = GetNode(dt, node).parent;
-		Int gp = GetNode(dt, p).parent;
-		Direction d = p == GetNode(dt, gp).left ? LEFT : RIGHT;
-		Int tmp = GetChild(dt, gp, RIGHT^d);
-
-		if (GetNodeColor(dt, tmp) == RED)
-		{
-			GetNode(dt, p).color = GetNode(dt, tmp).color = BLACK;
-			GetNode(dt, gp).color = RED;
-			node = gp;
-			continue;
-		}
-
-		if (node == GetChild(dt, p, RIGHT^d))
-		{
-			node = p;
-			Rotate(dt, node, LEFT^d);
-			p = GetNode(dt, node).parent;
-			gp = GetNode(dt, p).parent;
-		}
-
-		GetNode(dt, p).color = BLACK;
-		GetNode(dt, gp).color = RED;
-		Rotate(dt, gp, RIGHT^d);
-	}
-
-	GetNode(dt, GetRoot()).color = BLACK;
-	return inres;
-}
-
-Int DynamicArray::FindKey(const CompareHandle &ch, const DataType &dt, const void *valuePtr) const
-{
-	Int node = GetRoot();
-
-	while (node >= 0)
-	{
-		const auto &nkey = GetNode(dt, node);
-		auto cmp = ch.cfun(ch, valuePtr, &nkey);
-
-		if (cmp == 0)
-			return node;
-
-		node = GetChild(dt, node, cmp < 0 ? LEFT : RIGHT);
-	}
-
-	return -1;
-}
-
-Int DynamicArray::InsertSet(ScriptContext &ctx, const DataType &dt, const void *valuePtr, bool unique)
-{
-	CompareHandle ch;
-	auto cfun = GetCompareFunc(ctx, dt, ch);
-
-	if (!cfun)
-	{
-		// TODO: exception?
-		return -1;
-	}
-
-	if (size == 0)
-	{
-		// allocate root node
-		Push(ctx, dt);
-		GetRoot() = -1;
-	}
-
-	Int node = Push(ctx, dt, valuePtr);
-
-	auto &n = GetNode(dt, node);
-	n.parent = n.left = n.right = -1;
-	n.color = BLACK;
-
-	auto res = InsertNode(ch, dt, node, true, !unique);
-
-	if (res < 0)
-		FreeNode(ctx, dt, node);
-
-	return res;
-}
-
-Int DynamicArray::FindSet(ScriptContext &ctx, const DataType &dt, const void *valuePtr)
-{
-	CompareHandle ch;
-	auto cfun = GetCompareFunc(ctx, dt, ch);
-
-	if (!cfun)
-	{
-		// TODO: exception?
-		return -1;
-	}
-
-	if (size < 1)
-		return -1;
-
-	return FindKey(ch, dt, valuePtr);
-}
-
-template<bool lower>
-Int DynamicArray::BoundSet(ScriptContext &ctx, const DataType &dt, const void *valuePtr)
-{
-	CompareHandle ch;
-	auto cfun = GetCompareFunc(ctx, dt, ch);
-
-	if (!cfun)
-	{
-		// TODO: exception?
-		return -1;
-	}
-
-	if (size < 1)
-		return -1;
-
-	Int node = GetRoot();
-
-	Int res = -1;
-
-	while (node >= 0)
-	{
-		const auto &nkey = GetNode(dt, node);
-		auto cmp = ch.cfun(ch, valuePtr, &nkey);
-
-		const bool cond = (lower && cmp <= 0) || (!lower && cmp < 0);
-
-		if (cond)
-			res = node;
-
-		node = GetChild(dt, node, cond ? LEFT : RIGHT);
-	}
-
-	return res;
-}
-
-Int DynamicArray::EraseSet(ScriptContext &ctx, const DataType &dt, Int index)
-{
-	CompareHandle ch;
-	auto cfun = GetCompareFunc(ctx, dt, ch);
-
-	if (!cfun || index < 0 || index >= size)
-	{
-		// TODO: exception?
-		return -1;
-	}
-
-	Int succ = Successor(dt, index);
-	return EraseNode(ctx, dt, index, succ);
-}
-
 // wrappers
 
 void daResize(Stack &stk)
@@ -1301,9 +785,7 @@ void daResize(Stack &stk)
 	// skip saved this (arg 1)
 	auto nsize = stk.GetSignedInt(2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (!dt->IsSetElemType())
-		darr->Resize(ctx, *dt, nsize);
+	darr->Resize(ctx, *dt, nsize);
 }
 
 void daReserve(Stack &stk)
@@ -1344,9 +826,7 @@ void daPop(Stack &stk)
 	auto ntype = stk.GetSignedInt(0);
 	// skip saved this (arg 1)
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (!dt->IsSetElemType())
-		darr->Pop(ctx, *dt);
+	darr->Pop(ctx, *dt);
 }
 
 void daShrink(Stack &stk)
@@ -1367,11 +847,7 @@ void daPush(Stack &stk)
 	// skip saved this (arg 1)
 	auto pushValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (dt->IsSetElemType())
-		darr->InsertSet(ctx, *dt, pushValue, false);
-	else
-		darr->Push(ctx, *dt, pushValue);
+	darr->Push(ctx, *dt, pushValue);
 	// TODO: return index (or void?)
 }
 
@@ -1383,11 +859,7 @@ void daPushUnique(Stack &stk)
 	// skip saved this (arg 1)
 	auto pushValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (dt->IsSetElemType())
-		darr->InsertSet(ctx, *dt, pushValue, true);
-	else
-		darr->PushUnique(ctx, *dt, pushValue);
+	darr->PushUnique(ctx, *dt, pushValue);
 	// TODO: return index (or void?)
 }
 
@@ -1399,9 +871,7 @@ void daPushHeap(Stack &stk)
 	// skip saved this (arg 1)
 	auto pushValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (!dt->IsSetElemType())
-		darr->PushHeap(ctx, *dt, pushValue);
+	darr->PushHeap(ctx, *dt, pushValue);
 }
 
 void daPopHeap(Stack &stk)
@@ -1412,9 +882,7 @@ void daPopHeap(Stack &stk)
 	// skip saved this (arg 1)
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2);
-
-	if (!dt->IsSetElemType())
-		darr->PopHeap(ctx, *dt, res);
+	darr->PopHeap(ctx, *dt, res);
 }
 
 void daSlice(Stack &stk)
@@ -1451,11 +919,7 @@ void daFind(Stack &stk)
 	auto findValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2 + ((dt->size + Stack::WORD_SIZE-1) / Stack::WORD_SIZE));
-
-	if (dt->IsSetElemType())
-		*res = darr->FindSet(ctx, *dt, findValue);
-	else
-		*res = darr->Find(ctx, *dt, findValue);
+	*res = darr->Find(ctx, *dt, findValue);
 }
 
 void daLowerBound(Stack &stk)
@@ -1467,11 +931,7 @@ void daLowerBound(Stack &stk)
 	auto findValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2 + ((dt->size + Stack::WORD_SIZE - 1) / Stack::WORD_SIZE));
-
-	if (dt->IsSetElemType())
-		*res = darr->BoundSet<true>(ctx, *dt, findValue);
-	else
-		*res = darr->LowerBound(ctx, *dt, findValue);
+	*res = darr->LowerBound(ctx, *dt, findValue);
 }
 
 void daUpperBound(Stack &stk)
@@ -1483,11 +943,7 @@ void daUpperBound(Stack &stk)
 	auto findValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2 + ((dt->size + Stack::WORD_SIZE - 1) / Stack::WORD_SIZE));
-
-	if (dt->IsSetElemType())
-		*res = darr->BoundSet<false>(ctx, *dt, findValue);
-	else
-		*res = darr->UpperBound(ctx, *dt, findValue);
+	*res = darr->UpperBound(ctx, *dt, findValue);
 }
 
 void daFindSorted(Stack &stk)
@@ -1500,11 +956,7 @@ void daFindSorted(Stack &stk)
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2 + ((dt->size + Stack::WORD_SIZE - 1) / Stack::WORD_SIZE));
 	Int tmp;
-
-	if (dt->IsSetElemType())
-		*res = darr->FindSet(ctx, *dt, findValue);
-	else
-		*res = darr->FindSorted(ctx, *dt, findValue, tmp);
+	*res = darr->FindSorted(ctx, *dt, findValue, tmp);
 }
 
 void daInsertSorted(Stack &stk)
@@ -1516,11 +968,7 @@ void daInsertSorted(Stack &stk)
 	auto findValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2 + ((dt->size + Stack::WORD_SIZE - 1) / Stack::WORD_SIZE));
-
-	if (dt->IsSetElemType())
-		*res = darr->InsertSet(ctx, *dt, findValue, false);
-	else
-		*res = darr->InsertSorted(ctx, *dt, findValue);
+	*res = darr->InsertSorted(ctx, *dt, findValue);
 }
 
 void daInsertSortedUnique(Stack &stk)
@@ -1532,11 +980,7 @@ void daInsertSortedUnique(Stack &stk)
 	auto findValue = reinterpret_cast<void *>(stk.GetTop() + 2);
 	auto dt = stk.GetProgram().types[ntype].Get();
 	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2 + ((dt->size + Stack::WORD_SIZE - 1) / Stack::WORD_SIZE));
-
-	if (dt->IsSetElemType())
-		*res = darr->InsertSet(ctx, *dt, findValue, true);
-	else
-		*res = darr->InsertSortedUnique(ctx, *dt, findValue);
+	*res = darr->InsertSortedUnique(ctx, *dt, findValue);
 }
 
 void daSort(Stack &stk)
@@ -1546,9 +990,7 @@ void daSort(Stack &stk)
 	auto ntype = stk.GetSignedInt(0);
 	// skip saved this (arg 1)
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (!dt->IsSetElemType())
-		darr->Sort(ctx, *dt);
+	darr->Sort(ctx, *dt);
 }
 
 void daInsert(Stack &stk)
@@ -1560,9 +1002,7 @@ void daInsert(Stack &stk)
 	auto pushValue = reinterpret_cast<void *>(stk.GetTop() + 3);
 	auto index = stk.GetSignedInt(2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (!dt->IsSetElemType())
-		darr->Insert(ctx, *dt, pushValue, index);
+	darr->Insert(ctx, *dt, pushValue, index);
 }
 
 void daErase(Stack &stk)
@@ -1573,11 +1013,7 @@ void daErase(Stack &stk)
 	// skip saved this (arg 1)
 	auto index = stk.GetSignedInt(2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (dt->IsSetElemType())
-		darr->EraseSet(ctx, *dt, index);
-	else
-		darr->Erase(ctx, *dt, index);
+	darr->Erase(ctx, *dt, index);
 }
 
 void daEraseUnordered(Stack &stk)
@@ -1588,52 +1024,7 @@ void daEraseUnordered(Stack &stk)
 	// skip saved this (arg 1)
 	auto index = stk.GetSignedInt(2);
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (dt->IsSetElemType())
-		darr->EraseSet(ctx, *dt, index);
-	else
-		darr->EraseUnordered(ctx, *dt, index);
-}
-
-void daPred(Stack &stk)
-{
-	auto darr = static_cast<DynamicArray *>(const_cast<void *>(stk.GetThis()));
-	auto ntype = stk.GetSignedInt(0);
-	// skip saved this (arg 1)
-	auto index = stk.GetSignedInt(2);
-	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (dt->IsSetElemType())
-		stk.SetInt(3, darr->Predecessor(*dt, index));
-	else
-		stk.SetInt(3, darr->Fix(index-1));
-}
-
-void daSucc(Stack &stk)
-{
-	auto darr = static_cast<DynamicArray *>(const_cast<void *>(stk.GetThis()));
-	auto ntype = stk.GetSignedInt(0);
-	// skip saved this (arg 1)
-	auto index = stk.GetSignedInt(2);
-	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (dt->IsSetElemType())
-		stk.SetInt(3, darr->Successor(*dt, index));
-	else
-		stk.SetInt(3, darr->Fix(index+1));
-}
-
-void daBegin(Stack &stk)
-{
-	auto darr = static_cast<DynamicArray *>(const_cast<void *>(stk.GetThis()));
-	auto ntype = stk.GetSignedInt(0);
-	auto dt = stk.GetProgram().types[ntype].Get();
-
-	// skip saved this (arg 1)
-	if (dt->IsSetElemType())
-		stk.SetInt(2, darr->MinNode(*dt, 1));
-	else
-		stk.SetInt(2, darr->Fix(0));
+	darr->EraseUnordered(ctx, *dt, index);
 }
 
 void daReverse(Stack &stk)
@@ -1642,9 +1033,7 @@ void daReverse(Stack &stk)
 	auto ntype = stk.GetSignedInt(0);
 	// skip saved this (arg 1)
 	auto dt = stk.GetProgram().types[ntype].Get();
-
-	if (!dt->IsSetElemType())
-		darr->Reverse(*dt);
+	darr->Reverse(*dt);
 }
 
 void daAssign(Stack &stk)
@@ -2222,9 +1611,6 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("__da_push_heap", daPushHeap);
 	p.cpool.BindNativeFunc("__da_pop_heap", daPopHeap);
 	p.cpool.BindNativeFunc("__da_slice", daSlice);
-	p.cpool.BindNativeFunc("__da_pred", daPred);
-	p.cpool.BindNativeFunc("__da_succ", daSucc);
-	p.cpool.BindNativeFunc("__da_begin", daBegin);
 
 	// special methods:
 	p.cpool.BindNativeFunc("__da_assign", daAssign);

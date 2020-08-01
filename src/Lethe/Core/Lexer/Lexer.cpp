@@ -63,7 +63,6 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"__format", TOK_KEY_FORMAT},
 	{"__intrinsic", TOK_KEY_INTRINSIC},
 	{"__assert", TOK_KEY_ASSERT},
-	{"__set_entry", TOK_KEY_SET_ENTRY},
 	{"cast", TOK_KEY_CAST},
 	{"sizeof", TOK_KEY_SIZEOF},
 	{"auto", TOK_KEY_AUTO},

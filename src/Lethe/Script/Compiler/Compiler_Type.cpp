@@ -28,10 +28,6 @@ ULong Compiler::ParseQualifiers(bool ref)
 			res |= AST_Q_ASSERT;
 			break;
 
-		case TOK_KEY_SET_ENTRY:
-			res |= AST_Q_SET_ENTRY;
-			break;
-
 		case TOK_KEY_CONST:
 			res |= AST_Q_CONST;
 			break;
