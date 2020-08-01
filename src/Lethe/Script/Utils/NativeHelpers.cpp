@@ -58,7 +58,6 @@ struct DynamicArray
 	void Reserve(ScriptContext &ctx, const DataType &dt, Int newSize);
 	void EnsureCapacity(ScriptContext &ctx, const DataType &dt, Int newSize);
 	void Reallocate(ScriptContext &ctx, const DataType &dt, Int newReserve);
-	Int Push(ScriptContext &ctx, const DataType &dt);
 	Int Push(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 	Int PushUnique(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 
@@ -372,17 +371,6 @@ void DynamicArray::CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte 
 		ctx.CallOffset(dt.funVAssign);
 		ctx.GetStack().Pop(3);
 	}
-}
-
-Int DynamicArray::Push(ScriptContext &ctx, const DataType &dt)
-{
-	if (LETHE_UNLIKELY(size >= GetCapacity()))
-		EnsureCapacity(ctx, dt, size + 1);
-
-	auto dptr = data + size * dt.size;
-	ConstructObjectRange(ctx, dt, dptr, 1);
-	LETHE_ASSERT(data);
-	return size++;
 }
 
 Int DynamicArray::Push(ScriptContext &ctx, const DataType &dt, const void *valuePtr)
