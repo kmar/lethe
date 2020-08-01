@@ -135,7 +135,7 @@ __intrinsic class object
 
 namespace __int
 {
-	inline noinit int abs(int x) {return x >= 0 ? x : -x;}
+	inline noinit int abs(int x) {return x < 0 ? -x : x;}
 	inline noinit int min(int x, int y) {return x <= y ? x : y;}
 	inline noinit int max(int x, int y) {return x >= y ? x : y;}
 	inline noinit int clamp(int value, int minv, int maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
@@ -157,7 +157,7 @@ namespace __uint
 
 namespace __long
 {
-	inline noinit long abs(long x) {return x >= 0 ? x : -x;}
+	inline noinit long abs(long x) {return x < 0 ? -x : x;}
 	inline noinit long min(long x, long y) {return x <= y ? x : y;}
 	inline noinit long max(long x, long y) {return x >= y ? x : y;}
 	inline noinit long clamp(long value, long minv, long maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
@@ -182,7 +182,7 @@ namespace __float
 	// math
 	native __intrinsic noinit float sqrt(float v);
 
-	inline noinit float abs(float x) {return x >= 0 ? x : -x;}
+	inline noinit float abs(float x) {return x < 0 ? -x : x;}
 	inline noinit float min(float x, float y) {return x <= y ? x : y;}
 	inline noinit float max(float x, float y) {return x >= y ? x : y;}
 	inline noinit float clamp(float value, float minv, float maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
@@ -201,7 +201,7 @@ namespace __double
 	// math
 	native __intrinsic noinit double sqrt(double v);
 
-	inline noinit double abs(double x) {return x >= 0 ? x : -x;}
+	inline noinit double abs(double x) {return x < 0 ? -x : x;}
 	inline noinit double min(double x, double y) {return x <= y ? x : y;}
 	inline noinit double max(double x, double y) {return x >= y ? x : y;}
 	inline noinit double clamp(double value, double minv, double maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
