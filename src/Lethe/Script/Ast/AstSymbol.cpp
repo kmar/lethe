@@ -356,7 +356,13 @@ bool AstSymbol::TypeGen(CompiledProgram &p)
 			bool ok = false;
 
 			if (q & AST_Q_PROTECTED)
+			{
+				// allow one-level nested protected
+				if (targThisScope->parent && targThisScope->parent->IsBaseOf(thisScope))
+					targThisScope = targThisScope->parent;
+
 				ok = thisScope && targThisScope && targThisScope->IsBaseOf(thisScope);
+			}
 
 			if (!ok)
 				return p.Error(this, String::Printf("`%s' not accessible", text.Ansi()));
