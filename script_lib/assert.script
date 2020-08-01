@@ -1,6 +1,8 @@
 // the dumbest assert ever, doesn't show expression as text, because
 // a preprocessor is not integrated. however, you can bring your own
 // preprocessor and remove this
+// however careful because raw strings in the script start and end with """
+// which a C/C++-compatible preprocessor won't be able to lex properly
 __assert inline void assert(bool expr)
 {
 	if (!expr)
