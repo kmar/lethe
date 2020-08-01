@@ -32,6 +32,7 @@ struct queue<T>
 	//---------------------------------------------------------------------
 	T pop_front()
 	{
+		assert(count > 0);
 		auto &tmp = data[start];
 		T res = tmp;
 
@@ -51,6 +52,7 @@ struct queue<T>
 	//---------------------------------------------------------------------
 	T pop_back()
 	{
+		assert(count > 0);
 		auto &tmp = data[fix_index(count-1)];
 		T res = tmp;
 
@@ -126,7 +128,21 @@ struct queue<T>
 	//---------------------------------------------------------------------
 	void shrink()
 	{
+		compact();
+		data.resize(count);
 		data.shrink();
+	}
+
+	//---------------------------------------------------------------------
+	void compact()
+	{
+		// rotate start at zero, if necessary
+		if (start)
+		{
+			rotate_array<T>::execute(data, start, data.size);
+			start = 0;
+			end = count;
+		}
 	}
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,19 +155,14 @@ struct queue<T>
 	{
 		index += start;
 		index -= (index >= data.size)*data.size;
+		assert(cast uint index < cast uint count);
 		return index;
 	}
 
 	//---------------------------------------------------------------------
 	private void grow()
 	{
-		// first, rotate start at zero, if necessary
-		if (start)
-		{
-			rotate_array<T>::execute(data, start, count);
-			start = 0;
-			end = count;
-		}
+		compact();
 
 		// grow exponentially by 3/2
 		int nsize = data.size*3/2 + (data.size <= 1);
