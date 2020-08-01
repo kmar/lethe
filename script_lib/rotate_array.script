@@ -1,0 +1,14 @@
+// left rotation by mid
+struct rotate_array<T>
+{
+	static void execute(T[] arr, int mid, int end)
+	{
+		T[] tmp;
+		tmp = arr.slice(0, mid);
+		tmp.reverse();
+		tmp = arr.slice(mid, end);
+		tmp.reverse();
+		tmp = arr.slice(0, end);
+		tmp.reverse();
+	}
+}
