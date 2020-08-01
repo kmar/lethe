@@ -418,30 +418,38 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 				mtype = mn->GetTypeDesc(p);
 		}
 
-		const bool skipTypegen = mtype.IsProperty() && mtype.ref == typeRef.ref;
+		const bool skipTypegen = mtype.IsProperty();
 
-		if (!skipTypegen && mtype.IsRecursive(typeRef.ref))
-			return p.Error(mn, String::Printf("recursive member"));
-
-		if (type == AST_CLASS && (qualifiers & AST_Q_STATE) != 0)
-			return p.Error(mn, "state class cannot define new members");
-
-		if (!skipTypegen && (mtype.GetTypeEnum() == DT_NONE || !mtype.GetSize()))
+		if (skipTypegen)
 		{
-			if (!mn->target)
-				return p.Error(mn, "invalid member type");
+			qualifiers |= AST_Q_REBUILD_MEMBER_TYPES;
+			mtype.qualifiers |= AST_Q_REBUILD_MEMBER_TYPES;
+		}
+		else
+		{
+			if (mtype.IsRecursive(typeRef.ref))
+				return p.Error(mn, String::Printf("recursive member"));
 
-			if (type == AST_CLASS && mn->target == this)
+			if (type == AST_CLASS && (qualifiers & AST_Q_STATE) != 0)
+				return p.Error(mn, "state class cannot define new members");
+
+			if (mtype.GetTypeEnum() == DT_NONE || !mtype.GetSize())
 			{
-				// avoid infinite recursion for pointers; we only need size/alignment here, types will be resolved later!
-				mtype = QDataType::MakeConstType(p.elemTypes[DT_FUNC_PTR]);
-				qualifiers |= AST_Q_REBUILD_MEMBER_TYPES;
-				mtype.qualifiers |= AST_Q_REBUILD_MEMBER_TYPES;
-			}
-			else
-			{
-				LETHE_RET_FALSE(mn->target->TypeGen(p));
-				mtype = mn->GetTypeDesc(p);
+				if (!mn->target)
+					return p.Error(mn, "invalid member type");
+
+				if (type == AST_CLASS && mn->target == this)
+				{
+					// avoid infinite recursion for pointers; we only need size/alignment here, types will be resolved later!
+					mtype = QDataType::MakeConstType(p.elemTypes[DT_FUNC_PTR]);
+					qualifiers |= AST_Q_REBUILD_MEMBER_TYPES;
+					mtype.qualifiers |= AST_Q_REBUILD_MEMBER_TYPES;
+				}
+				else
+				{
+					LETHE_RET_FALSE(mn->target->TypeGen(p));
+					mtype = mn->GetTypeDesc(p);
+				}
 			}
 		}
 
