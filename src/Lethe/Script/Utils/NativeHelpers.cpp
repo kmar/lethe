@@ -385,98 +385,6 @@ Int DynamicArray::Push(ScriptContext &ctx, const DataType &dt, const void *value
 	return size++;
 }
 
-bool DynamicArray::PushHeap(ScriptContext &ctx, const DataType &dt, const void *valuePtr)
-{
-	CompareHandle ch;
-	auto cfun = GetCompareFunc(ctx, dt, ch);
-
-	if (!cfun)
-	{
-		// TODO: exception?
-		return false;
-	}
-
-	auto index = size;
-	Push(ctx, dt, valuePtr);
-
-	// percolate up
-	Int pindex;
-
-	auto sz = dt.size;
-
-	auto GetParent = [](Int index)->Int
-	{
-		return ((index + 1) >> 1) - 1;
-	};
-
-	while (index > 0 && cfun(ch, valuePtr, data + (pindex = GetParent(index))*sz) < 0)
-	{
-		MemSwap(data + index*sz, data + pindex*sz, sz);
-		index = pindex;
-	}
-
-	return true;
-}
-
-bool DynamicArray::PopHeap(ScriptContext &ctx, const DataType &dt, void *valuePtr)
-{
-	CompareHandle ch;
-	auto cfun = GetCompareFunc(ctx, dt, ch);
-
-	if (!cfun)
-	{
-		// TODO: exception?
-		return false;
-	}
-
-	if (!size)
-		return false;
-
-	auto sz = dt.size;
-
-	// we need to destroy the object before moving
-	DestroyObjectRange(ctx, dt, static_cast<Byte *>(valuePtr), 1);
-
-	// move out
-	MemCpy(valuePtr, data, sz);
-
-	// move last
-	MemCpy(data, data + (size - 1)*sz, sz);
-	// decrease size
-	size--;
-
-	// now: percolate down
-	Int child;
-	auto tsz = size;
-
-	auto GetRightChild = [](Int index) -> Int
-	{
-		return 2 * index + 2;
-	};
-
-	Int index = 0;
-
-	while ((child = GetRightChild(index)) < tsz)
-	{
-		if (cfun(ch, data + (child - 1)*sz, data + child*sz) < 0)
-			child--;
-
-		if (cfun(ch, data + child*sz, data + index*sz) >= 0)
-			return true;
-
-		MemSwap(data + index*sz, data + child*sz, sz);
-		index = child;
-	}
-
-	--child;
-	LETHE_ASSERT(child >= 0);
-
-	if (child < tsz && cfun(ch, data + child*sz, data + index*sz) < 0)
-		MemSwap(data + index*sz, data + child*sz, sz);
-
-	return true;
-}
-
 Int DynamicArray::PushUnique(ScriptContext &ctx, const DataType &dt, const void *valuePtr)
 {
 	auto where = Find(ctx, dt, valuePtr);
@@ -849,28 +757,6 @@ void daPushUnique(Stack &stk)
 	auto dt = stk.GetProgram().types[ntype].Get();
 	darr->PushUnique(ctx, *dt, pushValue);
 	// TODO: return index (or void?)
-}
-
-void daPushHeap(Stack &stk)
-{
-	auto &ctx = stk.GetContext();
-	auto darr = static_cast<DynamicArray *>(const_cast<void *>(stk.GetThis()));
-	auto ntype = stk.GetSignedInt(0);
-	// skip saved this (arg 1)
-	auto pushValue = reinterpret_cast<void *>(stk.GetTop() + 2);
-	auto dt = stk.GetProgram().types[ntype].Get();
-	darr->PushHeap(ctx, *dt, pushValue);
-}
-
-void daPopHeap(Stack &stk)
-{
-	auto &ctx = stk.GetContext();
-	auto darr = static_cast<DynamicArray *>(const_cast<void *>(stk.GetThis()));
-	auto ntype = stk.GetSignedInt(0);
-	// skip saved this (arg 1)
-	auto dt = stk.GetProgram().types[ntype].Get();
-	auto res = reinterpret_cast<Int *>(stk.GetTop() + 2);
-	darr->PopHeap(ctx, *dt, res);
 }
 
 void daSlice(Stack &stk)
@@ -1596,8 +1482,6 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("__da_find_sorted", daFindSorted);
 	p.cpool.BindNativeFunc("__da_insert_sorted", daInsertSorted);
 	p.cpool.BindNativeFunc("__da_insert_sorted_unique", daInsertSortedUnique);
-	p.cpool.BindNativeFunc("__da_push_heap", daPushHeap);
-	p.cpool.BindNativeFunc("__da_pop_heap", daPopHeap);
 	p.cpool.BindNativeFunc("__da_slice", daSlice);
 
 	// special methods:

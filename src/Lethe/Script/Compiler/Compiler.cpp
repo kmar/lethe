@@ -1098,16 +1098,6 @@ void Compiler::InitNativeTypeScopes()
 	nisortedu->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
 	dynamicArrayScope->members["insert_sorted_unique"] = nisortedu;
 
-	auto npushheap = AddNativeProp("__da_push_heap", AST_NPROP_METHOD);
-	npushheap->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["push_heap"] = npushheap;
-	dynamicArrayScope->members["pushheap"] = npushheap;
-
-	auto npopheap = AddNativeProp("__da_pop_heap", AST_NPROP_METHOD);
-	npopheap->flags |= AST_F_PUSH_TYPE | AST_F_RES_ELEM;
-	dynamicArrayScope->members["pop_heap"] = npopheap;
-	dynamicArrayScope->members["popheap"] = npopheap;
-
 	auto nslice = AddNativeProp("__da_slice", AST_NPROP_METHOD);
 	nslice->qualifiers |= AST_Q_CONST;
 	nslice->flags |= AST_F_PUSH_TYPE_SIZE | AST_F_RES_SLICE;
