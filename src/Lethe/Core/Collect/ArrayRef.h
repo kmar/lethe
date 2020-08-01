@@ -17,6 +17,7 @@ public:
 	const T *GetData() const;
 	T *GetData();
 	S GetSize() const;
+	bool IsEmpty() const;
 
 	const T &operator[](S index) const;
 	T &operator[](S index);
@@ -87,6 +88,12 @@ template<typename T, typename S>
 inline S ArrayRef<T,S>::GetSize() const
 {
 	return size;
+}
+
+template<typename T, typename S>
+inline bool ArrayRef<T,S>::IsEmpty() const
+{
+	return size == 0;
 }
 
 template<typename T, typename S>
