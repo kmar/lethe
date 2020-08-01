@@ -1,0 +1,132 @@
+// implements min heap
+
+///////////////////////////////////////////////////////////////////////////////
+struct priority_queue<T>
+{
+	//---------------------------------------------------------------------
+	// push value into queue
+	inline void push(const T &value)
+	{
+		insert_key(value);
+	}
+
+	//---------------------------------------------------------------------
+	// pop minimal value
+	inline T pop()
+	{
+		T res = data[0];
+		delete_min();
+		return res;
+	}
+
+	//---------------------------------------------------------------------
+	// top (minimum)
+	inline T top() const
+	{
+		return data[0];
+	}
+
+	//---------------------------------------------------------------------
+	inline bool empty() const
+	{
+		return data.size == 0;
+	}
+
+	//---------------------------------------------------------------------
+	inline bool size() const
+	{
+		return data.size;
+	}
+
+	//---------------------------------------------------------------------
+	void reserve(int capacity)
+	{
+		data.reserve(capacity);
+	}
+
+	//---------------------------------------------------------------------
+	void clear()
+	{
+		data.clear();
+	}
+
+	//---------------------------------------------------------------------
+	void reset()
+	{
+		data.reset();
+	}
+
+	//---------------------------------------------------------------------
+	void shrink()
+	{
+		data.shrink();
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+// private
+	private array<T> data;
+
+	//---------------------------------------------------------------------
+	// get parent index
+	private static inline int get_parent(int index)
+	{
+		return ((index+1) >> 1)-1;
+	}
+
+	//---------------------------------------------------------------------
+	// get right child index
+	// note: left child is 2*index+1
+	private static inline int get_right_child(int index)
+	{
+		return 2*index+2;
+	}
+
+	//---------------------------------------------------------------------
+	private void insert_key(const T &key)
+	{
+		int index = data.size;
+		data.add(key);
+		// percolate up
+		int pindex;
+
+		T[] ldata = data;
+
+		while (index > 0 && key < ldata[pindex = get_parent(index)])
+		{
+			ldata[index] <-> ldata[pindex];
+			index = pindex;
+		}
+	}
+
+	//---------------------------------------------------------------------
+	private void delete_min()
+	{
+		data.erase_unordered(0);
+		percolate_down(0);
+	}
+
+	//---------------------------------------------------------------------
+	private void percolate_down(int index)
+	{
+		int child;
+		const int sz = data.size;
+		T[] ldata = data;
+
+		while ((child = get_right_child(index)) < sz)
+		{
+			if (ldata[child-1] < ldata[child])
+				child--;
+
+			if (!(ldata[child] < ldata[index]))
+				return;
+
+			ldata[index] <-> ldata[child];
+			index = child;
+		}
+
+		--child;
+
+		if (child < sz && ldata[child] < ldata[index])
+			ldata[index] <-> ldata[child];
+	}
+}

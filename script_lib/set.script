@@ -1,0 +1,300 @@
+// a simple vector-based hashset
+
+//=============================================================================
+struct set<T>
+{
+	protected struct entry
+	{
+		T key;
+		// index of next collision entry
+		int next;
+	}
+
+	// entries
+	protected array<entry> entries;
+	// hash table: 2**n, index to first entry or -1 if none
+	// always >= number of entries
+	protected array<int> table;
+
+	//---------------------------------------------------------------------
+	inline bool empty() const
+	{
+		return entries.size == 0;
+	}
+
+	//---------------------------------------------------------------------
+	inline int size() const
+	{
+		return entries.size;
+	}
+
+	//---------------------------------------------------------------------
+	void clear()
+	{
+		entries.clear();
+		table.clear();
+	}
+
+	//---------------------------------------------------------------------
+	void shrink()
+	{
+		entries.shrink();
+		table.shrink();
+	}
+
+	//---------------------------------------------------------------------
+	void reset()
+	{
+		entries.reset();
+		table.reset();
+	}
+
+	//---------------------------------------------------------------------
+	inline const T &get(int index) const
+	{
+		return entries[index].key;
+	}
+
+	//---------------------------------------------------------------------
+	// returns -1 if new, entry index if old
+	inline int add(T value)
+	{
+		return insert_internal(value);
+	}
+
+	//---------------------------------------------------------------------
+	// alias for add
+	inline int insert(T value)
+	{
+		return insert_internal(value);
+	}
+
+	//---------------------------------------------------------------------
+	// multiset
+	inline int add_multi(T value)
+	{
+		return insert_internal(value, true);
+	}
+
+	//---------------------------------------------------------------------
+	inline int insert_multi(T value)
+	{
+		return insert_internal(value, true);
+	}
+
+	//---------------------------------------------------------------------
+	// boolean test
+	inline bool contains(T key) const
+	{
+		return find_internal(key) >= 0;
+	}
+
+	//---------------------------------------------------------------------
+	// returns entry index or -1 if not found
+	inline int find(T key) const
+	{
+		return find_internal(key);
+	}
+
+	//---------------------------------------------------------------------
+	inline const T &find_value(T key) const
+	{
+		return entries[find_internal(key)].key;
+	}
+
+	//---------------------------------------------------------------------
+	// remove element, returns next "iterator" (=index)
+	int remove(T key)
+	{
+		int idx = find(key);
+		return idx < 0 ? -1 : erase(idx);
+	}
+
+	//---------------------------------------------------------------------
+	// erase entry at index
+	int erase(int index)
+	{
+		// the problem is table isn't rehashed...
+		auto res = erase_internal(index);
+
+		// we need to do this to clean up
+		// shrinking is 2x slower than growing, so we should be fine
+		auto esize = entries.size | 1;
+
+		if (table.size > 4*esize)
+		{
+			table.resize(table.size >> 1);
+			rehash();
+		}
+
+		return res;
+	}
+
+	//---------------------------------------------------------------------
+	// get index of next collision, -1 if none
+	// note: chain is broken if set is modified during iteration
+	int next_collision(int index) const
+	{
+		return index >= 0 ? entries[index].next : -1;
+	}
+
+	//---------------------------------------------------------------------
+	void rehash()
+	{
+		assert(!entries.size || table.size);
+
+		for (int i=0; i<table.size; i++)
+			table[i] = -1;
+
+		auto mask = cast uint table.size-1;
+
+		for (int i=0; i<entries.size; i++)
+		{
+			auto &e = entries[i];
+			auto h = cast int (hash(e.key) & mask);
+
+			e.next = table[h];
+			table[h] = i;
+		}
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+// private
+
+	//---------------------------------------------------------------------
+	// returns entry index or -1 if not found
+	int find_internal(const T &key) const
+	{
+		auto sz = table.size;
+
+		if (!sz)
+			return -1;
+
+		auto h = hash(key) & (sz-1);
+		auto index = table[cast int h];
+
+		while (index >= 0)
+		{
+			const auto &e = entries[index];
+
+			if (e.key == key)
+				return index;
+
+			index = e.next;
+		}
+
+		return -1;
+	}
+
+	//---------------------------------------------------------------------
+	// returns entry index or -1 if new
+	private int insert_internal(const T &key, bool multi = false)
+	{
+		auto h = hash(key);
+		int sz = table.size;
+
+		auto e = entry{key, -1};
+
+		if (!sz)
+		{
+			// just add one entry (empty table)
+			entries.add(e);
+			table.add(0);
+			return -1;
+		}
+
+		// make sure sz is power of two
+		assert(!(sz & (sz-1)));
+
+		auto index = cast int (h & (sz-1));
+
+		if (!multi)
+		{
+			auto tmp = table[index];
+
+			while (tmp >= 0)
+			{
+				auto &he = entries[tmp];
+
+				if (he.key == key)
+				{
+					// already in table
+					return tmp;
+				}
+
+				tmp = he.next;
+			}
+		}
+
+		e.next = table[index];
+		table[index] = entries.size;
+		entries.add(e);
+
+		// rehash if too big
+		if (entries.size > table.size)
+		{
+			assert(sz*2 > sz);
+			table.resize(sz*2);
+			rehash();
+		}
+
+		assert(find(key) >= 0);
+
+		return -1;
+	}
+
+	//---------------------------------------------------------------------
+	private int erase_internal(int index)
+	{
+		auto h = cast int (hash(entries[index].key) & (table.size-1));
+		unbind_entry(h, index);
+		auto last = entries.size-1;
+
+		if (index == last)
+		{
+			entries.pop();
+			return -1;
+		}
+
+		auto nh = cast int (hash(entries[last].key) & (table.size-1));
+
+		unbind_entry(nh, last);
+		entries.erase_unordered(index);
+
+		auto &e = entries[index];
+		assert(nh == cast int (hash(e.key) & (table.size-1)));
+		e.next = table[nh];
+		table[nh] = index;
+		return index;
+	}
+
+	//---------------------------------------------------------------------
+	private void unbind_entry(int h, int index)
+	{
+		auto tmp = table[h];
+		auto prev = -1;
+
+		while (tmp >= 0)
+		{
+			if (tmp == index)
+				break;
+
+			const auto &e = entries[tmp];
+			prev = tmp;
+			tmp = e.next;
+		}
+
+		assert(tmp >= 0);
+		auto next = entries[index].next;
+
+		if (prev >= 0)
+			entries[prev].next = next;
+		else
+		{
+			// replace head
+			assert(table[h] == index);
+			table[h] = next;
+		}
+	}
+
+}

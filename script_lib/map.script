@@ -1,0 +1,212 @@
+// a simple vector-based hashmap
+
+//=============================================================================
+struct map<K, V>
+{
+	using __const_V = const V;
+	private set<K> keys;
+	private array<V> values;
+
+	//---------------------------------------------------------------------
+	void rehash()
+	{
+		keys.rehash();
+	}
+
+	//---------------------------------------------------------------------
+	inline bool empty() const
+	{
+		return keys.empty();
+	}
+
+	//---------------------------------------------------------------------
+	inline int size() const
+	{
+		return keys.size();
+	}
+
+	//---------------------------------------------------------------------
+	void clear()
+	{
+		keys.clear();
+		values.clear();
+	}
+
+	//---------------------------------------------------------------------
+	void shrink()
+	{
+		keys.shrink();
+		values.shrink();
+	}
+
+	//---------------------------------------------------------------------
+	void reset()
+	{
+		keys.reset();
+		values.reset();
+	}
+
+	//---------------------------------------------------------------------
+	inline const V &find_value(K key) const
+	{
+		return values[keys.find(key)];
+	}
+
+	//---------------------------------------------------------------------
+	// get key at index
+	inline const K &get_key(int index) const
+	{
+		return keys.get(index);
+	}
+
+	//---------------------------------------------------------------------
+	// get value at index
+	inline const V &get(int index) const
+	{
+		return values[index];
+	}
+
+	//---------------------------------------------------------------------
+	// get value at index (alias)
+	inline const V &get_value(int index) const
+	{
+		return values[index];
+	}
+
+	//---------------------------------------------------------------------
+	inline void set_value(int index, V value)
+	{
+		values[index] = value;
+	}
+
+	//---------------------------------------------------------------------
+	// note: returns const array reference
+	inline __const_V[] get_values() const
+	{
+		return values;
+	}
+
+	//---------------------------------------------------------------------
+	// because scripting language doesn't have function overloads...
+	inline V[] get_values_mutable()
+	{
+		return values;
+	}
+
+	//---------------------------------------------------------------------
+	void set_values(const array<V> &nvalues)
+	{
+		values = nvalues;
+	}
+
+	//---------------------------------------------------------------------
+	// returns -1 if new, otherwise entry index
+	inline int add(K key, V value)
+	{
+		return insert_internal(key, value);
+	}
+
+	//---------------------------------------------------------------------
+	inline int insert(K key, V value)
+	{
+		return insert_internal(key, value);
+	}
+
+	//---------------------------------------------------------------------
+	inline int add_multi(K key, V value)
+	{
+		return insert_internal(key, value, true);
+	}
+
+	//---------------------------------------------------------------------
+	inline int insert_multi(K key, V value)
+	{
+		return insert_internal(key, value, true);
+	}
+
+	//---------------------------------------------------------------------
+	// boolean test
+	inline bool contains(K key) const
+	{
+		return keys.contains(key);
+	}
+
+	//---------------------------------------------------------------------
+	// returns entry index, -1 if not found
+	inline int find(K key) const
+	{
+		return keys.find(key);
+	}
+
+	//---------------------------------------------------------------------
+	// remove element, returns next "iterator" (=index)
+	int remove(K key)
+	{
+		auto res = keys.remove(key);
+
+		if (res < 0)
+			values.pop();
+		else
+			values.erase_unordered(res);
+
+		return res;
+	}
+
+	//---------------------------------------------------------------------
+	// erase entry at index
+	int erase(int index)
+	{
+		auto res = keys.erase(index);
+		values.erase_unordered(index);
+
+		return res;
+	}
+
+	//---------------------------------------------------------------------
+	// get index of next collision, -1 if none
+	// note: chain is broken if set is modified during iteration
+	int next_collision(int index) const
+	{
+		return keys.next_collision(index);
+	}
+
+	//---------------------------------------------------------------------
+	// access operator, assume not multimap
+	static V operator[](const map &m, K key)
+	{
+		return m.find_value(key);
+	}
+
+	//---------------------------------------------------------------------
+	// write-access operator
+	static V &operator[](map &m, K key)
+	{
+		auto res = m.keys.insert(key);
+
+		if (res < 0)
+		{
+			res = m.values.size;
+			m.values.resize(res+1);
+		}
+
+		return m.values[res];
+	}
+
+///////////////////////////////////////////////////////////////////////////////
+// private
+
+	//---------------------------------------------------------------------
+	// returns entry index or -1 if new
+	private int insert_internal(const K &key, const V &value,
+		bool multi = false)
+	{
+		auto res = multi ? keys.insert_multi(key) : keys.insert(key);
+
+		if (res < 0)
+			values.add(value);
+		else
+			values[res] = value;
+
+		return res;
+	}
+}
