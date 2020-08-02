@@ -1,4 +1,4 @@
-// a simple double-ended queue
+// a simple double-ended queue, amortized O(1) push/pop
 ///////////////////////////////////////////////////////////////////////////////
 struct queue<T>
 {
@@ -39,15 +39,12 @@ struct queue<T>
 		auto &tmp = data[start];
 		T res = tmp;
 
-		// because we can't destroy range in the script, we simply
-		// swap with default
-		T nullT;
-		nullT <-> tmp;
+		reset_element(tmp);
 
 		++start;
 		start *= start < data.size;
 
-		--count;
+		dec_count();
 
 		return res;
 	}
@@ -59,15 +56,12 @@ struct queue<T>
 		auto &tmp = data[fix_index(count-1)];
 		T res = tmp;
 
-		// because we can't destroy range in the script, we simply
-		// swap with default
-		T nullT;
-		nullT <-> tmp;
+		reset_element(tmp);
 
 		--end;
 		end += data.size * end < 0;
 
-		--count;
+		dec_count();
 
 		return res;
 	}
@@ -172,5 +166,24 @@ struct queue<T>
 		// grow exponentially by 3/2
 		int nsize = data.size*3/2 + (data.size <= 1);
 		data.resize(nsize);
+	}
+
+	//---------------------------------------------------------------------
+	private inline void dec_count()
+	{
+		--count;
+
+		// auto-compact when count drops below 1/2 of capacity
+		if (count < (data.size >> 1) && count)
+			compact();
+	}
+
+	//---------------------------------------------------------------------
+	private inline void reset_element(T &elem)
+	{
+		// because we can't destroy range in the script, we simply
+		// swap with default
+		T nullT;
+		nullT <-> elem;
 	}
 }
