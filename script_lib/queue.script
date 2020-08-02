@@ -3,7 +3,7 @@
 struct queue<T>
 {
 	//---------------------------------------------------------------------
-	void push_front(const T &value)
+	void push_front(T value)
 	{
 		if (count == data.size)
 			grow();
@@ -17,10 +17,13 @@ struct queue<T>
 	}
 
 	//---------------------------------------------------------------------
-	void push_back(const T &value)
+	void push_back(T value)
 	{
 		if (count == data.size)
+		{
 			grow();
+			end += end+1 == count;
+		}
 
 		data[end++] = value;
 
