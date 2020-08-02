@@ -157,7 +157,7 @@ struct queue<T>
 	{
 		index += start;
 		index -= (index >= data.size)*data.size;
-		assert(cast uint index < cast uint count);
+		assert(cast uint index < cast uint data.size);
 		return index;
 	}
 
