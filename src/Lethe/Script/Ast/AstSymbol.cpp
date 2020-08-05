@@ -384,7 +384,7 @@ bool AstSymbol::TypeGen(CompiledProgram &p)
 		{
 			auto tdesc = targ->GetTypeDesc(p);
 
-			if (tdesc.GetTypeEnum() == DT_CLASS && (parent->type == AST_CALL || parent->type == AST_OP_EQ || parent->type == AST_OP_NEQ))
+			if ((tdesc.GetTypeEnum() == DT_CLASS || targ->type == AST_STRUCT) && (parent->type == AST_CALL || parent->type == AST_OP_EQ || parent->type == AST_OP_NEQ))
 			{
 				AstNode *newNode = new AstConstName(tdesc.GetType().name, location);
 				parent->ReplaceChild(this, newNode);
