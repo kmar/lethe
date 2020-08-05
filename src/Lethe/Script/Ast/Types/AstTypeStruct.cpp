@@ -398,8 +398,8 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 		auto *mn = n->nodes[0];
 		auto mtype = mn->GetTypeDesc(p);
 
-		// copy editable qualifier to members
-		mtype.qualifiers |= qualifiers & AST_Q_EDITABLE;
+		// copy editable and nobounds qualifiers to members
+		mtype.qualifiers |= qualifiers & (AST_Q_EDITABLE | AST_Q_NOBOUNDS);
 
 		if (mn->qualifiers & AST_Q_NATIVE)
 			++nativeMembers;
@@ -482,7 +482,13 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 			Int msize  = mtype.GetSize();
 
 			if (!msize)
-				return p.Error(vn, "illegal member type");
+			{
+				// for empty structs as members, we imply 1 byte size
+				if (mtype.IsStruct())
+					msize = malign = 1;
+				else
+					return p.Error(vn, "illegal member type");
+			}
 
 			// virtual property?
 			if (mn->qualifiers & AST_Q_PROPERTY)
