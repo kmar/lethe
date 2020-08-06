@@ -367,7 +367,7 @@ enum VmOpCode
 	OPC_BMCALL,
 	// builtin call with trap (used for int64 divide ops)
 	OPC_BCALL_TRAP,
-	// call native virtual func (uimm24 vtbl index)
+	// call native virtual func (uimm24 vtbl index) [unused]
 	OPC_NVCALL,
 	// return from function/method; simply pop ret addr
 	// think about the arm way with LR to simplify tailcalls?

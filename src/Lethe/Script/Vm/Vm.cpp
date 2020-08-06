@@ -1652,6 +1652,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 			return EXEC_BREAKPOINT;
 
 		case OPC_HALT:
+		case OPC_NVCALL:
 			stk.programCounter = static_cast<Int>(iptr - 1 - prog->instructions.GetData());
 			return EXEC_OK;
 
