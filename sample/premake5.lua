@@ -64,7 +64,7 @@ project "lethe_sample"
 	files {"main.cpp"}
 
 	filter "system:windows"
-		links {"winmm"}
+		links {"winmm", "ws2_32"}
 
 	filter "system:not windows"
 		links {"pthread"}
