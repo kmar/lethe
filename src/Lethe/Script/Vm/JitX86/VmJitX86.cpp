@@ -2953,6 +2953,10 @@ Int VmJitX86::FindFunctionPC(const void *) const
 	return -1;
 }
 
+void VmJitX86::FlushStackOpt(bool)
+{
+}
+
 #endif
 
 }
