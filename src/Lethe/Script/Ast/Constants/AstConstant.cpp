@@ -29,6 +29,10 @@ namespace lethe
 		res->num.id = static_cast<T>(num.i OP);	\
 		AST_CONST_CONV_WARN_IF(static_cast<SByte>(res->num.id) != num.i); \
 		break; \
+	case DT_BYTE:	\
+		res->num.id = static_cast<T>(num.i OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Byte>(res->num.id) != num.i); \
+		break; \
 	case DT_SHORT:	\
 		res->num.id = static_cast<T>(num.i OP);	\
 		AST_CONST_CONV_WARN_IF(static_cast<Short>(res->num.id) != num.i); \
@@ -72,6 +76,7 @@ namespace lethe
 	break;	\
 	case DT_BOOL:	\
 	case DT_SBYTE:	\
+	case DT_BYTE:	\
 	case DT_SHORT:	\
 	case DT_USHORT:	\
 	case DT_INT:	\
