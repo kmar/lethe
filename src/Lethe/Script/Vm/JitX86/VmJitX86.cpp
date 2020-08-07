@@ -2921,6 +2921,18 @@ VmJitX86::VmJitX86()
 {
 }
 
+const void *VmJitX86::GetCodePtr(Int) const
+{
+	return nullptr;
+}
+
+bool VmJitX86::GetJitCode(const Byte *&ptr, Int &size)
+{
+	ptr = nullptr;
+	size = 0;
+	return false;
+}
+
 bool VmJitX86::CodeGen(CompiledProgram &)
 {
 	return false;
@@ -2929,6 +2941,16 @@ bool VmJitX86::CodeGen(CompiledProgram &)
 ExecResult VmJitX86::ExecScriptFunc(Vm &, Int)
 {
 	return EXEC_NO_JIT;
+}
+
+ExecResult VmJitX86::ExecScriptFuncPtr(Vm &, const void *)
+{
+	return EXEC_NO_JIT;
+}
+
+Int VmJitX86::FindFunctionPC(const void *) const
+{
+	return -1;
 }
 
 #endif
