@@ -132,7 +132,7 @@ AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const C
 
 	case DT_CHAR:
 		res = new AstConstInt(location);
-		AST_CONST_CONV_TO( WChar, i, dt.type, res,);
+		AST_CONST_CONV_TO(Int, i, dt.type, res,);
 		break;
 
 	case DT_ENUM:
