@@ -55,6 +55,8 @@ public:
 	Delegate<Array<String>()> onGetScriptFilenames;
 
 private:
+	ScriptEngine *engine;
+
 	String debuggerIP;
 	Int debuggerPort;
 
@@ -65,8 +67,6 @@ private:
 		DSTEP_OVER,
 		DSTEP_OUT
 	};
-
-	ScriptEngine *engine;
 
 	mutable Mutex clientMutex;
 	UniquePtr<Thread> serverThread;
