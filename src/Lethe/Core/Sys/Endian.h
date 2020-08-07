@@ -8,6 +8,17 @@
 #	include <intrin.h>
 #endif
 
+// so retarded that we don't have a portable way to do constexpr endian detection
+// as of 2020...
+#if LETHE_OS_LINUX || LETHE_OS_ANDROID
+#	include <endian.h>
+#elif LETHE_OS_BSD
+#	include <sys/types.h>
+#	include <sys/endian.h>
+#elif LETHE_OS_OSX || LETHE_OS_IOS
+#	include <machine/endian.h>
+#endif
+
 namespace lethe
 {
 
@@ -26,20 +37,24 @@ struct Endian
 		}
 	}
 
-private:
-	static const UInt endianTest = 0x1020304;
+	// note: mixed endian not supported
 
-public:
 	// returns true if host is little endian
 	static constexpr inline bool IsLittle()
 	{
-		return *(const Byte *)&endianTest == 4;
+#if defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN
+		return false;
+#elif defined(BYTE_ORDER) && defined(BIG_ENDIAN) && BYTE_ORDER == BIG_ENDIAN
+		return false;
+#else
+		return true;
+#endif
 	}
 
 	// returns true if host is big endian
 	static constexpr inline bool IsBig()
 	{
-		return *(const Byte *)&endianTest == 1;
+		return !IsLittle();
 	}
 
 	// generic function to convert from litle endian to host (native)
