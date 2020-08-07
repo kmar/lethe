@@ -245,23 +245,8 @@ UShort LETHE_API FloatToHalf(Float f);
 
 static inline Int RoundFloatToInt(Float f)
 {
-#if 0
-	// reference: http://stereopsis.com/sree/fpu2006.html
-	// seems 6x faster than default in msc
-	// question is what if internal FPU rounding is set to non-default? will it still work?
-	// => must investigate, also should measure performance diff on ARM
-	// ok, 1.8x faster on ARM (without check), with check it's actually 1.1% slower
-	LETHE_ASSERT(Abs(f) <= Float(Limits<Int>::MAX));
-	/*if ( LETHE_UNLIKELY( Abs(f) >= Float(Limits<Int>::MAX) ) ) {
-		return Limits<Int>::MAX * ((f>0)*2 - 1);
-	}*/
-	Double tmp = Double(f) + 6755399441055744.0;
-	return reinterpret_cast<Int *>(&tmp)[Endian::IsBig()];
-#else
-	// slower than above (say 1.5x-2x) but yields correct results for rounding -0.5 and 0.5
 	static const Float ofs[2] = {0.5f, -0.5f};
 	return FloatToInt(f + ofs[FloatToBinary(f) >> 31]);
-#endif
 }
 
 static inline Float IntToFloat(Int i)
