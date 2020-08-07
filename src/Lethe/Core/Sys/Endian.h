@@ -26,17 +26,20 @@ struct Endian
 		}
 	}
 
+private:
+	static const UInt endianTest = 0x1020304;
+
+public:
 	// returns true if host is little endian
-	static inline bool IsLittle()
+	static constexpr inline bool IsLittle()
 	{
-		UShort x = 1;
-		return *reinterpret_cast<const Byte *>(&x) == 1;
+		return *(const Byte *)&endianTest == 4;
 	}
 
 	// returns true if host is big endian
-	static inline bool IsBig()
+	static constexpr inline bool IsBig()
 	{
-		return !IsLittle();
+		return *(const Byte *)&endianTest == 1;
 	}
 
 	// generic function to convert from litle endian to host (native)

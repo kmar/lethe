@@ -62,15 +62,15 @@ static inline UInt MyHash(const void *buf, size_t len, UInt seed = 0)
 	{
 	case 3:
 		last = (UInt)b[2] << 16;
-                // fall through
+		// fall through
 	case 2:
 		last |= (UInt)b[1] << 8;
-                // fall through
+		// fall through
 	case 1:
 		last |= (UInt)b[0];
 		last ^= len * KEY3;
 		h = MyHashUInt(last, h);
-                // fall through
+		// fall through
 	default:
 		break;
 	}

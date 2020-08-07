@@ -57,14 +57,23 @@ constexpr UInt ConstMyHashInner(const Byte *buf, UInt h)
 {
 	return len >= 4 ?
 		   ConstMyHashInner<len-4>(buf + 4,
-								   ConstMyHashUInt(
-									   (UInt)buf[0] +
-									   ((UInt)buf[1] << 8) +
-									   ((UInt)buf[2] << 16) +
-									   ((UInt)buf[3] << 24),
-									   h
-								   )
-								  )
+			Endian::IsLittle() ?
+				   ConstMyHashUInt(
+					   (UInt)buf[0] +
+					   ((UInt)buf[1] << 8) +
+					   ((UInt)buf[2] << 16) +
+					   ((UInt)buf[3] << 24),
+					   h
+				   )
+			:
+				   ConstMyHashUInt(
+					   (UInt)buf[3] +
+					   ((UInt)buf[2] << 8) +
+					   ((UInt)buf[1] << 16) +
+					   ((UInt)buf[0] << 24),
+					   h
+				   )
+		   )
 		   :
 		   ConstMyHashFinish<len>(buf, h);
 }

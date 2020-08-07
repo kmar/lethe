@@ -2,6 +2,7 @@
 
 #include "../Sys/Types.h"
 #include "../Sys/Platform.h"
+#include "../Sys/Endian.h"
 
 namespace lethe
 {
