@@ -275,6 +275,12 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 
 			p.DynArrayVarFix(tdesc);
 
+			if (Endian::IsBig() && !top.IsReference() && top.IsSmallNumber())
+			{
+				// big endian adjust
+				p.EmitI24(OPC_ISHL_ICONST, (4-top.GetSize())*8);
+			}
+
 			p.PopStackType(1);
 		}
 		else if (varType->qualifiers & AST_Q_REFERENCE)

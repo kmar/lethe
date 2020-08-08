@@ -137,7 +137,12 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			// auto
 			auto *type = static_cast<const DataType *>(stk.GetPtr(ofs++));
 
-			type->GetVariableText(res, stk.GetTop() + ofs);
+			auto *src = reinterpret_cast<const Byte *>(stk.GetTop() + ofs);
+
+			if (Endian::IsBig() && type->IsSmallNumber())
+				src += 4-type->size;
+
+			type->GetVariableText(res, src);
 
 			ofs += (type->size + Stack::WORD_SIZE-1)/Stack::WORD_SIZE;
 			wc++;

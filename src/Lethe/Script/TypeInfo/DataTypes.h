@@ -120,6 +120,8 @@ struct LETHE_API QDataType
 	bool IsRecursive(const DataType *rec) const;
 	// needs zero-init?
 	bool ZeroInit() const;
+	// is elementary numeric type smaller than int?
+	bool IsSmallNumber() const;
 	// is elementary numeric type?
 	bool IsNumber() const;
 	// is long integer type (64-bit)?
@@ -261,6 +263,9 @@ public:
 
 	// returns true if zero-init needed
 	bool ZeroInit() const;
+
+	// is elementary numeric type smaller than int?
+	bool IsSmallNumber() const;
 
 	// contains array ref?
 	bool HasArrayRef() const;

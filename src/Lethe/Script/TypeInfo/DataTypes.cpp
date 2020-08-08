@@ -164,6 +164,11 @@ Int DataType::GetTypeEnumSize(DataTypeEnum t)
 	return 0;
 }
 
+bool DataType::IsSmallNumber() const
+{
+	return type >= DT_BOOL && type < DT_CHAR && size < 4;
+}
+
 bool DataType::IsNumberEnum(DataTypeEnum t)
 {
 	return t >= DT_BYTE && t <= DT_DOUBLE;
@@ -1380,6 +1385,11 @@ bool QDataType::IsLongInt() const
 {
 	auto dte = GetTypeEnum();
 	return dte == DT_LONG || dte == DT_ULONG;
+}
+
+bool QDataType::IsSmallNumber() const
+{
+	return ref->IsSmallNumber();
 }
 
 bool QDataType::IsNumber() const
