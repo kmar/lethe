@@ -1159,6 +1159,12 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			FixPointerQualifiers(argtype, argValue);
 		}
 
+		if (Endian::IsBig() && !isEllipsis && !argtype.IsReference() && argtype.IsSmallNumber())
+		{
+			// big endian adjust
+			p.EmitI24(OPC_ISHL_ICONST, (4-argtype.GetSize())*8);
+		}
+
 		p.PopStackType(1);
 
 		argValue->offset = cscope.AllocVar(argtype);
@@ -1467,6 +1473,13 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			if (resType.GetTypeEnum() == DT_DYNAMIC_ARRAY)
 				return p.Error(this, "illegal expression construct");
 		}
+	}
+
+	if (Endian::IsBig() && !resType.IsReference() && resType.IsSmallNumber())
+	{
+		// endian-adjust result after call
+        p.EmitI24(resType.GetTypeEnum() == DT_SHORT || resType.GetTypeEnum() == DT_SBYTE ?
+			OPC_ISAR_ICONST : OPC_ISHR_ICONST, (4-resType.GetSize())*8);
 	}
 
 	if (p.curScope)
