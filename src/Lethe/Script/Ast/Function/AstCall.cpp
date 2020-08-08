@@ -1478,7 +1478,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	if (Endian::IsBig() && !resType.IsReference() && resType.IsSmallNumber())
 	{
 		// endian-adjust result after call
-        p.EmitI24(resType.GetTypeEnum() == DT_SHORT || resType.GetTypeEnum() == DT_SBYTE ?
+		p.EmitI24(resType.GetTypeEnum() == DT_SHORT || resType.GetTypeEnum() == DT_SBYTE ?
 			OPC_ISAR_ICONST : OPC_ISHR_ICONST, (4-resType.GetSize())*8);
 	}
 
