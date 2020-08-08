@@ -84,6 +84,11 @@ public:
 	void SetString(Int offset, const String &val);
 	const String &GetString(Int offset) const;
 
+	inline bool GetBool(Int offset) const;
+	inline Byte GetByte(Int offset) const;
+	inline SByte GetSignedByte(Int offset) const;
+	inline UShort GetShort(Int offset) const;
+	inline Short GetSignedShort(Int offset) const;
 	inline UInt GetInt(Int offset) const;
 	inline Int GetSignedInt(Int offset) const;
 	inline ULong GetLong(Int offset) const;
@@ -97,6 +102,8 @@ public:
 	inline void SetDouble(Int offset, Double value);
 	inline void SetPtr(Int offset, const void *value);
 	inline void PushBool(bool value);
+	inline void PushByte(Byte value);
+	inline void PushShort(UShort value);
 	inline void PushInt(UInt value);
 	inline void PushLong(ULong value);
 	inline void PushFloat(Float value);
@@ -231,6 +238,31 @@ inline void Stack::PushRaw(Int words)
 	top -= words;
 }
 
+inline bool Stack::GetBool(Int offset) const
+{
+	return *reinterpret_cast<const bool *>(top + offset);
+}
+
+inline Byte Stack::GetByte(Int offset) const
+{
+	return *reinterpret_cast<const Byte *>(top + offset);
+}
+
+inline SByte Stack::GetSignedByte(Int offset) const
+{
+	return *reinterpret_cast<const SByte *>(top + offset);
+}
+
+inline UShort Stack::GetShort(Int offset) const
+{
+	return *reinterpret_cast<const UShort *>(top + offset);
+}
+
+inline Short Stack::GetSignedShort(Int offset) const
+{
+	return *reinterpret_cast<const Short *>(top + offset);
+}
+
 inline UInt Stack::GetInt(Int offset) const
 {
 	return *reinterpret_cast<const UInt *>(top + offset);
@@ -278,7 +310,32 @@ inline void Stack::PushInt(UInt value)
 
 inline void Stack::PushBool(bool value)
 {
-	*reinterpret_cast<UInt *>(--top) = (UInt)value;
+	UInt bval = (UInt)value;
+
+	if (Endian::IsBig() && sizeof(bool) < 4)
+		bval <<= (4 - sizeof(bool))*8;
+
+	*reinterpret_cast<UInt *>(--top) = bval;
+}
+
+inline void Stack::PushByte(Byte value)
+{
+	UInt bval = (UInt)value;
+
+	if (Endian::IsBig())
+		bval <<= 3*8;
+
+	*reinterpret_cast<UInt *>(--top) = bval;
+}
+
+inline void Stack::PushShort(UShort value)
+{
+	UInt bval = (UInt)value;
+
+	if (Endian::IsBig())
+		bval <<= 2*8;
+
+	*reinterpret_cast<UInt *>(--top) = bval;
 }
 
 inline void Stack::PushLong(ULong value)
