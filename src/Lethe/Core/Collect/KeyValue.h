@@ -11,7 +11,7 @@ struct KeyValue
 	K key;
 	V value;
 
-	inline KeyValue() {}
+	inline KeyValue() : key(), value() {}
 	inline KeyValue(const K &k, const V &v) : key(k), value(v) {}
 
 	inline bool operator <(const KeyValue &o) const
