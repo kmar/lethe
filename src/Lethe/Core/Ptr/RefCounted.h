@@ -81,28 +81,28 @@ public:
 		return res;
 	}
 
-	inline UInt AddWeakRef() const
+	static inline UInt AddWeakRef(const RefCounted *self)
 	{
-		LETHE_ASSERT(strongRefCount != 0);
-		UInt res = Atomic::Increment(weakRefCount);
+		LETHE_ASSERT(self->strongRefCount != 0);
+		UInt res = Atomic::Increment(self->weakRefCount);
 		LETHE_ASSERT(res);
 		return res;
 	}
 
-	inline UInt ReleaseWeak() const
+	static inline UInt ReleaseWeak(const RefCounted *self)
 	{
-		UInt res = Atomic::Decrement(weakRefCount);
+		UInt res = Atomic::Decrement(self->weakRefCount);
 		LETHE_ASSERT(res != (NonAtomicType)(((UInt)0-1) & Limits<NonAtomicType>::Max()));
 
-		if (LETHE_UNLIKELY(!res && Atomic::CompareAndSwap(strongRefCount, (NonAtomicType)0, (NonAtomicType)0)))
-			CustomDeleteObjectSkeleton();
+		if (LETHE_UNLIKELY(!res && Atomic::CompareAndSwap(self->strongRefCount, (NonAtomicType)0, (NonAtomicType)0)))
+			CustomDeleteObjectSkeleton(self);
 
 		return res;
 	}
 
-	inline bool HasStrongRef() const
+	static inline bool HasStrongRef(const RefCounted *self)
 	{
-		return Atomic::Load(strongRefCount) != 0;
+		return Atomic::Load(self->strongRefCount) != 0;
 	}
 
 	// note: Finalize callback NOT called when object is on stack => only called for dynamically allocated objects!
@@ -118,7 +118,7 @@ protected:
 
 	virtual CustomDeleterFunc GetCustomDeleter() const;
 
-	void LETHE_NOINLINE CustomDeleteObjectSkeleton() const;
+	static void LETHE_NOINLINE CustomDeleteObjectSkeleton(const RefCounted *self);
 
 	void LETHE_NOINLINE ReleaseAfterStrongZero() const;
 };

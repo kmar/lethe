@@ -603,7 +603,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 	Int firstArg = 1 - p.IsFastCall();
 
 	// load ptr first
-	p.Emit(OPC_LPUSHPTR + (firstArg << 8));
+	p.Emit(OPC_LPUSHPTR + ((UInt)firstArg << 8));
 
 	const auto native = (structQualifiers & AST_Q_NATIVE) != 0;
 
@@ -643,7 +643,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 	if (type == DT_CLASS)
 	{
 		p.EmitI24(OPC_GLOADADR, vtblOffset);
-		p.Emit(OPC_LPUSHPTR + ((firstArg+2) << 8));
+		p.Emit(OPC_LPUSHPTR + (UInt(firstArg+2) << 8));
 		p.EmitI24(OPC_PSTOREPTR_IMM, BaseObject::OFS_VTBL);
 	}
 
@@ -661,7 +661,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 		if (m.type.GetType().funCtor >= 0)
 		{
 			Int delta = m.offset - ofs;
-			p.Emit(OPC_PUSH_ICONST + (delta << 8));
+			p.Emit(OPC_PUSH_ICONST + ((UInt)delta << 8));
 			p.Emit(OPC_AADD + (1 << 8));
 			p.EmitBackwardJump(OPC_CALL, m.type.GetType().funCtor);
 			ofs += delta;
@@ -671,7 +671,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 	if (ofs)
 	{
 		p.EmitI24(OPC_POP, 1);
-		p.Emit(OPC_LPUSHPTR + (firstArg << 8));
+		p.Emit(OPC_LPUSHPTR + ((UInt)firstArg << 8));
 	}
 
 	Int pop = 1;
@@ -698,7 +698,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 		}
 	}
 
-	p.Emit(OPC_RET + (pop << 8));
+	p.Emit(OPC_RET + ((UInt)pop << 8));
 
 	// no vector ctor for classes
 	if (type == DT_CLASS)
@@ -714,7 +714,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 
 	// FIXME: should iterate FORWARD here!!!
 
-	p.Emit(OPC_LPUSH32 + (firstArg << 8));
+	p.Emit(OPC_LPUSH32 + ((UInt)firstArg << 8));
 	p.Emit(OPC_IBNZ_P + (1 << 8));
 	p.Emit(OPC_RET);
 
@@ -736,8 +736,8 @@ bool DataType::GenCtor(CompiledProgram &p) const
 	// inc idx
 	p.Emit(OPC_LIADD_ICONST + (0 << 8) + (0 << 16) + 0x01000000u);
 	// dec count
-	p.Emit(OPC_LIADD_ICONST + (firstArg << 8) + (firstArg << 16) + 0xff000000u);
-	p.Emit(OPC_LPUSH32 + (firstArg << 8));
+	p.Emit(OPC_LIADD_ICONST + ((UInt)firstArg << 8) + ((UInt)firstArg << 16) + 0xff000000u);
+	p.Emit(OPC_LPUSH32 + ((UInt)firstArg << 8));
 	LETHE_RET_FALSE(p.EmitBackwardJump(OPC_IBNZ_P, vloop));
 
 	p.EmitI24(OPC_RET, 1);
@@ -840,14 +840,14 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		if (type == DT_CLASS)
 		{
 			p.EmitI24(OPC_GLOADADR, vtblOffset);
-			p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
+			p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
 			p.EmitI24(OPC_PSTOREPTR_IMM, BaseObject::OFS_VTBL);
 		}
 
 		if (cdtor)
 		{
 			// call custom dtor first
-			p.Emit(OPC_LPUSHPTR + (firstArg << 8));
+			p.Emit(OPC_LPUSHPTR + ((UInt)firstArg << 8));
 			p.Emit(OPC_LOADTHIS);
 			Int handle = p.EmitForwardJump(OPC_CALL);
 			p.Emit(OPC_POPTHIS);
@@ -855,7 +855,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		}
 
 		// load ptr first
-		p.Emit(OPC_LPUSHPTR + (firstArg << 8));
+		p.Emit(OPC_LPUSHPTR + ((UInt)firstArg << 8));
 
 		Int ofs = 0;
 
@@ -871,7 +871,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 			if (m.type.GetTypeEnum() == DT_STRING)
 			{
 				Int delta = m.offset - ofs;
-				p.Emit(OPC_PUSH_ICONST + (delta << 8));
+				p.Emit(OPC_PUSH_ICONST + ((UInt)delta << 8));
 				p.Emit(OPC_AADD + (1 << 8));
 				p.Emit(OPC_BCALL + (BUILTIN_PDELSTR_NP << 8));
 				ofs += delta;
@@ -881,7 +881,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 				if (m.type.GetType().funDtor >= 0)
 				{
 					Int delta = m.offset - ofs;
-					p.Emit(OPC_PUSH_ICONST + (delta << 8));
+					p.Emit(OPC_PUSH_ICONST + ((UInt)delta << 8));
 					p.Emit(OPC_AADD + (1 << 8));
 					p.EmitBackwardJump(OPC_CALL, m.type.GetType().funDtor);
 					ofs += delta;
@@ -1003,7 +1003,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 			p.EmitBackwardJump(OPC_BR, base->funDtor);
 		}
 		else
-			p.Emit(OPC_RET + (pop << 8));
+			p.Emit(OPC_RET + ((UInt)pop << 8));
 
 		// no vector dtor/copying for classes (really? but copying might be useful for cloning!)
 		if (type == DT_CLASS)
@@ -1017,7 +1017,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		// vector deleter has:
 		// [0] = ret adr [1] = count, [2] = ptr
 
-		p.Emit(OPC_LPUSH32 + (firstArg << 8));
+		p.Emit(OPC_LPUSH32 + ((UInt)firstArg << 8));
 		p.Emit(OPC_IBNZ_P + (1 << 8));
 		p.Emit(OPC_RET);
 
@@ -1025,17 +1025,17 @@ bool DataType::GenDtor(CompiledProgram &p) const
 
 		Int vloop = p.instructions.GetSize();
 
-		p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
-		p.Emit(OPC_LPUSH32 + ((firstArg+1) << 8));
+		p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
+		p.Emit(OPC_LPUSH32 + (UInt(firstArg+1) << 8));
 		p.Emit(p.GenIntConst(-1));
 		p.Emit(OPC_IADD);
-		p.Emit(OPC_AADD + (size << 8));
+		p.Emit(OPC_AADD + ((UInt)size << 8));
 		LETHE_RET_FALSE(p.EmitBackwardJump(OPC_CALL, funDtor));
 		p.Emit(OPC_POP + (1 << 8));
 
 		// dec count
-		p.Emit(OPC_LIADD_ICONST + (firstArg << 8) + (firstArg << 16) + 0xff000000u);
-		p.Emit(OPC_LPUSH32 + (firstArg << 8));
+		p.Emit(OPC_LIADD_ICONST + ((UInt)firstArg << 8) + ((UInt)firstArg << 16) + 0xff000000u);
+		p.Emit(OPC_LPUSH32 + ((UInt)firstArg << 8));
 		LETHE_RET_FALSE(p.EmitBackwardJump(OPC_IBNZ_P, vloop));
 
 		p.Emit(OPC_RET);
@@ -1082,11 +1082,11 @@ bool DataType::GenDtor(CompiledProgram &p) const
 	// FIXME: I should finally switch to C++11 and use lambdas
 #define GENDT_FLUSH_COPY() \
 		if (lastCopyOfs >= 0) { \
-			p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8)); \
-			if (lastCopyOfs) p.Emit(OPC_AADD_ICONST + (lastCopyOfs << 8)); \
-			p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8)); \
-			if (lastCopyOfs) p.Emit(OPC_AADD_ICONST + (lastCopyOfs << 8)); \
-			p.Emit(OPC_PCOPY + (copyLen << 8)); \
+			p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8)); \
+			if (lastCopyOfs) p.Emit(OPC_AADD_ICONST + ((UInt)lastCopyOfs << 8)); \
+			p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8)); \
+			if (lastCopyOfs) p.Emit(OPC_AADD_ICONST + ((UInt)lastCopyOfs << 8)); \
+			p.Emit(OPC_PCOPY + ((UInt)copyLen << 8)); \
 			lastCopyOfs = -1; \
 		}
 
@@ -1116,18 +1116,18 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		GENDT_FLUSH_COPY()
 		// okay, we have to do something special here...
 		// aw, crap, here we just... oh well...
-		p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
+		p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
 
 		if (m.offset)
-			p.Emit(OPC_AADD_ICONST + (m.offset << 8));
+			p.Emit(OPC_AADD_ICONST + ((UInt)m.offset << 8));
 
 		if (m.type.IsPointer())
 			p.Emit(OPC_PLOADPTR_IMM);
 
-		p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
+		p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
 
 		if (m.offset)
-			p.Emit(OPC_AADD_ICONST + (m.offset << 8));
+			p.Emit(OPC_AADD_ICONST + ((UInt)m.offset << 8));
 
 		DataTypeEnum mdte = m.type.GetTypeEnum();
 
@@ -1159,13 +1159,13 @@ bool DataType::GenDtor(CompiledProgram &p) const
 	{
 		// copy pointers...
 
-		p.Emit(OPC_LPUSHPTR + ((firstArg + 1) << 8));
+		p.Emit(OPC_LPUSHPTR + (UInt(firstArg + 1) << 8));
 
 		p.EmitNameConst(Name(elemType.GetType().name));
 
 		p.EmitI24(OPC_BCALL, type == DT_WEAK_PTR ? BUILTIN_FIX_ADD_WEAK : BUILTIN_FIX_ADD_STRONG);
 
-		p.Emit(OPC_LPUSHPTR + ((firstArg + 1) << 8));
+		p.Emit(OPC_LPUSHPTR + (UInt(firstArg + 1) << 8));
 
 		p.EmitBackwardJump(OPC_CALL, funDtor);
 		p.Emit(OPC_PSTOREPTR_IMM);
@@ -1193,16 +1193,16 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		{
 			if (elem->type == DT_STRING)
 			{
-				p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
-				p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
+				p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
+				p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
 				p.Emit(p.GenIntConst(arrayDims));
 				p.Emit(OPC_BCALL + (BUILTIN_VCOPYSTR << 8));
 			}
 			else if (elem->funVAssign >= 0)
 			{
 				// call funVAssign!
-				p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
-				p.Emit(OPC_LPUSHPTR + ((firstArg+1) << 8));
+				p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
+				p.Emit(OPC_LPUSHPTR + (UInt(firstArg+1) << 8));
 				p.Emit(p.GenIntConst(arrayDims));
 				p.EmitBackwardJump(OPC_CALL, elem->funVAssign);
 				p.Emit(OPC_POP + (3 << 8));
@@ -1221,7 +1221,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 
 	// [0] = ret adr, [1] = count, [2] = dst_ptr, [3] = src_ptr
 
-	p.Emit(OPC_LPUSH32 + (firstArg << 8));
+	p.Emit(OPC_LPUSH32 + ((UInt)firstArg << 8));
 	p.Emit(OPC_IBNZ_P + (1 << 8));
 	p.Emit(OPC_RET);
 
@@ -1229,28 +1229,28 @@ bool DataType::GenDtor(CompiledProgram &p) const
 
 	Int vcloop = p.instructions.GetSize();
 
-	p.Emit(OPC_LPUSHPTR + ((2+firstArg) << 8));
+	p.Emit(OPC_LPUSHPTR + (UInt(2+firstArg) << 8));
 
-	p.Emit(OPC_LPUSH32 + ((1 + firstArg) << 8));
+	p.Emit(OPC_LPUSH32 + (UInt(1 + firstArg) << 8));
 	p.Emit(p.GenIntConst(-1));
 	p.Emit(OPC_IADD);
-	p.Emit(OPC_AADD + (size << 8));
+	p.Emit(OPC_AADD + ((UInt)size << 8));
 
 	if (IsPointer())
 		p.Emit(OPC_PLOADPTR_IMM);
 
-	p.Emit(OPC_LPUSHPTR + ((2+firstArg) << 8));
-	p.Emit(OPC_LPUSH32 + ((2+firstArg) << 8));
+	p.Emit(OPC_LPUSHPTR + (UInt(2+firstArg) << 8));
+	p.Emit(OPC_LPUSH32 + (UInt(2+firstArg) << 8));
 	p.Emit(p.GenIntConst(-1));
 	p.Emit(OPC_IADD);
-	p.Emit(OPC_AADD + (size << 8));
+	p.Emit(OPC_AADD + ((UInt)size << 8));
 
 	LETHE_RET_FALSE(p.EmitBackwardJump(OPC_CALL, funAssign));
 	p.EmitI24(OPC_POP, 2);
 
 	// dec count
-	p.Emit(OPC_LIADD_ICONST + (firstArg << 8) + (firstArg << 16) + 0xff000000u);
-	p.Emit(OPC_LPUSH32 + (firstArg << 8));
+	p.Emit(OPC_LIADD_ICONST + ((UInt)firstArg << 8) + ((UInt)firstArg << 16) + 0xff000000u);
+	p.Emit(OPC_LPUSH32 + ((UInt)firstArg << 8));
 	LETHE_RET_FALSE(p.EmitBackwardJump(OPC_IBNZ_P, vcloop));
 
 	p.Emit(OPC_RET);

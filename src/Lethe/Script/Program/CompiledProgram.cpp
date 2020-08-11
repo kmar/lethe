@@ -259,7 +259,7 @@ bool CompiledProgram::GotoScope(const NamedScope *target)
 		{
 			// emit_cleanup!
 			cscope->GenDestructors(*this);
-			Emit(OPC_POP + (((cscope->varOfs - vofsBase) / Stack::WORD_SIZE) << 8));
+			Emit(OPC_POP + (UInt((cscope->varOfs - vofsBase) / Stack::WORD_SIZE) << 8));
 		}
 
 		cscope = sd.oldScope;
@@ -292,7 +292,7 @@ NamedScope *CompiledProgram::BreakScope(bool isContinue)
 		{
 			// emit_cleanup!
 			cscope->GenDestructors(*this);
-			Emit(OPC_POP + (((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
+			Emit(OPC_POP + (UInt((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
 		}
 
 		cscope = sd.oldScope;
@@ -333,7 +333,7 @@ bool CompiledProgram::StateBreakScope()
 		{
 			// emit_cleanup!
 			cscope->GenDestructors(*this);
-			Emit(OPC_POP + (((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
+			Emit(OPC_POP + (UInt((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
 		}
 
 		if (cscope->type == NSCOPE_FUNCTION)
@@ -369,7 +369,7 @@ bool CompiledProgram::ReturnScope(bool retOpt)
 			if (!dest && cscope->varOfs != vofsBase)
 			{
 				// emit_cleanup!
-				Emit(OPC_POP + (((cscope->varOfs - vofsBase) / Stack::WORD_SIZE) << 8));
+				Emit(OPC_POP + (UInt((cscope->varOfs - vofsBase) / Stack::WORD_SIZE) << 8));
 			}
 
 			return !dest;
@@ -391,7 +391,7 @@ bool CompiledProgram::ReturnScope(bool retOpt)
 		{
 			// emit_cleanup!
 			cscope->GenDestructors(*this);
-			Emit(OPC_POP + (((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
+			Emit(OPC_POP + (UInt((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
 		}
 
 		if (cscope->type == NSCOPE_FUNCTION)
@@ -434,7 +434,7 @@ bool CompiledProgram::LeaveScope(bool virt)
 		{
 			// emit_cleanup!
 			curScope->GenDestructors(*this);
-			Emit(OPC_POP + (((curScope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
+			Emit(OPC_POP + (UInt((curScope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
 		}
 
 		if (curScope->type == NSCOPE_FUNCTION)
@@ -502,7 +502,7 @@ bool CompiledProgram::FixupForwardTarget(Int fwHandle)
 		LETHE_RET_FALSE(CanEncodeI24(delta));
 		Int &ins = instructions[target];
 		ins &= 255;
-		ins += delta << 8;
+		ins += (UInt)delta << 8;
 	}
 
 	// optimize conditional jump + br => flipped cond
@@ -788,7 +788,7 @@ void CompiledProgram::Finalize()
 		{
 			const GlobalDestFixup &fix = globalDestFixups[i];
 			Int pc = size - fix.revPc + start - 1;
-			instructions[pc] += (fix.target - pc - 1) << 8;
+			instructions[pc] += UInt(fix.target - pc - 1) << 8;
 		}
 
 		Emit(OPC_RET);
@@ -897,7 +897,7 @@ bool CompiledProgram::EmitGlobalCopy(AstNode *n, const DataType &src, Int offset
 	{
 		Emit(OPC_LPUSHADR);
 		EmitI24(OPC_GLOADADR, offset);
-		Emit(OPC_PCOPY + (src.size << 8));
+		Emit(OPC_PCOPY + ((UInt)src.size << 8));
 		Emit(OPC_POP + (2 << 8));
 		return true;
 	}
@@ -961,7 +961,7 @@ void CompiledProgram::EmitLocalDtor(const DataType &src, Int offset)
 	if (src.funDtor < 0)
 		return;
 
-	Emit(OPC_LPUSHADR + (delta << 8));
+	Emit(OPC_LPUSHADR + ((UInt)delta << 8));
 	EmitBackwardJump(OPC_CALL, src.funDtor);
 	Emit(OPC_POP + (1 << 8));
 }
@@ -999,11 +999,11 @@ bool CompiledProgram::EmitGlobalDtor(AstNode *n, const DataType &src, Int offset
 		{
 			globalDestInstr.AddFront(OPC_IADD);
 			globalDestInstr.AddFront(OPC_ISHL_ICONST + (16 << 8));
-			globalDestInstr.AddFront(OPC_PUSH_ICONST + (hiOfs << 8));
-			globalDestInstr.AddFront(OPC_PUSH_ICONST + (smallOfs << 8));
+			globalDestInstr.AddFront(OPC_PUSH_ICONST + ((UInt)hiOfs << 8));
+			globalDestInstr.AddFront(OPC_PUSH_ICONST + ((UInt)smallOfs << 8));
 		}
 		else
-			globalDestInstr.AddFront(OPC_PUSH_ICONST + (offset << 8));
+			globalDestInstr.AddFront(OPC_PUSH_ICONST + ((UInt)offset << 8));
 
 		return true;
 	}
@@ -1014,11 +1014,11 @@ bool CompiledProgram::EmitGlobalDtor(AstNode *n, const DataType &src, Int offset
 
 	if (large)
 	{
-		globalDestInstr.AddFront(OPC_AADDH_ICONST + (hiOfs << 8));
+		globalDestInstr.AddFront(OPC_AADDH_ICONST + ((UInt)hiOfs << 8));
 		offset = smallOfs;
 	}
 
-	globalDestInstr.AddFront(OPC_GLOADADR + (offset << 8));
+	globalDestInstr.AddFront(OPC_GLOADADR + ((UInt)offset << 8));
 	return true;
 }
 

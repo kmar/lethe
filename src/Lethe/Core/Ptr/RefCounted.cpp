@@ -17,12 +17,12 @@ void LETHE_NOINLINE RefCounted::ReleaseAfterStrongZero() const
 	// and abuse vtable for custom deleter!
 	*(CustomDeleterFunc *)this = cdel;
 
-	ReleaseWeak();
+	ReleaseWeak(this);
 }
 
-void LETHE_NOINLINE RefCounted::CustomDeleteObjectSkeleton() const
+void LETHE_NOINLINE RefCounted::CustomDeleteObjectSkeleton(const RefCounted *self)
 {
-	(*(CustomDeleterFunc *)this)(this);
+	(*(CustomDeleterFunc *)self)(self);
 }
 
 RefCounted::CustomDeleterFunc RefCounted::GetCustomDeleter() const

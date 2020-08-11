@@ -384,8 +384,8 @@ void CompiledProgram::EmitI24(Int ins, Int offset)
 		case OPC_GLOAD32:
 		case OPC_GLOAD32F:
 		case OPC_GLOADPTR:
-			Emit(OPC_GLOADADR + (smallOfs << 8));
-			Emit(OPC_AADDH_ICONST + (hiOfs << 8));
+			Emit(OPC_GLOADADR + ((UInt)smallOfs << 8));
+			Emit(OPC_AADDH_ICONST + ((UInt)hiOfs << 8));
 			// note: requires same sequence
 			Emit(OPC_PLOAD8_IMM + (ins - OPC_GLOAD8));
 			return;
@@ -400,15 +400,15 @@ void CompiledProgram::EmitI24(Int ins, Int offset)
 		case OPC_GSTORE32_NP:
 		case OPC_GSTORE32F_NP:
 		case OPC_GSTOREPTR_NP:
-			Emit(OPC_GLOADADR + (smallOfs << 8));
-			Emit(OPC_AADDH_ICONST + (hiOfs << 8));
+			Emit(OPC_GLOADADR + ((UInt)smallOfs << 8));
+			Emit(OPC_AADDH_ICONST + ((UInt)hiOfs << 8));
 			// note: requires same sequence
 			Emit(OPC_PSTORE8_IMM + (ins - OPC_GSTORE8));
 			return;
 
 		case OPC_GLOADADR:
-			Emit(OPC_GLOADADR + (smallOfs << 8));
-			Emit(OPC_AADDH_ICONST + (hiOfs << 8));
+			Emit(OPC_GLOADADR + ((UInt)smallOfs << 8));
+			Emit(OPC_AADDH_ICONST + ((UInt)hiOfs << 8));
 			return;
 		}
 	}
@@ -702,7 +702,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 
 				if (CanEncodeI24(const0))
 				{
-					ins = (const0 << 8) + OPC_AADD_ICONST;
+					ins = ((UInt)const0 << 8) + OPC_AADD_ICONST;
 					num--;
 					instructions.Pop();
 
@@ -825,7 +825,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 				delta++;
 
 				Int &pins = instructions[num-1];
-				pins = optIns + (delta << 8);
+				pins = Int(optIns + ((UInt)delta << 8));
 				return;
 			}
 		}
@@ -857,7 +857,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			if (x > 255 || y > 255)
 				continue;
 
-			instructions[num-1] = f2->opcFold + (y << 8) + (x << 16);
+			instructions[num-1] = f2->opcFold + ((UInt)y << 8) + ((UInt)x << 16);
 			return;
 		}
 
@@ -880,7 +880,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			// LSTORE32 expects 1 arg on stack
 			Int z = (Int)(ins >> 8)-1;
 			instructions[num-2] =
-				f3->opcFold + (x << 24) + (y << 16) + (z << 8);
+				f3->opcFold + ((UInt)x << 24) + ((UInt)y << 16) + ((UInt)z << 8);
 			instructions.Resize(num-1);
 			return;
 		}
@@ -901,7 +901,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			// LSTORE32 expects 1 arg on stack
 			Int z = (Int)(ins >> 8)-0;
 			instructions[num-2] =
-				f3->opcFold + (y << 16) + (z << 8);
+				f3->opcFold + ((UInt)y << 16) + ((UInt)z << 8);
 			instructions.Resize(num-1);
 			return;
 		}
@@ -929,7 +929,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			if (!CanEncodeI24(x))
 				continue;
 
-			instructions[num-1] = f2->opcFold + (x << 8);
+			instructions[num-1] = f2->opcFold + ((UInt)x << 8);
 
 			if (emitOptBase <= num-2 && num-2 >= 0 && GetInsType(num-2) == OPC_AADD_ICONST)
 			{
@@ -937,7 +937,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 
 				if (CanEncodeI24(x))
 				{
-					instructions[num-2] = f2->opcFold + (x << 8);
+					instructions[num-2] = f2->opcFold + ((UInt)x << 8);
 					instructions.Pop();
 				}
 			}
@@ -982,7 +982,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			if (!CanEncodeI24(x))
 				continue;
 
-			instructions[num-1] = f2->opcFold + (x << 8);
+			instructions[num-1] = f2->opcFold + ((UInt)x << 8);
 			return;
 		}
 
@@ -1003,7 +1003,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			if (opc != (UInt)f2->opc1 || GetInsType(num-1) != f2->opc0)
 				continue;
 
-			instructions[num-1] = (GetInsImm24(num-1) << 8) + f2->opcFold;
+			instructions[num-1] = ((UInt)GetInsImm24(num-1) << 8) + f2->opcFold;
 			return;
 		}
 
@@ -1024,7 +1024,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 				cpool.Add((Float)val);
 
 			// note: this assumes 2's complement integers
-			instructions[num-1] = (val << 8) + f2->opcFold;
+			instructions[num-1] = ((UInt)val << 8) + f2->opcFold;
 			return;
 		}
 
@@ -1044,7 +1044,7 @@ void CompiledProgram::EmitInternal(UInt ins)
 			if (Abs(i1 >> 8) > 32767 || ((UInt)i0 >> 8) > 255u)
 				continue;
 
-			instructions[num-2] = f2->opcFold + ((i1 >> 8) << 16) + (i0 & 0xff00);
+			instructions[num-2] = f2->opcFold + (UInt(i1 >> 8) << 16) + (i0 & 0xff00);
 			instructions[num-1] = *reinterpret_cast< const Int * >(&ins);
 			return;
 		}
