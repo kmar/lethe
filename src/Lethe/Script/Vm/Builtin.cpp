@@ -364,6 +364,7 @@ Int Opcode_New_Internal(Stack &stk)
 		// FIXME: better
 		auto ptr = ObjectHeap::Get().Alloc(dt->size, dt->align);
 		MemSet(ptr, 0, dt->size);
+		::new(ptr) BaseObject;
 		stk.PushPtr(ptr);
 		stk.PushPtr(ptr);
 		auto obj = static_cast<BaseObject *>(ptr);
@@ -385,6 +386,7 @@ Int Opcode_New_Internal(Stack &stk, Name n, void *ptr)
 	if (dt)
 	{
 		MemSet(ptr, 0, dt->size);
+		::new(ptr) BaseObject;
 		stk.PushPtr(ptr);
 		stk.PushPtr(ptr);
 		auto obj = static_cast<BaseObject *>(ptr);
