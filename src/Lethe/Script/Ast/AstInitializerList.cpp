@@ -73,8 +73,6 @@ bool AstInitializerList::GenInitializeElem(CompiledProgram &p, AstNode *n, QData
 	if (!elem.CanAlias(ntype))
 		return p.Error(n, "invalid type");
 
-	p.DynArrayVarFix(ntype);
-
 	// FIXME: refactor (merge) this copy-pasted code with code in AstVarDecl
 	if (!global && p.GetJitFriendly() && top.HasArrayRefWithNonConstElem())
 	{
