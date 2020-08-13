@@ -1247,7 +1247,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 			break;
 
 		case OPC_AADDH_ICONST:
-			PtrAddIConst(DecodeImm24(ins) << 16);
+			PtrAddIConst((UInt)DecodeImm24(ins) << 16);
 			break;
 
 		case OPC_IADD:

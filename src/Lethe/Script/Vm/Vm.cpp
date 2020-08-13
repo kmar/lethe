@@ -460,39 +460,39 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_PLOAD8:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.SetInt(1, *reinterpret_cast<const SByte *>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins)));
+			stk.SetInt(1, *reinterpret_cast<const SByte *>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins)));
 			stk.Pop(1);
 			break;
 
 		case OPC_PLOAD8U:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.SetInt(1, *reinterpret_cast<const Byte *>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins)));
+			stk.SetInt(1, *reinterpret_cast<const Byte *>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins)));
 			stk.Pop(1);
 			break;
 
 		case OPC_PLOAD16:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.SetInt(1, *reinterpret_cast<const Short *>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins)));
+			stk.SetInt(1, *reinterpret_cast<const Short *>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins)));
 			stk.Pop(1);
 			break;
 
 		case OPC_PLOAD16U:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.SetInt(1, *reinterpret_cast<const UShort *>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins)));
+			stk.SetInt(1, *reinterpret_cast<const UShort *>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins)));
 			stk.Pop(1);
 			break;
 
 		case OPC_PLOAD32:
 		case OPC_PLOAD32F:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.SetInt(1, *reinterpret_cast<const UInt *>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins)));
+			stk.SetInt(1, *reinterpret_cast<const UInt *>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins)));
 			stk.Pop(1);
 			break;
 
 		case OPC_PLOAD64D:
 		{
 			VM_DEBUG_CHECK_PTR(1);
-			auto val = *reinterpret_cast<const Double *>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins));
+			auto val = *reinterpret_cast<const Double *>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins));
 			stk.Pop(2);
 			stk.PushDouble(val);
 			break;
@@ -500,7 +500,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_PLOADPTR:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.SetPtr(1, *reinterpret_cast<const void **>((UIntPtr)stk.GetPtr(1) + stk.GetInt(0)*DecodeUImm24(ins)));
+			stk.SetPtr(1, *reinterpret_cast<const void **>((UIntPtr)stk.GetPtr(1) + (UIntPtr)stk.GetInt(0)*DecodeUImm24(ins)));
 			stk.Pop(1);
 			break;
 
@@ -754,13 +754,13 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_AADD:
 			VM_DEBUG_CHECK_PTR(1);
-			stk.GetTop()[1] += stk.GetInt(0) * DecodeUImm24(ins);
+			stk.GetTop()[1] += (UIntPtr)stk.GetInt(0) * DecodeUImm24(ins);
 			stk.Pop(1);
 			break;
 
 		case OPC_LAADD:
 			VM_DEBUG_CHECK_PTR(0);
-			stk.GetTop()[0] += stk.GetInt(DecodeUImm16Top(ins)) * DecodeUImm8(ins, 0);
+			stk.GetTop()[0] += (UIntPtr)stk.GetInt(DecodeUImm16Top(ins)) * DecodeUImm8(ins, 0);
 			break;
 
 		case OPC_AADD_ICONST:
@@ -770,7 +770,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_AADDH_ICONST:
 			VM_DEBUG_CHECK_PTR(0);
-			stk.SetPtr(0, static_cast<const Byte *>(stk.GetPtr(0)) + (DecodeImm24(ins) << 16));
+			stk.SetPtr(0, static_cast<const Byte *>(stk.GetPtr(0)) + ((UInt)DecodeImm24(ins) << 16));
 			break;
 
 		case OPC_IADD:
