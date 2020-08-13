@@ -61,9 +61,6 @@ struct DynamicArray
 	Int Push(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 	Int PushUnique(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 
-	bool PushHeap(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
-	bool PopHeap(ScriptContext &ctx, const DataType &dt, void *valuePtr);
-
 	Int Find(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 	Int LowerBound(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 	Int UpperBound(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
@@ -195,9 +192,9 @@ void DynamicArray::Resize(ScriptContext &ctx, const DataType &dt, Int newSize)
 	}
 
 	if (size > newSize)
-		DestroyObjectRange(ctx, dt, data + dt.size*newSize, size - newSize);
+		DestroyObjectRange(ctx, dt, data + (size_t)dt.size*newSize, size - newSize);
 	else
-		ConstructObjectRange(ctx, dt, data + dt.size*size, newSize - size);
+		ConstructObjectRange(ctx, dt, data + (size_t)dt.size*size, newSize - size);
 
 	size = newSize;
 }
@@ -266,7 +263,7 @@ void DynamicArray::ConstructObjectRange(ScriptContext &ctx, const DataType &dt, 
 		return;
 
 	LETHE_ASSERT(ptr);
-	MemSet(ptr, 0, elemCount * dt.size);
+	MemSet(ptr, 0, (size_t)elemCount * dt.size);
 
 	if (dt.funCtor < 0)
 		return;
@@ -341,7 +338,7 @@ void DynamicArray::CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte 
 	if (dt.funAssign < 0 || elemCount <= 0)
 	{
 		if (elemCount > 0)
-			MemCpy(dst, src, elemCount * dt.size);
+			MemCpy(dst, src, elemCount * (size_t)dt.size);
 
 		return;
 	}
@@ -625,7 +622,7 @@ bool DynamicArray::EraseUnordered(ScriptContext &ctx, const DataType &dt, Int in
 	DestroyObjectRange(ctx, dt, dptr, 1);
 
 	// okay, now copy last element
-	MemCpy(data + index*dt.size, data + (size-1)*dt.size, dt.size);
+	MemCpy(data + index*dt.size, data + (size_t)(size-1)*dt.size, dt.size);
 
 	size--;
 	return true;
@@ -644,7 +641,7 @@ void DynamicArray::Assign(ScriptContext &ctx, const DataType &dt, const ArrayRef
 	auto adata = aref->GetData();
 
 	// avoid crashes due to overlaps!!!
-	if (data && adata && adata >= data && adata < data + dt.size*size)
+	if (data && adata && adata >= data && adata < data + (size_t)dt.size*size)
 		return;
 
 	Resize(ctx, dt, aref->GetSize());

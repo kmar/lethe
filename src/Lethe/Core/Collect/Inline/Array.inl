@@ -211,7 +211,7 @@ Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve)
 		if (this->data)
 		{
 			if (MemCopyTraits<T>::VALUE && newSize > 0)
-				MemCpy(newData, this->data, newSize*sizeof(T));
+				MemCpy(newData, this->data, (size_t)newSize*sizeof(T));
 			else
 			{
 				for (S i=0; i<newSize; i++)
@@ -363,7 +363,7 @@ S Array<T,S,A>::Append(const T *nbuf, S sz)
 	ConstructObjectRange<T,S>(this->data + this->size, sz);
 
 	if (MemCopyTraits<T>::VALUE && sz > 0)
-		MemCpy(this->data + this->size, nbuf, sz * sizeof(T));
+		MemCpy(this->data + this->size, nbuf, (size_t)sz * sizeof(T));
 	else
 	{
 		for (S i=0; i<sz; i++)
@@ -517,7 +517,7 @@ LETHE_NOINLINE Array<T,S,A> &Array<T,S,A>::operator =(const Array &o)
 	LETHE_ASSERT(!o.size || this->data);
 
 	if (MemCopyTraits<T>::VALUE && o.size > 0)
-		MemCpy(this->data, o.data, o.size * sizeof(T));
+		MemCpy(this->data, o.data, (size_t)o.size * sizeof(T));
 	else
 	{
 		for (S i=0; i < o.size; i++)
@@ -534,7 +534,7 @@ LETHE_NOINLINE Array<T,S,A> &Array<T,S,A>::operator =(const ArrayRef<T,S> &o)
 	LETHE_ASSERT(!o.GetSize() || this->data);
 
 	if (MemCopyTraits<T>::VALUE && o.GetSize() > 0)
-		MemCpy(this->data, o.GetData(), o.GetSize() * sizeof(T));
+		MemCpy(this->data, o.GetData(), (size_t)o.GetSize() * sizeof(T));
 	else
 	{
 		for (S i=0; i < o.GetSize(); i++)
@@ -711,16 +711,19 @@ inline typename Array<T,S,A>::Iterator Array<T,S,A>::EraseFast(typename Array::I
 template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::Erase(S index, S count)
 {
-	LETHE_ASSERT(index >= 0 && index < this->size);
+	if (count)
+	{
+		CORE_ASSERT(index >= 0 && index < this->size);
 
-	if (count < 0 || count > this->size - index)
-		count = this->size - index;
+		if (count < 0 || count > this->size - index)
+			count = this->size - index;
 
-	for (S i=index+count; i<this->size; i++)
-		SwapCopy(this->data[i-count], this->data[i]);
+		for (S i=index+count; i<this->size; i++)
+			SwapCopy(this->data[i-count], this->data[i]);
 
-	this->size -= count;
-	DestroyObjectRange<T,S>(this->data+this->size, count);
+		this->size -= count;
+		DestroyObjectRange<T,S>(this->data+this->size, count);
+	}
 	return *this;
 }
 
@@ -979,7 +982,7 @@ template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::MemSet(int value)
 {
 	if (LETHE_LIKELY(this->size > 0))
-		lethe::MemSet(this->data, value, sizeof(T)*this->size);
+		lethe::MemSet(this->data, value, sizeof(T)*(size_t)this->size);
 
 	return *this;
 }
