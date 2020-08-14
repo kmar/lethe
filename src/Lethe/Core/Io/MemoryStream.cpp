@@ -8,16 +8,25 @@ namespace lethe
 // MemoryStream
 
 // dynamic ctor
-MemoryStream::MemoryStream() : refBuf(0), cpos(0), refBufSize(0)
+MemoryStream::MemoryStream()
+	: refBuf(nullptr)
+	, cpos(0)
+	, refBufSize(0)
 {
 }
 
 // const buffer ctor
-MemoryStream::MemoryStream(const void *rbuff, Int rbSize) : refBuf(static_cast<const Byte *>(rbuff)), cpos(0), refBufSize(rbSize)
+MemoryStream::MemoryStream(const void *rbuff, Int rbSize)
+	: refBuf(static_cast<const Byte *>(rbuff))
+	, cpos(0)
+	, refBufSize(rbSize)
 {
 }
 
-MemoryStream::MemoryStream(const char *str) : refBuf(0), cpos(0), refBufSize(0)
+MemoryStream::MemoryStream(const char *str)
+	: refBuf(nullptr)
+	, cpos(0)
+	, refBufSize(0)
 {
 	if (LETHE_UNLIKELY(!str))
 		return;
@@ -92,10 +101,10 @@ Long MemoryStream::Tell() const
 bool MemoryStream::Truncate()
 {
 	if (LETHE_UNLIKELY(refBuf))
-		return 0;
+		return false;
 
 	data.Resize(cpos);
-	return 1;
+	return true;
 }
 
 const void *MemoryStream::GetData() const
@@ -114,7 +123,10 @@ bool MemoryStream::Read(void *buf, Int size, Int &nread)
 	Int avail = (Int)GetSize() - cpos;
 	Int nr = Max((Int)0, Min(size, avail));
 	nread = nr;
-	MemCpy(buf, (const Byte *)GetData() + cpos, (size_t)nr);
+
+	if (nr)
+		MemCpy(buf, (const Byte *)GetData() + cpos, (size_t)nr);
+
 	cpos += nr;
 	return 1;
 }
@@ -132,50 +144,52 @@ bool MemoryStream::Write(const void *buf, Int size, Int &nwritten)
 		data.Resize(potNewSize);
 	}
 
-	MemCpy(data.GetData() + cpos, buf, (size_t)size);
+	if (size)
+		MemCpy(data.GetData() + cpos, buf, (size_t)size);
+
 	cpos += size;
 	nwritten = size;
-	return 1;
+	return true;
 }
 
 // reserve (only valid in dynamic mode)
 bool MemoryStream::Reserve(Int res)
 {
 	if (refBuf)
-		return 0;
+		return false;
 
 	data.Reserve(res);
-	return 1;
+	return true;
 }
 
 bool MemoryStream::Resize(Int res)
 {
 	if (refBuf)
-		return 0;
+		return false;
 
 	data.Resize(res);
 	cpos = Max(data.GetSize(), cpos);
-	return 1;
+	return true;
 }
 
 bool MemoryStream::Clear()
 {
 	if (refBuf)
-		return 0;
+		return false;
 
 	data.Clear();
 	cpos = 0;
-	return 1;
+	return true;
 }
 
 bool MemoryStream::Reset()
 {
 	if (refBuf)
-		return 0;
+		return false;
 
 	data.Reset();
 	cpos = 0;
-	return 1;
+	return true;
 }
 
 String MemoryStream::ToString() const
