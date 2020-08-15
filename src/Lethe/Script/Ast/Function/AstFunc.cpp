@@ -632,6 +632,10 @@ bool AstFunc::CodeGen(CompiledProgram &p)
 		AstIterator ci(nodes[3]);
 		AstNode *vn;
 		auto retType = nodes[0]->GetTypeDesc(p);
+		auto nrvoType = nrvo->GetTypeDesc(p);
+
+		if (!nrvoType.CanAssign(retType))
+			return p.Error(nrvo, "invalid return type");
 
 		Array<AstNode *> rets;
 
