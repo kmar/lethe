@@ -622,22 +622,26 @@ bool AstFunc::CodeGen(CompiledProgram &p)
 
 	if (nrvo)
 	{
+		auto retType = nodes[0]->GetTypeDesc(p);
+		auto nrvoType = nrvo->GetTypeDesc(p);
+
+		AstIterator ci(nodes[3]);
+		AstNode *vn;
+		Array<AstNode *> rets;
+
+		if (!retType.CanAssign(nrvoType) || (!retType.IsNumber() && retType.ref != nrvoType.ref))
+		{
+			p.Warning(nrvo, "nrvo prevented due to incompatible types", WARN_NRVO_PREVENTED);
+			nrvo = nullptr;
+			goto skipNrvo;
+		}
+
 		// mark func as NRVO
 		flags |= AST_F_NRVO;
 		// nrvo-optimize returns!!!
 		nrvo->flags |= AST_F_NRVO;
 		nrvo->offset = nodes[0]->offset;
 		nrvo->target = nodes[0];
-
-		AstIterator ci(nodes[3]);
-		AstNode *vn;
-		auto retType = nodes[0]->GetTypeDesc(p);
-		auto nrvoType = nrvo->GetTypeDesc(p);
-
-		if (!nrvoType.CanAssign(retType))
-			return p.Error(nrvo, "invalid return type");
-
-		Array<AstNode *> rets;
 
 		while ((vn = ci.Next()) != 0)
 		{
@@ -668,6 +672,7 @@ bool AstFunc::CodeGen(CompiledProgram &p)
 			rets[i]->type = AST_RETURN_VALUE;
 			rets[i]->flags |= AST_F_NRVO;
 		}
+skipNrvo:;
 	}
 
 	// virtual-push args

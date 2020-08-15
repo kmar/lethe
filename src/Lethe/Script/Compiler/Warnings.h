@@ -19,7 +19,9 @@ enum Warnings
 	// variable shadows another variable in outer scope
 	WARN_SHADOW,
 	// integer constant overflow
-	WARN_OVERFLOW
+	WARN_OVERFLOW,
+	// NRVO optimization prevented
+	WARN_NRVO_PREVENTED
 };
 
 }
