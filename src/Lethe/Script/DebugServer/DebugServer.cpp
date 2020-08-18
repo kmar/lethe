@@ -429,6 +429,8 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 
 void DebugServer::ServerThreadProc()
 {
+	auto *thisThread = serverThread.Get();
+
 	serverThreadSocket = new Socket(true);
 	serverThreadSocket->Bind(debuggerIP, debuggerPort);
 
@@ -439,8 +441,6 @@ void DebugServer::ServerThreadProc()
 		GetEngine().onInfo("listen failed on debugger socket");
 		return;
 	}
-
-	auto *thisThread = serverThread.Get();
 
 	while (!thisThread->GetKillFlag())
 	{

@@ -919,7 +919,7 @@ char String::operator[](int index) const
 
 bool String::IsUnique() const
 {
-	return !data || data->refCount == 1;
+	return !data || Atomic::Load(data->refCount) == 1;
 }
 
 String &String::CloneData()

@@ -57,7 +57,7 @@ public:
 	void UnlockWrite();
 
 private:
-	Mutex writeMutex;
+	SpinMutex writeMutex;
 	SpinMutex readMutex;
 	Int counter;
 };
