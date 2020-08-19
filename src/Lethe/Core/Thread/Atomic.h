@@ -10,6 +10,27 @@
 namespace lethe
 {
 
+template<typename T>
+struct AtomicPointer
+{
+	inline AtomicPointer(T *value = nullptr)
+		: data(value)
+	{
+	}
+
+	inline T *Load() const;
+
+	inline void Store(T *value);
+
+private:
+	AtomicPointer &operator =(const AtomicPointer &)
+	{
+		return *this;
+	}
+
+	volatile T *data;
+};
+
 struct LETHE_API Atomic
 {
 	// atomic increment/decrement/cmpxchg

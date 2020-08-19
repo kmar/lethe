@@ -1,3 +1,30 @@
+// atomic pointer
+
+template<typename T>
+inline T *AtomicPointer<T>::Load() const
+{
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
+#	if LETHE_CPU_X86
+	_ReadBarrier();
+	return (T *)data;
+#	else
+	return (T *)_InterlockedCompareExchangePointer((void * volatile *)&data, (void *)data, (void *)data);
+#	endif
+#else
+	return (T *)__atomic_load_n((volatile void **)&data, __ATOMIC_SEQ_CST);
+#endif
+}
+
+template<typename T>
+inline void AtomicPointer<T>::Store(T *value)
+{
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
+	_InterlockedExchangePointer((void * volatile *)&data, (void *)value);
+#else
+	__atomic_store_n((volatile void **)&data, (void *)value, __ATOMIC_SEQ_CST);
+#endif
+}
+
 // specializations
 template<> Int Atomic::Load<Int>(const AtomicInt &t);
 template<> void Atomic::Store<Int>(AtomicInt &t, Int value);
@@ -110,7 +137,7 @@ template<> inline bool Atomic::CompareAndSwap<UShort>(volatile UShort &t, UShort
 template<> inline Int Atomic::Load<Int>(const volatile Int &t)
 {
 #if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
-#	if LETHE_CPU_X86 && !LETHE_HAS_THREAD_SANITIZER
+#	if LETHE_CPU_X86
 	_ReadBarrier();
 	return t;
 #	else
@@ -134,7 +161,7 @@ template<> inline void Atomic::Store<Int>(volatile Int &t, Int value)
 template<> inline Short Atomic::Load<Short>(const volatile Short &t)
 {
 #if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
-#	if LETHE_CPU_X86 && !LETHE_HAS_THREAD_SANITIZER
+#	if LETHE_CPU_X86
 	_ReadBarrier();
 	return t;
 #	else
