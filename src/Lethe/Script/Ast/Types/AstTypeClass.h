@@ -45,7 +45,10 @@ private:
 	// standard vtbl offset
 	Int vtblOffset;
 
+	void GenPtrTypes(CompiledProgram &p, Name cname, const DataType *ntype, QDataType &ptype, QDataType &wptype, QDataType &rptype);
+
 	bool VtblGenNestedClasses(CompiledProgram &p);
+	bool InjectBaseStates(CompiledProgram &p);
 };
 
 

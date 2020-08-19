@@ -31,6 +31,46 @@ Name AstTypeClass::GetName() const
 	return className;
 }
 
+void AstTypeClass::GenPtrTypes(CompiledProgram &p, Name cname, const DataType *ntype, QDataType &ptype, QDataType &wptype, QDataType &rptype)
+{
+	// generate ptrTypeRef now
+	UniquePtr<DataType> dt = new DataType;
+	dt->type = DT_STRONG_PTR;
+	dt->align = dt->size = sizeof(void *);
+	dt->elemType.ref = ntype;
+
+	dt->name = String("^") + cname;
+	ptype.ref = p.AddType(dt.Detach());
+	ptype.qualifiers |= AST_Q_SKIP_DTOR;
+
+	dt = new DataType;
+	dt->type = DT_WEAK_PTR;
+	dt->align = dt->size = sizeof(void *);
+	dt->elemType.ref = ntype;
+
+	dt->name = String("w^") + cname;
+	wptype.ref = p.AddType(dt.Detach());
+	wptype.qualifiers |= AST_Q_SKIP_DTOR;
+
+	dt = new DataType;
+	dt->type = DT_RAW_PTR;
+	dt->align = dt->size = sizeof(void *);
+	dt->elemType.ref = ntype;
+
+	dt->name = String("r^") + cname;
+	rptype.ref = p.AddType(dt.Detach());
+	rptype.qualifiers |= AST_Q_SKIP_DTOR;
+
+	const_cast<DataType *>(rptype.ref)->complementaryType = ptype.ref;
+	const_cast<DataType *>(rptype.ref)->complementaryType2 = wptype.ref;
+
+	const_cast<DataType *>(wptype.ref)->complementaryType = ptype.ref;
+	const_cast<DataType *>(wptype.ref)->complementaryType2 = rptype.ref;
+
+	const_cast<DataType *>(ptype.ref)->complementaryType = wptype.ref;
+	const_cast<DataType *>(ptype.ref)->complementaryType2 = rptype.ref;
+}
+
 bool AstTypeClass::BeginCodegen(CompiledProgram &p)
 {
 	// no code should be generated for templates
@@ -43,43 +83,7 @@ bool AstTypeClass::BeginCodegen(CompiledProgram &p)
 	className = typeRef.ref->name;
 	p.AddClassType(className, typeRef.ref);
 
-	// generate ptrTypeRef now
-	UniquePtr<DataType> dt = new DataType;
-	dt->type = DT_STRONG_PTR;
-	dt->align = dt->size = sizeof(void *);
-	dt->elemType.ref = typeRef.ref;
-
-	dt->name = String("^") + className;
-	ptrTypeRef.ref = p.AddType(dt.Detach());
-	ptrTypeRef.qualifiers |= AST_Q_SKIP_DTOR;
-
-	dt = new DataType;
-	dt->type = DT_WEAK_PTR;
-	dt->align = dt->size = sizeof(void *);
-	dt->elemType.ref = typeRef.ref;
-
-	dt->name = String("w^") + className;
-	weakPtrTypeRef.ref = p.AddType(dt.Detach());
-	weakPtrTypeRef.qualifiers |= AST_Q_SKIP_DTOR;
-
-	dt = new DataType;
-	dt->type = DT_RAW_PTR;
-	dt->align = dt->size = sizeof(void *);
-	dt->elemType.ref = typeRef.ref;
-
-	dt->name = String("r^") + className;
-	rawPtrTypeRef.ref = p.AddType(dt.Detach());
-	rawPtrTypeRef.qualifiers |= AST_Q_SKIP_DTOR;
-
-	const_cast<DataType *>(rawPtrTypeRef.ref)->complementaryType = ptrTypeRef.ref;
-	const_cast<DataType *>(rawPtrTypeRef.ref)->complementaryType2 = weakPtrTypeRef.ref;
-
-	const_cast<DataType *>(weakPtrTypeRef.ref)->complementaryType = ptrTypeRef.ref;
-	const_cast<DataType *>(weakPtrTypeRef.ref)->complementaryType2 = rawPtrTypeRef.ref;
-
-	const_cast<DataType *>(ptrTypeRef.ref)->complementaryType = weakPtrTypeRef.ref;
-	const_cast<DataType *>(ptrTypeRef.ref)->complementaryType2 = rawPtrTypeRef.ref;
-
+	GenPtrTypes(p, className, typeRef.ref, ptrTypeRef, weakPtrTypeRef, rawPtrTypeRef);
 	return true;
 }
 
@@ -313,7 +317,7 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 		}
 	}
 
-	return VtblGenNestedClasses(p);
+	return VtblGenNestedClasses(p) && InjectBaseStates(p);
 }
 
 bool AstTypeClass::CodeGenComposite(CompiledProgram &p)
@@ -348,6 +352,158 @@ bool AstTypeClass::CodeGenComposite(CompiledProgram &p)
 
 	// generate pointer dtors...
 	return ptrTypeRef.ref->GenDtor(p) && weakPtrTypeRef.ref->GenDtor(p);
+}
+
+bool AstTypeClass::InjectBaseStates(CompiledProgram &p)
+{
+	if ((qualifiers & AST_Q_STATE) || !scopeRef->base)
+		return true;
+
+	// at this point we should be able to auto-inherit nested state classes of base class (that haven't been defined here)
+	StackArray<AstNode *, 64> baseStates;
+
+	for (auto &&it : scopeRef->base->namedScopes)
+	{
+		auto *n = it.value->node;
+
+		if (!n || n->type != AST_CLASS || !(n->qualifiers & AST_Q_STATE) || it.value->base != scopeRef->base)
+			continue;
+
+		if (scopeRef->namedScopes.FindIndex(it.key) < 0)
+			baseStates.Add(n);
+	}
+
+	if (baseStates.IsEmpty())
+		return true;
+
+	// okay, we have work to do!
+	auto *baseClass = scopeRef->base->node;
+	auto baseType = baseClass->GetTypeDesc(p);
+	auto thisType = GetTypeDesc(p);
+
+	auto ptrType = QDataType::MakeConstType(p.elemTypes[DT_STRONG_PTR]);
+
+	// PROBLEM: vtblgen is called multiple times!
+
+	// vtbl:
+	// -3 = engine ptr
+	// -2 = script instance deleter
+	// -1 = class type ptr
+	// 0  = dtor
+	// 1+ = methods
+
+	for (auto *it : baseStates)
+	{
+		auto stateType = it->GetTypeDesc(p);
+		LETHE_ASSERT(stateType.GetType().vtblSize == baseType.GetType().vtblSize);
+
+		// generate name...
+		auto stateName = stateType.GetType().name;
+		Int firstColon = stateName.ReverseFind(':');
+
+		if (firstColon < 0)
+			return p.Error(this, "invalid base state name");
+
+		StringRef sr(stateName.Ansi() + firstColon+1, stateName.GetLength() - firstColon-1);
+
+		const auto &thisName = thisType.GetType().name;
+		StringBuilder sb(thisName.Ansi());
+		sb += "::";
+		sb += sr;
+
+		String newName = sb.Get();
+		Name localName = sr;
+		Name newClsName = newName;
+
+		DataType *ntype = const_cast<DataType *>(p.FindClass(newClsName));
+
+		if (ntype && ntype->type != DT_CLASS)
+			continue;
+
+		UniquePtr<DataType> ntypePtr;
+
+		if (!ntype)
+		{
+			ntypePtr = new DataType;
+			ntype = ntypePtr;
+			ntype->type = DT_CLASS;
+		}
+
+		if (ntypePtr)
+		{
+			// [-3] = engine refptr
+			p.cpool.AllocGlobal(ptrType);
+			// [-2] = deleter
+			p.cpool.AllocGlobal(ptrType);
+			// [-1] = class type
+			auto classOfs = p.cpool.AllocGlobal(ptrType);
+
+			// set refptr to class type
+			*reinterpret_cast<const DataType **>(p.cpool.data.GetData() + classOfs) = ntype;
+
+			p.SetupVtbl(classOfs);
+		}
+
+		// [0] = dtor
+		auto vtblOfs = ntypePtr ? -1 : ntype->vtblOffset;
+
+		for (Int i=0; i<thisType.GetType().vtblSize; i++)
+		{
+			auto vtblValueThis  = *reinterpret_cast<const IntPtr *>(&p.cpool.data[thisType.GetType().vtblOffset + i*sizeof(IntPtr)]);
+			IntPtr value = vtblValueThis;
+
+			// keep dtor
+			if (i > 0 && i < stateType.GetType().vtblSize)
+			{
+				// we want to copy vtbl values overriden by state (in base), otherwise keep this vtbl value
+				auto vtblValueBase  = *reinterpret_cast<const IntPtr *>(&p.cpool.data[baseType.GetType().vtblOffset + i*sizeof(IntPtr)]);
+				auto vtblValueState = *reinterpret_cast<const IntPtr *>(&p.cpool.data[stateType.GetType().vtblOffset + i*sizeof(IntPtr)]);
+
+				if (vtblValueBase != vtblValueState)
+					value = vtblValueState;
+			}
+
+			auto entryOfs = ntypePtr ? p.cpool.AllocGlobal(ptrType) : Int(vtblOfs + i*sizeof(IntPtr));
+
+			if (vtblOfs < 0)
+				vtblOfs = entryOfs;
+
+			*reinterpret_cast<IntPtr *>(&p.cpool.data[entryOfs]) = value;
+		}
+
+		ntype->funCtor = thisType.GetType().funCtor;
+		ntype->funDtor = thisType.GetType().funDtor;
+
+		if (!ntypePtr)
+			continue;
+
+		ntype->align = thisType.GetType().align;
+		ntype->size  = thisType.GetType().size;
+		ntype->vtblOffset = vtblOfs;
+		ntype->vtblSize = thisType.GetType().vtblSize;
+		ntype->structQualifiers = stateType.GetType().structQualifiers;
+		ntype->baseType = thisType;
+		ntype->name = newName;
+		ntype->className = newClsName;
+
+		if (p.typeHash.FindIndex(newName) >= 0)
+			return p.Error(this, "cannot inherit base state: type already defined");
+
+		p.AddVtbl(ntype->vtblOffset, ntype->vtblSize);
+
+		p.stateToLocalNameMap[newName] = localName;
+		p.fixupStateMap[CompiledProgram::PackNames(thisType.GetType().name, localName)] = newClsName;
+
+		p.AddClassType(newClsName, ntype);
+		p.AddType(ntypePtr.Detach());
+
+		QDataType ptype, wptype, rptype;
+		GenPtrTypes(p, newClsName, ntype, ptype, wptype, rptype);
+
+		ntype->GenBaseChain();
+	}
+
+	return true;
 }
 
 void AstTypeClass::CopyTo(AstNode *n) const
