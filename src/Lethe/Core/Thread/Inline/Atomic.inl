@@ -109,8 +109,13 @@ template<> inline bool Atomic::CompareAndSwap<UShort>(volatile UShort &t, UShort
 // FIXME: a bit hacky but should work
 template<> inline Int Atomic::Load<Int>(const volatile Int &t)
 {
-#if LETHE_OS_WINDOWS && !LETHE_COMPILER_NOT_MSC
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
+#	if LETHE_CPU_X86 && !LETHE_HAS_THREAD_SANITIZER
+	_ReadBarrier();
+	return t;
+#	else
 	return (Int)_InterlockedExchangeAdd((volatile long *)&t, 0);
+#	endif
 #else
 	return __atomic_load_n((volatile Int *)&t, __ATOMIC_SEQ_CST);
 #endif
@@ -118,7 +123,7 @@ template<> inline Int Atomic::Load<Int>(const volatile Int &t)
 
 template<> inline void Atomic::Store<Int>(volatile Int &t, Int value)
 {
-#if LETHE_OS_WINDOWS && !LETHE_COMPILER_NOT_MSC
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
 	_InterlockedExchange((volatile long *)&t, (long)value);
 #else
 	__atomic_store_n((volatile Int *)&t, value, __ATOMIC_SEQ_CST);
@@ -128,8 +133,13 @@ template<> inline void Atomic::Store<Int>(volatile Int &t, Int value)
 #if LETHE_ATOMIC_ADD16
 template<> inline Short Atomic::Load<Short>(const volatile Short &t)
 {
-#if LETHE_OS_WINDOWS && !LETHE_COMPILER_NOT_MSC
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
+#	if LETHE_CPU_X86 && !LETHE_HAS_THREAD_SANITIZER
+	_ReadBarrier();
+	return t;
+#	else
 	return (Short)_InterlockedExchangeAdd((volatile short *)&t, 0);
+#	endif
 #else
 	return __atomic_load_n((volatile Short *)&t, __ATOMIC_SEQ_CST);
 #endif
@@ -202,7 +212,7 @@ template<> inline Short Atomic::Decrement<Short>(volatile Short &t)
 #if LETHE_ATOMIC_ADD16
 template<> inline Short Atomic::Add<Short>(volatile Short &t, Short value)
 {
-#if LETHE_OS_WINDOWS && !LETHE_COMPILER_MINGW
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
 	return (Short)((Short)_InterlockedExchangeAdd16((volatile short *)&t, (SHORT)value) + value);
 #else
 	return __sync_add_and_fetch((volatile Short *)&t, value);
@@ -211,7 +221,7 @@ template<> inline Short Atomic::Add<Short>(volatile Short &t, Short value)
 
 template<> inline Short Atomic::Subtract<Short>(volatile Short &t, Short value)
 {
-#if LETHE_OS_WINDOWS && !LETHE_COMPILER_MINGW
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
 	return (Short)((Short)_InterlockedExchangeAdd16((volatile short *)&t, (SHORT)-value) - value);
 #else
 	return __sync_sub_and_fetch((volatile Short *)&t, value);
