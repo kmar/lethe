@@ -1029,6 +1029,9 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	LETHE_RET_FALSE(nname);
 	nname->flags |= AST_F_RESOLVED;
 
+	// nobounds inherited to var decls
+	auto inheritStructQualifiers = ntype->qualifiers & AST_Q_NOBOUNDS;
+
 	// check if it's a struct template
 	if (!nname->nodes.IsEmpty())
 		ntype->qualifiers |= AST_Q_TEMPLATE;
@@ -1341,6 +1344,8 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 		if (decl->type == AST_VAR_DECL_LIST)
 		{
 			decl->nodes[0]->qualifiers &= ~AST_Q_LOCAL_INT;
+			decl->nodes[0]->qualifiers |= inheritStructQualifiers;
+
 			// check for initialized vars...
 			AstConstIterator ci(decl);
 			const AstNode *n;
