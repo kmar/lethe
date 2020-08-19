@@ -130,22 +130,28 @@ AstNode *AstScopeResOp::ResolveScope(const NamedScope *scope, Int idx, ULong sto
 	LETHE_RET_FALSE(scope && idx < nodes.GetSize());
 
 	LETHE_ASSERT(nodes[idx]->type == AST_IDENT);
-	auto stext = AstStaticCast<const AstText *>(nodes[idx])->text;
+	const auto &stext = AstStaticCast<const AstText *>(nodes[idx])->text;
 
 	bool isSuper = stext == "super";
 
 	if (idx+1 == nodes.GetSize())
 	{
 		// just look up member
-		AstNode *res = scope->FindSymbol(stext);
+		while (scope)
+		{
+			AstNode *res = scope->FindSymbol(stext);
 
-		if (res)
-			return res;
+			if (res)
+				return res;
 
-		Int ridx = scope->namedScopes.FindIndex(stext);
+			Int ridx = scope->namedScopes.FindIndex(stext);
 
-		if (ridx >= 0)
-			return scope->namedScopes.GetValue(ridx)->node;
+			if (ridx >= 0)
+				return scope->namedScopes.GetValue(ridx)->node;
+
+			// chain base
+			scope = scope->base;
+		}
 
 		return nullptr;
 	}
