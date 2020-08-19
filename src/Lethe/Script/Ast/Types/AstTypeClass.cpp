@@ -412,7 +412,7 @@ bool AstTypeClass::InjectBaseStates(CompiledProgram &p)
 		sb += sr;
 
 		String newName = sb.Get();
-		Name localName = sr;
+		Name localName = sr.Ansi();
 		Name newClsName = newName;
 
 		DataType *ntype = const_cast<DataType *>(p.FindClass(newClsName));
