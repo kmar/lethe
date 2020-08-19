@@ -4,6 +4,7 @@
 
 #include <Lethe/Core/String/String.h>
 #include <Lethe/Core/Sys/Platform.h>
+#include <Lethe/Core/Thread/Atomic.h>
 #include "NetAddr.h"
 
 namespace lethe
@@ -53,10 +54,31 @@ public:
 private:
 #if LETHE_OS_WINDOWS
 	typedef void *SocketType;
+	typedef AtomicPointer<void> SocketHandle;
 #else
 	typedef int SocketType;
+	typedef AtomicInt SocketHandle;
 #endif
-	SocketType handle;
+	SocketHandle handle;
+
+	void SetHandle(SocketType nhandle)
+	{
+#if LETHE_OS_WINDOWS
+		handle.Store(nhandle);
+#else
+		Atomic::Store(handle, nhandle);
+#endif
+	}
+
+	SocketType GetHandle() const
+	{
+#if LETHE_OS_WINDOWS
+		return handle.Load();
+#else
+		return Atomic::Load(handle);
+#endif
+	}
+
 	NetAddr addr;
 	bool tcp;
 	bool connected;

@@ -35,9 +35,9 @@ Socket::Socket(bool ntcp)
 	LETHE_COMPILE_ASSERT(sizeof(sockaddr_in) <= sizeof(NetAddr));
 
 	if (tcp)
-		handle = reinterpret_cast<SocketType>(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP));
+		SetHandle(reinterpret_cast<SocketType>(::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)));
 	else
-		handle = reinterpret_cast<SocketType>(::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+		SetHandle(reinterpret_cast<SocketType>(::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)));
 }
 
 Socket::~Socket()
@@ -47,7 +47,7 @@ Socket::~Socket()
 
 void Socket::Close()
 {
-	auto shandle = reinterpret_cast<SOCKET>(handle);
+	auto shandle = reinterpret_cast<SOCKET>(GetHandle());
 
 	if (!InvalidSocket(shandle))
 	{
@@ -57,7 +57,7 @@ void Socket::Close()
 		::shutdown(shandle, SHUT_RDWR);
 #endif
 		::closesocket(shandle);
-		handle = reinterpret_cast<SocketType>(InvalidSocketHandle());
+		SetHandle(reinterpret_cast<SocketType>(InvalidSocketHandle()));
 	}
 }
 
@@ -85,7 +85,7 @@ bool Socket::Bind(const String &ip, Int port)
 
 	*reinterpret_cast<sockaddr_in *>(addr.data) = local;
 
-	bool bindFailed = ::bind(reinterpret_cast<SOCKET>(handle), reinterpret_cast<sockaddr*>(&local), sizeof(local)) != 0;
+	bool bindFailed = ::bind(reinterpret_cast<SOCKET>(GetHandle()), reinterpret_cast<sockaddr*>(&local), sizeof(local)) != 0;
 
 	return !bindFailed;
 }
@@ -107,9 +107,10 @@ bool Socket::BindAny(Int port, bool keepAddr)
 	}
 
 	int rad = 1;
-	::setsockopt(reinterpret_cast<SOCKET>(handle), SOL_SOCKET, SO_REUSEADDR,
+	auto nhandle = GetHandle();
+	::setsockopt(reinterpret_cast<SOCKET>(nhandle), SOL_SOCKET, SO_REUSEADDR,
 				 reinterpret_cast<char *>(&rad), sizeof(int));
-	bool bindFailed = ::bind(reinterpret_cast<SOCKET>(handle), reinterpret_cast<sockaddr*>(&local), sizeof(local)) != 0;
+	bool bindFailed = ::bind(reinterpret_cast<SOCKET>(nhandle), reinterpret_cast<sockaddr*>(&local), sizeof(local)) != 0;
 
 	return !bindFailed;
 }
@@ -117,7 +118,7 @@ bool Socket::BindAny(Int port, bool keepAddr)
 bool Socket::Listen() const
 {
 	LETHE_RET_FALSE(tcp);
-	return ::listen(reinterpret_cast<SOCKET>(handle), 10) == 0;
+	return ::listen(reinterpret_cast<SOCKET>(GetHandle()), 10) == 0;
 }
 
 Socket *Socket::Accept()
@@ -127,13 +128,13 @@ Socket *Socket::Accept()
 	MemSet(&local, 0, sizeof(local));
 	socklen_t len = sizeof(local);
 	SOCKET cli;
-	cli = ::accept(reinterpret_cast<SOCKET>(handle), reinterpret_cast<sockaddr *>(&local), &len);
+	cli = ::accept(reinterpret_cast<SOCKET>(GetHandle()), reinterpret_cast<sockaddr *>(&local), &len);
 
 	if (InvalidSocket(cli))
 		return nullptr;
 
 	Socket *res = new Socket;
-	res->handle = reinterpret_cast<SocketType>(cli);
+	res->SetHandle(reinterpret_cast<SocketType>(cli));
 	addr.Clear();
 	*reinterpret_cast<sockaddr_in *>(res->addr.data) = local;
 
@@ -177,12 +178,12 @@ bool Socket::Connect(const String &ip, Int port)
 
 	if (tcp)
 	{
-		if(::connect(reinterpret_cast<SOCKET>(handle),
+		if(::connect(reinterpret_cast<SOCKET>(GetHandle()),
 					 reinterpret_cast<struct sockaddr *>(&server), sizeof(server)))
 			return 0;
 
 		int nod = 1;
-		::setsockopt(reinterpret_cast<SOCKET>(handle), IPPROTO_TCP, TCP_NODELAY,
+		::setsockopt(reinterpret_cast<SOCKET>(GetHandle()), IPPROTO_TCP, TCP_NODELAY,
 					 reinterpret_cast<char *>(&nod), sizeof(int));
 	}
 	else
@@ -199,17 +200,17 @@ bool Socket::Send(const void *buf, Int len) const
 {
 	if (connected)
 	{
-		return ::sendto(reinterpret_cast<SOCKET>(handle),
+		return ::sendto(reinterpret_cast<SOCKET>(GetHandle()),
 						static_cast<const char *>(buf), len, 0, reinterpret_cast<const sockaddr *>(addr.data),
 						sizeof(sockaddr_in)) == len;
 	}
 
-	return ::send(reinterpret_cast<SOCKET>(handle), static_cast<const char *>(buf), len, 0) == len;
+	return ::send(reinterpret_cast<SOCKET>(GetHandle()), static_cast<const char *>(buf), len, 0) == len;
 }
 
 Int Socket::Recv(void *buf, Int len) const
 {
-	return (Int)::recv(reinterpret_cast<SOCKET>(handle), static_cast<char *>(buf), len, 0);
+	return (Int)::recv(reinterpret_cast<SOCKET>(GetHandle()), static_cast<char *>(buf), len, 0);
 }
 
 Int Socket::Recv(void *buf, Int len, NetAddr &naddr) const
@@ -217,13 +218,13 @@ Int Socket::Recv(void *buf, Int len, NetAddr &naddr) const
 	if (!connected)
 	{
 		naddr = addr;
-		return (Int)::recv(reinterpret_cast<SOCKET>(handle), static_cast<char *>(buf), len, 0);
+		return (Int)::recv(reinterpret_cast<SOCKET>(GetHandle()), static_cast<char *>(buf), len, 0);
 	}
 
 	socklen_t froml = sizeof(sockaddr_in);
 	naddr.Clear();
-	return (Int)::recvfrom(reinterpret_cast<SOCKET>(handle), static_cast<char *>(buf), len, 0,
-						   reinterpret_cast<sockaddr *>(naddr.data), &froml);
+	return (Int)::recvfrom(reinterpret_cast<SOCKET>(GetHandle()), static_cast<char *>(buf), len, 0,
+		reinterpret_cast<sockaddr *>(naddr.data), &froml);
 }
 
 String Socket::GetIP() const
