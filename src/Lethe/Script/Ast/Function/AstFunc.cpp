@@ -181,19 +181,32 @@ bool AstFunc::ValidateADLCall(const AstCall &o) const
 		auto *tn1 = o.nodes[i+1]->GetTypeNode();
 		LETHE_RET_FALSE(tn1);
 
+		auto *n0 = nodes1[i];
+		LETHE_ASSERT(n0->type == AST_ARG);
+		const bool isref = (n0->nodes[0]->qualifiers & AST_Q_REFERENCE) != 0;
+
+		if (isref && tn0->type != tn1->type)
+			return false;
+
 		if (tn0->IsElemType() && tn1->IsElemType())
 		{
-			auto *n0 = nodes1[i];
-			LETHE_ASSERT(n0->type == AST_ARG);
-			const bool isref = (n0->nodes[0]->qualifiers & AST_Q_REFERENCE) != 0;
-
-			if (isref && tn0->type != tn1->type)
-				return false;
-
 			if (PromoteSmallType(tn0->type) != PromoteSmallType(tn1->type))
 				return false;
 
 			continue;
+		}
+
+		// validate array ref types
+		auto arr0 = tn0->type == AST_TYPE_ARRAY_REF || tn0->type == AST_TYPE_DYNAMIC_ARRAY;
+		auto arr1 = tn1->type == AST_TYPE_ARRAY_REF || tn1->type == AST_TYPE_DYNAMIC_ARRAY;
+
+		if (arr0 == arr1 && arr1)
+		{
+			auto *el0 = tn0->nodes[0]->GetTypeNode();
+			auto *el1 = tn1->nodes[0]->GetTypeNode();
+
+			if (el0 && el1 && el0 == el1)
+				continue;
 		}
 
 		if (tn0 != tn1)
