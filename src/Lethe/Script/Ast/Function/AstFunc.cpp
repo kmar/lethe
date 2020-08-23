@@ -205,8 +205,14 @@ bool AstFunc::ValidateADLCall(const AstCall &o) const
 			auto *el0 = tn0->nodes[0]->GetTypeNode();
 			auto *el1 = tn1->nodes[0]->GetTypeNode();
 
-			if (el0 && el1 && el0 == el1)
-				continue;
+			if (el0 && el1)
+			{
+				if (el0 == el1)
+					continue;
+
+				if (el0->IsElemType() && el1->IsElemType() && el0->type == el1->type)
+					continue;
+			}
 		}
 
 		if (tn0 != tn1)
