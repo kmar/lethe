@@ -56,7 +56,7 @@ protected:
 	// find function definition
 	AstNode *FindFunction(String &fname) const;
 	// find special ADL scope for elementary type
-	NamedScope *FindSpecialADLScope(const StringRef &nname) const;
+	NamedScope *FindSpecialADLScope(const NamedScope *baseScope, const StringRef &nname) const;
 
 	Int GenTempCopy(CompiledProgram &p, Int resultBaseOffset, Int resultWords, bool resultZeroed, Int actual, const Array<TempArg> &tempArgs);
 };

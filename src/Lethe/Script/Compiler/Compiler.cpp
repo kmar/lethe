@@ -775,9 +775,14 @@ bool Compiler::Resolve(bool ignoreErrors)
 		changed = false;
 		++resolveSteps;
 
-		for (auto &&adl : adlNodes)
+		for (Int i=0; i<adlNodes.GetSize(); i++)
 		{
+			const auto &adl = adlNodes[i];
 			bool oldResolved = adl.node->IsResolved();
+
+			if (oldResolved)
+				continue;
+
 			eh.tryADL = false;
 
 			auto rres = adl.node->Resolve(eh);
@@ -801,6 +806,8 @@ bool Compiler::Resolve(bool ignoreErrors)
 				changed = true;
 		}
 	}
+
+	eh.FlushLateDeleteNodes();
 
 	onResolve(resolveSteps);
 

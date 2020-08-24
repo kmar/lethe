@@ -22,10 +22,8 @@ LETHE_BUCKET_ALLOC_DEF(AstCall)
 
 // AstCall
 
-NamedScope *AstCall::FindSpecialADLScope(const StringRef &nname) const
+NamedScope *AstCall::FindSpecialADLScope(const NamedScope *tempScope, const StringRef &nname) const
 {
-	auto *tempScope = scopeRef;
-
 	while (tempScope)
 	{
 		auto it = tempScope->namedScopes.Find(nname);
@@ -43,7 +41,7 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 {
 	AstNode::ResolveResult res;
 
-	if (!(nodes[0]->flags & AST_F_RESOLVED) && !(nodes[0]->qualifiers & AST_Q_NON_VIRT) && nodes[0]->type == AST_IDENT && nodes.GetSize() > 1)
+	if (!(nodes[0]->flags & AST_F_RESOLVED) && !(nodes[0]->qualifiers & AST_Q_NON_VIRT) && (nodes[0]->type == AST_IDENT || nodes[0]->type == AST_OP_SCOPE_RES) && nodes.GetSize() > 1)
 	{
 		// I need to hack in ADL here somehow
 
@@ -115,7 +113,14 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 				default:;
 				}
 
-				NamedScope *specialScope = specialScopeName.IsEmpty() ? nullptr : FindSpecialADLScope(specialScopeName);
+				const auto *lookupScope = scopeRef;
+
+				if (nodes[0]->type == AST_OP_SCOPE_RES)
+				{
+					lookupScope = nodes[0]->nodes[0]->symScopeRef;
+				}
+
+				NamedScope *specialScope = specialScopeName.IsEmpty() ? nullptr : FindSpecialADLScope(lookupScope, specialScopeName);
 
 				if (!tscope && specialScope)
 					tscope = specialScope;

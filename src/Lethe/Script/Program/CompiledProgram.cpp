@@ -50,6 +50,22 @@ const String &ErrorHandler::AddString(const StringRef &sr) const
 	return stringTable.GetKey(stringTable.GetSize()-1);
 }
 
+void ErrorHandler::AddLateDeleteNode(AstNode *node) const
+{
+	SpinMutexLock lock(lateDeleteMutex);
+	lateDeleteNodes.Add(node);
+}
+
+void ErrorHandler::FlushLateDeleteNodes()
+{
+	SpinMutexLock lock(lateDeleteMutex);
+
+	for (auto *it : lateDeleteNodes)
+		delete it;
+
+	lateDeleteNodes.Clear();
+}
+
 // CompiledProgram
 
 CompiledProgram::CompiledProgram(bool njitFriendly)

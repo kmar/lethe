@@ -57,8 +57,16 @@ public:
 	NamedScope *arrayScope = nullptr;
 	NamedScope *dynamicArrayScope = nullptr;
 
+	// late deletion of AST nodes (used by ADL resolve)
+	void AddLateDeleteNode(AstNode *node) const;
+	void FlushLateDeleteNodes();
+
 	// ADL pass flag
 	bool tryADL = false;
+
+private:
+	mutable SpinMutex lateDeleteMutex;
+	mutable HashSet<AstNode *> lateDeleteNodes;
 };
 
 class LETHE_API CompiledProgram : public ErrorHandler

@@ -52,7 +52,7 @@ AstNode *AstScopeResOp::ResolveScopeInternal(bool wantTemplate, const NamedScope
 	return ResolveScope(scope, start, AST_Q_TEMPLATE*wantTemplate);
 }
 
-bool AstScopeResOp::ResolveNode(const ErrorHandler &)
+bool AstScopeResOp::ResolveNode(const ErrorHandler &eh)
 {
 	if (type != AST_OP_SCOPE_RES)
 		return true;
@@ -98,7 +98,14 @@ bool AstScopeResOp::ResolveNode(const ErrorHandler &)
 	newNode->qualifiers |= AST_Q_NON_VIRT;
 	newNode->flags |= AST_F_RESOLVED;
 	nodes.Pop();
-	ClearNodes();
+
+	for (auto *it : nodes)
+	{
+		it->parent = nullptr;
+		eh.AddLateDeleteNode(it);
+	}
+
+	nodes.Clear();
 
 	// FIXME: hacky
 	text = AstStaticCast<const AstText *>(newNode)->text;
@@ -120,7 +127,7 @@ bool AstScopeResOp::ResolveNode(const ErrorHandler &)
 	for (auto *it : nodes)
 		it->parent = this;
 
-	delete newNode;
+	eh.AddLateDeleteNode(newNode);
 
 	return true;
 }
