@@ -1008,7 +1008,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	// exprStackOfs for temp args
 	StackArray<TempArg, 16> tempArgs;
 
-	bool lastEllipsis = false;
+	bool lastEllipsis = fn->HasEllipsis();
 
 	// FIXME: refactor!!!
 	// push args back to front
