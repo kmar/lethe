@@ -18,6 +18,8 @@
 namespace lethe
 {
 
+AstTypeBool AstBinaryOp::boolType(TokenLocation{0, 0, String()});
+
 static AstNode *AstCreateConstNode(DataTypeEnum dt, const TokenLocation &loc)
 {
 	switch(dt)
@@ -1058,6 +1060,25 @@ const AstNode *AstBinaryOp::FindUserDefOperatorType(const AstNode *type0, const 
 	return FindUserDefOperatorType(GetOpName(), type0, type1);
 }
 
+bool AstBinaryOp::ReturnsBool() const
+{
+	switch(type)
+	{
+	case AST_OP_EQ:
+	case AST_OP_NEQ:
+	case AST_OP_LEQ:
+	case AST_OP_GEQ:
+	case AST_OP_LT:
+	case AST_OP_GT:
+	// note: logical or and and handled elsewhere
+		return true;
+
+	default:;
+	}
+
+	return false;
+}
+
 const AstNode *AstBinaryOp::GetTypeNode() const
 {
 	// TODO: handle reference types, DAMN! (really?!)
@@ -1069,6 +1090,10 @@ const AstNode *AstBinaryOp::GetTypeNode() const
 		// try user-defined operators...
 		return FindUserDefOperatorType(type0, type1);
 	}
+
+	// relational operators should return bool type!
+	if (ReturnsBool())
+		return &boolType;
 
 	const auto *ctype = CoerceTypes(type0, type1);
 

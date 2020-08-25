@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Lethe/Script/Ast/AstNode.h>
+#include <Lethe/Script/Ast/Types/AstTypeBool.h>
 
 namespace lethe
 {
@@ -44,6 +45,10 @@ protected:
 private:
 	const char *GetOpName() const;
 	const AstNode *FindUserDefOperatorType(const AstNode *type0, const AstNode *type1) const;
+
+	bool ReturnsBool() const;
+
+	static AstTypeBool boolType;
 };
 
 }
