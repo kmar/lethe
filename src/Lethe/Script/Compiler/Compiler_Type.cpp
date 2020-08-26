@@ -513,7 +513,7 @@ AstNode *Compiler::ParseTypeWithQualifiers(Int depth, ULong nqualifiers, bool in
 			else if (!--templateAccum)
 				ts->ConsumeToken();
 
-			AstNode *atype = isDynArray ? NewAstNode<AstTypeDynamicArray>(it.location) : NewAstNode<AstTypeArrayRef>(it.location);
+			UniquePtr<AstNode> atype = isDynArray ? NewAstNode<AstTypeDynamicArray>(it.location) : NewAstNode<AstTypeArrayRef>(it.location);
 			atype->qualifiers |= isDynArray*AST_Q_DTOR | qualifiers;
 
 			if (ts->PeekToken().type == TOK_AND)
@@ -526,7 +526,11 @@ AstNode *Compiler::ParseTypeWithQualifiers(Int depth, ULong nqualifiers, bool in
 			atype->scopeRef = isDynArray ? dynamicArrayScope : arrayRefScope;
 
 			atype->Add(sub.Detach());
-			return atype;
+
+			LETHE_RET_FALSE(ParseArrayType(atype, depth+1));
+			atype->qualifiers |= ParseQualifiers(1);
+
+			return atype.Detach();
 		}
 	}
 
