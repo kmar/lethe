@@ -1652,6 +1652,32 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 	return true;
 }
 
+void QDataType::RemoveVirtualProps()
+{
+	if (qualifiers & AST_Q_TYPEDEF_LOCK)
+		return;
+
+	qualifiers |= AST_Q_TYPEDEF_LOCK;
+
+	auto *dt = const_cast<DataType *>(ref);
+
+	for (Int i=dt->members.GetSize()-1; i>=0; i--)
+	{
+		if (dt->members[i].type.qualifiers & AST_Q_PROPERTY)
+		{
+			dt->members.EraseIndex(i);
+			continue;
+		}
+
+		// recurse to members
+		dt->members[i].type.RemoveVirtualProps();
+	}
+
+	qualifiers &= ~AST_Q_TYPEDEF_LOCK;
+}
+
+// DataType
+
 void DataType::GetVariableText(StringBuilder &sb, const void *ptr, Int maxLen) const
 {
 	GetVariableTextInternal(sb, ptr, maxLen, false, true);

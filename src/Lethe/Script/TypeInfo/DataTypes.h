@@ -158,6 +158,9 @@ struct LETHE_API QDataType
 	// get/extract human readable type name
 	String GetName() const;
 
+	// remove virtual property members
+	void RemoveVirtualProps();
+
 	// type matching
 	bool operator ==(const QDataType &o) const;
 	inline bool operator !=(const QDataType &o) const
