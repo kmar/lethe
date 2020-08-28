@@ -23,9 +23,12 @@ struct set<T>
 	}
 
 	//---------------------------------------------------------------------
-	inline int size() const
+	int size:
 	{
-		return entries.size;
+		inline noinit int get() const
+		{
+			return entries.size;
+		}
 	}
 
 	//---------------------------------------------------------------------

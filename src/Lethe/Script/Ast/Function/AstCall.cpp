@@ -378,15 +378,41 @@ bool AstCall::TypeGen(CompiledProgram &p)
 	if (callArgs)
 		return res;
 
+	auto replaceProp = [this]()
+	{
+		// replace with direct prop access!
+		parent->ReplaceChild(this, nodes[0]);
+		nodes[0] = nullptr;
+		delete this;
+	};
+
+	// try to remap property call to getter
+	if (nodes[0]->type == AST_OP_DOT && nodes[0]->nodes[1]->type == AST_IDENT)
+	{
+		auto *propn = AstStaticCast<AstText *>(nodes[0]->nodes[1]);
+
+		if (propn->symScopeRef && (propn->qualifiers & AST_Q_PROPERTY))
+		{
+			StringBuilder sb;
+			sb += "__get_";
+			sb += propn->text;
+			auto *refn = propn->symScopeRef->FindSymbol(sb.Get());
+
+			if (refn)
+			{
+				replaceProp();
+				return res;
+			}
+		}
+	}
+
+	// ditto for native props
 	auto targ = nodes[0]->GetResolveTarget();
 
 	if (!targ || targ->type != AST_NPROP)
 		return res;
 
-	// replace with direct native prop access!
-	parent->ReplaceChild(this, nodes[0]);
-	nodes[0] = nullptr;
-	delete this;
+	replaceProp();
 
 	return res;
 }

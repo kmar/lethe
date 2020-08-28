@@ -20,9 +20,12 @@ struct map<K, V>
 	}
 
 	//---------------------------------------------------------------------
-	inline int size() const
+	int size:
 	{
-		return keys.size();
+		inline noinit int get() const
+		{
+			return keys.size;
+		}
 	}
 
 	//---------------------------------------------------------------------
