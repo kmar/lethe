@@ -13,9 +13,25 @@ LETHE_SINGLETON_INSTANCE(NameTable)
 
 static const Int NTAB_STRCACHE_MAX = 8192;
 
+// note: this won't work for custom NameTable instances, just for the global (singleton) one
+thread_local Array<UInt> nameTableStableHashCache;
+
 UInt NameTable::GetStableHash(Name n) const
 {
-	return !n.index ? 0 : names.GetStableHash(n.index);
+	if (!n.index)
+		return 0;
+
+	if (this != &Get())
+		return names.GetStableHash(n.index);
+
+	// this is the singleton so try to build thread-local cache first
+	while ((UInt)n.index >= (UInt)nameTableStableHashCache.GetSize())
+	{
+		nameTableStableHashCache.Add(names.GetStableHash(nameTableStableHashCache.GetSize()));
+	}
+
+	// and look it up
+	return nameTableStableHashCache[n.index];
 }
 
 String NameTable::GetString(const Name &name) const
@@ -106,6 +122,9 @@ void NameTable::FixupString(String &str)
 
 NameTable::~NameTable()
 {
+	// reset thread local stable hash cache if this is the singleton
+	if (this == &Get())
+		nameTableStableHashCache.Reset();
 }
 
 // get size

@@ -227,7 +227,7 @@ void NameTableNum::Extract(Int nidx, String &base, Int &idx) const
 UInt NameTableNum::GetStableHash(Int nidx) const
 {
 	ReadMutexLock _(hashMutex);
-	return hashes[nidx];
+	return nidx <= 0 ? 0 : hashes[nidx-1];
 }
 
 }
