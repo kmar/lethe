@@ -26,7 +26,7 @@ public:
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 	AstNode *DerefConstant(const CompiledProgram &p) override;
 	AstNode *FindSymbolNode(String &sname, const NamedScope *&nscope) const override;
-	AstNode *FindVarSymbolNode() override;
+	AstSymbol *FindVarSymbolNode() override;
 	bool FoldConst(const CompiledProgram &p) override;
 	Int ToBoolConstant(const CompiledProgram &p) override;
 

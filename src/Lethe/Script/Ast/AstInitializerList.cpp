@@ -1,5 +1,6 @@
 #include "AstInitializerList.h"
 #include "BinaryOp/AstAssignOp.h"
+#include "AstSymbol.h"
 #include "NamedScope.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>

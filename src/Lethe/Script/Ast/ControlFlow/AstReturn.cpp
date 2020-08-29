@@ -1,5 +1,6 @@
 #include "AstReturn.h"
 #include "../NamedScope.h"
+#include "../AstSymbol.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Stack.h>
 #include <Lethe/Script/Vm/Opcodes.h>
@@ -29,29 +30,34 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 			// we have this: AST_EXPR / AST_BIN_ASSIGN...
 			AstNode *lv = nodes[0]->nodes[0]->nodes.GetSize() > 1 ? nodes[0]->nodes[0]->nodes[1] : nullptr;
 
-			if (!lv || resType.GetType() != lv->GetTypeDesc(p).GetType())
+			QDataType lvdt;
+
+			if (lv)
+				lvdt = lv->GetTypeDesc(p);
+
+			if (!lv || resType.GetType() != lvdt.GetType())
 				return p.Error(this, "incompatible types");
 
-			Int start = p.instructions.GetSize();
 			LETHE_RET_FALSE(lv->CodeGenRef(p, 1));
 
-			// FIXME: superhack to check if returning local var
-			bool hasPushAdr = false;
+			auto *lvNode = lv->FindVarSymbolNode();
+			const auto *lvScope = lvNode ? lvNode->scopeRef : scopeRef;
 
-			for (int i=start; i<p.instructions.GetSize(); i++)
+			if (lvNode && lvNode->symScopeRef)
+				lvScope = lvNode->symScopeRef;
+
+			if (lvNode && lvNode != lv)
+				lvdt = lvNode->GetTypeDesc(p);
+
+			if (!(lvdt.qualifiers & AST_Q_STATIC))
 			{
-				auto ins = (p.instructions[i] & 255u);
+				if (lvScope && lvScope->IsLocal() && !lvdt.IsReference())
+					return p.Error(lv, "returning address of a local variable");
 
-				if (ins == OPC_LPUSHADR)
-					hasPushAdr = true;
-
-				// if LPUSHADR was used before a call, reset flag
-				if (p.IsCall(ins))
-					hasPushAdr = false;
+				// make sure we don't return non-const member ref from a const method
+				if (lvScope && resType.IsReference() && !resType.IsConst() && lvScope->IsComposite() && scopeRef->IsConstMethod())
+					return p.Error(lv, "cannot return non-const member reference from a const method");
 			}
-
-			if (hasPushAdr)
-				return p.Error(nodes[0], "returning address of local variable");
 
 			// find result offset
 			Int ofs = nodes[0]->nodes[0]->nodes[0]->target->offset;

@@ -26,7 +26,7 @@ AstNode *AstSubscriptOp::FindSymbolNode(String &sname, const NamedScope *&nscope
 	return res;
 }
 
-AstNode *AstSubscriptOp::FindVarSymbolNode()
+AstSymbol *AstSubscriptOp::FindVarSymbolNode()
 {
 	return nodes[0]->FindVarSymbolNode();
 }

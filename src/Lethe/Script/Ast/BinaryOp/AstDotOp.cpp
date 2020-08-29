@@ -50,7 +50,7 @@ AstNode *AstDotOp::GetResolveTarget() const
 	return nodes[1]->GetResolveTarget();
 }
 
-AstNode *AstDotOp::FindVarSymbolNode()
+AstSymbol *AstDotOp::FindVarSymbolNode()
 {
 	return nodes[IDX_LEFT]->FindVarSymbolNode();
 }

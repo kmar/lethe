@@ -711,7 +711,7 @@ AstNode *AstNode::FindSymbolNode(String &, const NamedScope *&) const
 	return nullptr;
 }
 
-AstNode *AstNode::FindVarSymbolNode()
+AstSymbol *AstNode::FindVarSymbolNode()
 {
 	return nullptr;
 }

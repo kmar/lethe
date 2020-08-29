@@ -1286,8 +1286,8 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			// this simple optimization helps JIT a little
 			if (nscope == nscope2 && p.GetJitFriendly())
 			{
-				noPopThis = 1;
-				p.Emit(OPC_PUSH_RAW + 256);
+				noPopThis = true;
+				p.EmitI24(OPC_PUSH_RAW, 1);
 			}
 			else
 				p.Emit(OPC_PUSHTHIS);

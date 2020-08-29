@@ -256,6 +256,8 @@ private:
 	protected: cls() {} \
 	public: AstNode *Clone() const override {auto *res = new cls;CopyTo(res);return res;}
 
+class AstSymbol;
+
 class LETHE_API AstNode : public NoCopy
 {
 	LETHE_BUCKET_ALLOC(AstNode)
@@ -428,7 +430,7 @@ public:
 	// find symbol node + defining scope
 	virtual AstNode *FindSymbolNode(String &sname, const NamedScope *&nscope) const;
 	// find (leftmost) variable symbol
-	virtual AstNode *FindVarSymbolNode();
+	virtual AstSymbol *FindVarSymbolNode();
 
 	inline bool IsUnaryOp() const
 	{
