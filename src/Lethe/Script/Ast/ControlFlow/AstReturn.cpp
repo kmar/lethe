@@ -38,6 +38,9 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 			if (!lv || resType.GetType() != lvdt.GetType())
 				return p.Error(this, "incompatible types");
 
+			if (resType.IsReference() && !resType.IsConst() && lvdt.IsConst())
+				return p.Error(lv, "cannot return non-const reference (input is const)");
+
 			LETHE_RET_FALSE(lv->CodeGenRef(p, 1));
 
 			auto *lvNode = lv->FindVarSymbolNode();
