@@ -347,7 +347,7 @@ private:
 	static DataTypeEnum EvalTypeEnum(DataTypeEnum t);
 	static bool IsNumberEnum(DataTypeEnum t0);
 
-	void GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int maxLen = 256, bool baseStruct = false, bool depth0 = false) const;
+	void GetVariableTextInternal(HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen = 256, bool baseStruct = false, bool depth0 = false) const;
 	static bool ValidReadPtr(const void *ptr, Int size);
 };
 

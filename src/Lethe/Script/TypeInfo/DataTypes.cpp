@@ -1428,7 +1428,7 @@ bool QDataType::HasCtor() const
 	if (qualifiers & AST_Q_CTOR)
 		return true;
 
-	if (IsProperty() || IsReference() || dte < DT_STRING)
+	if (IsProperty() || IsReference() || dte <= DT_STRING || dte == DT_FUNC_PTR || dte == DT_DELEGATE || dte == DT_ARRAY_REF)
 		return false;
 
 	// note: dynamic arrays don't need ctor; zero-init will do
@@ -1470,7 +1470,7 @@ bool QDataType::IsRecursive(const DataType *rec) const
 
 		auto dte = qdt.GetTypeEnum();
 
-		if (dte < DT_STRING || dte == DT_DELEGATE || qdt.IsPointer())
+		if (dte < DT_STRING || dte == DT_DELEGATE || qdt.IsPointer() || dte == DT_ARRAY_REF)
 			continue;
 
 		if (qdt.ref == rec)
@@ -1498,7 +1498,7 @@ bool QDataType::HasDtor() const
 	if ((qualifiers & AST_Q_DTOR) || dte == DT_STRING || dte == DT_STRONG_PTR || dte == DT_WEAK_PTR || dte == DT_CLASS)
 		return true;
 
-	if (IsReference() || dte < DT_STRING || dte == DT_DELEGATE)
+	if (IsReference() || dte < DT_STRING || dte == DT_FUNC_PTR || dte == DT_DELEGATE || dte == DT_ARRAY_REF)
 		return false;
 
 	if (IsArray())
@@ -1680,7 +1680,8 @@ void QDataType::RemoveVirtualProps()
 
 void DataType::GetVariableText(StringBuilder &sb, const void *ptr, Int maxLen) const
 {
-	GetVariableTextInternal(sb, ptr, maxLen, false, true);
+	HashSet<const void *> hset;
+	GetVariableTextInternal(hset, sb, ptr, maxLen, false, true);
 }
 
 bool DataType::ValidReadPtr(const void *ptr, Int size)
@@ -1709,8 +1710,10 @@ bool DataType::ValidReadPtr(const void *ptr, Int size)
 	return true;
 }
 
-void DataType::GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int maxLen, bool baseStruct, bool depth0) const
+void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen, bool baseStruct, bool depth0) const
 {
+	hset.Add(ptr);
+
 	if (!ValidReadPtr(ptr, size))
 	{
 		sb += '?';
@@ -1873,7 +1876,7 @@ void DataType::GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int m
 				sb += obj->GetScriptClassType()->name;
 				sb += ' ';
 
-				obj->GetScriptClassType()->GetVariableTextInternal(sb, ptrval, maxLen);
+				obj->GetScriptClassType()->GetVariableTextInternal(hset, sb, ptrval, maxLen);
 			}
 		}
 	}
@@ -1886,7 +1889,7 @@ void DataType::GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int m
 
 		for (Int i=0; i<arrayDims; i++)
 		{
-			elemType.GetType().GetVariableTextInternal(sb, bptr, maxLen);
+			elemType.GetType().GetVariableTextInternal(hset, sb, bptr, maxLen);
 
 			if (i+1 < arrayDims)
 				sb += ", ";
@@ -1917,7 +1920,11 @@ void DataType::GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int m
 
 		for (Int i = 0; i<count; i++)
 		{
-			elemType.GetType().GetVariableTextInternal(sb, bptr, maxLen);
+			// avoid infinite recursion
+			if (hset.FindIndex(bptr) >= 0)
+				sb += "?";
+			else
+				elemType.GetType().GetVariableTextInternal(hset, sb, bptr, maxLen);
 
 			if (i + 1 < count)
 				sb += ", ";
@@ -1943,7 +1950,7 @@ void DataType::GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int m
 		if (baseType.GetTypeEnum() != DT_NONE)
 		{
 			auto olen = sb.GetLength();
-			baseType.GetType().GetVariableTextInternal(sb, bptr, maxLen, true);
+			baseType.GetType().GetVariableTextInternal(hset, sb, bptr, maxLen, true);
 
 			if (sb.GetLength() > olen && !members.IsEmpty())
 				sb += ", ";
@@ -1954,7 +1961,7 @@ void DataType::GetVariableTextInternal(StringBuilder &sb, const void *ptr, Int m
 			const auto &m = members[i];
 			sb += m.name;
 			sb += '=';
-			m.type.GetType().GetVariableTextInternal(sb, bptr + m.offset, maxLen);
+			m.type.GetType().GetVariableTextInternal(hset, sb, bptr + m.offset, maxLen);
 
 			if (i+1 < members.GetSize())
 				sb += ", ";

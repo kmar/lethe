@@ -83,7 +83,7 @@ template<> struct Limits<UShort>
 template<> struct Limits<UInt>
 {
 	static const UInt MIN = 0;
-	static const UInt MAX = (UInt)0-1;
+	static const UInt MAX = (UInt)0xffffffffu;
 	static inline UInt Min()
 	{
 		return MIN;

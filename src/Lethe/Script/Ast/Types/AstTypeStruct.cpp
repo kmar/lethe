@@ -165,6 +165,7 @@ bool AstTypeStruct::ResolveNode(const ErrorHandler &)
 bool AstTypeStruct::CodeGenComposite(CompiledProgram &p)
 {
 	LETHE_RET_FALSE(Super::CodeGenComposite(p));
+
 	QDataType qdt = GetTypeDesc(p);
 
 	// it's safe to remove virtual properties from members now
@@ -414,7 +415,8 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 				mtype = mn->GetTypeDesc(p);
 		}
 
-		const bool skipTypegen = mtype.IsProperty();
+		// note: we have to rebuild member types for array refs as well
+		const bool skipTypegen = mtype.IsProperty() || mtype.GetTypeEnum() == DT_ARRAY_REF;
 
 		if (skipTypegen)
 		{

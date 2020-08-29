@@ -25,7 +25,7 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 
 		auto resType = fn->GetResult()->GetTypeDesc(p);
 
-		if (resType.IsReference())
+		if (scopeRef && resType.IsReference())
 		{
 			// we have this: AST_EXPR / AST_BIN_ASSIGN...
 			AstNode *lv = nodes[0]->nodes[0]->nodes.GetSize() > 1 ? nodes[0]->nodes[0]->nodes[1] : nullptr;
@@ -52,13 +52,13 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 			if (lvNode && lvNode != lv)
 				lvdt = lvNode->GetTypeDesc(p);
 
-			if (!(lvdt.qualifiers & AST_Q_STATIC))
+			if (lvScope && !(lvdt.qualifiers & AST_Q_STATIC))
 			{
-				if (lvScope && lvScope->IsLocal() && !lvdt.IsReference())
+				if (lvScope->IsLocal() && !lvdt.IsReference())
 					return p.Error(lv, "returning address of a local variable");
 
 				// make sure we don't return non-const member ref from a const method
-				if (lvScope && resType.IsReference() && !resType.IsConst() && lvScope->IsComposite() && scopeRef->IsConstMethod())
+				if (resType.IsReference() && !resType.IsConst() && lvScope->IsComposite() && scopeRef->IsConstMethod())
 					return p.Error(lv, "cannot return non-const member reference from a const method");
 			}
 
