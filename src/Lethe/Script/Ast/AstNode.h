@@ -127,6 +127,9 @@ enum AstNodeType : Short
 	AST_CAST_OR_CALL,	// [0] = cast_type or f_name, [1] = expr or args
 	AST_CAST,
 	AST_SIZEOF,
+	AST_OFFSETOF,
+	AST_ALIGNOF,
+	AST_TYPEID,
 	AST_CALL,
 
 	AST_TYPE_VOID,

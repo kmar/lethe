@@ -12,11 +12,14 @@ public:
 
 	typedef AstNode Super;
 
-	explicit AstSizeOf(const TokenLocation &nloc) : Super(AST_SIZEOF, nloc) { }
+	explicit AstSizeOf(AstNodeType ntype, const TokenLocation &nloc) : Super(ntype, nloc) { }
 
 	bool FoldConst(const CompiledProgram &p) override;
 
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
+
+private:
+	static bool TryTypeGen(AstNode *node, const CompiledProgram &p);
 };
 
 }

@@ -392,6 +392,9 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_DEC:
 		case TOK_KEY_NEW:
 		case TOK_KEY_SIZEOF:
+		case TOK_KEY_OFFSETOF:
+		case TOK_KEY_ALIGNOF:
+		case TOK_KEY_TYPEID:
 		{
 			AstNode *tmp = 0;
 
@@ -426,7 +429,19 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				break;
 
 			case TOK_KEY_SIZEOF:
-				tmp = NewAstNode<AstSizeOf>(t.location);
+				tmp = NewAstNode<AstSizeOf>(AST_SIZEOF, t.location);
+				break;
+
+			case TOK_KEY_ALIGNOF:
+				tmp = NewAstNode<AstSizeOf>(AST_ALIGNOF, t.location);
+				break;
+
+			case TOK_KEY_OFFSETOF:
+				tmp = NewAstNode<AstSizeOf>(AST_OFFSETOF, t.location);
+				break;
+
+			case TOK_KEY_TYPEID:
+				tmp = NewAstNode<AstSizeOf>(AST_TYPEID, t.location);
 				break;
 
 			default:
