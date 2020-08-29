@@ -66,6 +66,14 @@ bool AstTypeDef::TypeGenDef(CompiledProgram &p)
 	return Super::TypeGenDef(p);
 }
 
+bool AstTypeDef::TypeGen(CompiledProgram &p)
+{
+	if (nodes[0]->target)
+		LETHE_RET_FALSE(nodes[0]->target->TypeGen(p));
+
+	return Super::TypeGen(p);
+}
+
 AstNode::ResolveResult AstTypeDef::Resolve(const ErrorHandler &eh)
 {
 	return Super::Resolve(eh);

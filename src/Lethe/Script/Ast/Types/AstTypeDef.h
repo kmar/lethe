@@ -22,6 +22,7 @@ public:
 	bool IsElemType() const override;
 
 	bool TypeGenDef(CompiledProgram &p) override;
+	bool TypeGen(CompiledProgram &p) override;
 
 	ResolveResult Resolve(const ErrorHandler &e) override;
 
