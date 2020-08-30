@@ -71,7 +71,13 @@ bool AstUnaryRef::CodeGen(CompiledProgram &p)
 	LETHE_RET_FALSE(nodes[IDX_REF]->CodeGenRef(p, true));
 	p.PopStackType(true);
 	p.PopStackType(true);
-	p.PushStackType(GetTypeDesc(p));
+
+	auto resType = GetTypeDesc(p);
+
+	if (nodes[IDX_REF]->type == AST_THIS && resType.GetType().elemType.IsPointer())
+		return p.Error(nodes[IDX_REF], "cannot construct ref from this inside a class");
+
+	p.PushStackType(resType);
 	return true;
 }
 
