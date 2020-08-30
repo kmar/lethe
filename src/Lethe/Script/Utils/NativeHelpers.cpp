@@ -1443,6 +1443,97 @@ static void natDoubleFromBinary(Stack &stk)
 	res = BinaryToDouble(value);
 }
 
+struct NakedArrayRef
+{
+	const Byte *ptr;
+	Int size;
+};
+
+static void natToBytesInternal(Stack &stk, bool mut)
+{
+	ArgParser ap(stk);
+	auto numArgs = ap.Get<Int>();
+
+	if (numArgs != 1)
+		return;
+
+	auto *dt = ap.Get<const DataType *>();
+
+	if (dt->type != DT_ARRAY_REF)
+		return;
+
+	if (mut && dt->elemType.IsConst())
+		return;
+
+	const auto &src = ap.Get<ArrayRef<Byte>>();
+	auto &res = ap.Get<NakedArrayRef>();
+	res.ptr = src.GetData();
+	res.size = src.GetSize();
+	res.size *= dt->elemType.GetSize();
+}
+
+static void natToBytes(Stack &stk)
+{
+	natToBytesInternal(stk, false);
+}
+
+static void natToBytesMutable(Stack &stk)
+{
+	natToBytesInternal(stk, true);
+}
+
+static void natMemSet(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto dst = ap.Get<ArrayRef<Byte>>();
+	auto filler = ap.Get<Int>();
+
+	if (!dst.IsEmpty())
+		MemSet(dst.GetData(), filler, dst.GetSize());
+}
+
+static void natMemCpy(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto dst = ap.Get<ArrayRef<Byte>>();
+	auto src = ap.Get<ArrayRef<Byte>>();
+
+	Int toCopy = Min(dst.GetSize(), src.GetSize());
+
+	if (toCopy > 0)
+	{
+		auto *ptr0 = dst.GetData();
+		auto *ptr1 = src.GetData();
+
+		if (ptr0 == ptr1)
+			return;
+
+		auto *end0 = ptr0 + toCopy;
+		auto *end1 = ptr1 + toCopy;
+
+		// check for overlap
+		if (end0 < ptr1 || ptr0 > end1)
+			MemCpy(dst.GetData(), src.GetData(), toCopy);
+		else
+			MemMove(dst.GetData(), src.GetData(), toCopy);
+	}
+}
+
+static void natMemCmp(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto dst = ap.Get<ArrayRef<Byte>>();
+	auto src = ap.Get<ArrayRef<Byte>>();
+	auto &res = ap.Get<Int>();
+
+	Int toCmp = Min(dst.GetSize(), src.GetSize());
+
+	res = toCmp > 0 ? MemCmp(dst.GetData(), src.GetData(), toCmp) : 0;
+
+	if (!res && src.GetSize() != dst.GetSize())
+		res = (dst.GetSize() > src.GetSize()) - (dst.GetSize() < src.GetSize());
+}
+
 void NativeHelpers::Init(CompiledProgram &p)
 {
 	p.cpool.BindNativeFunc("decode_utf8", native_decodeUtf8);
@@ -1513,6 +1604,14 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("float_to_binary", natFloatToBinary);
 	p.cpool.BindNativeFunc("double_from_binary", natDoubleFromBinary);
 	p.cpool.BindNativeFunc("double_to_binary", natDoubleToBinary);
+
+	// memory
+	p.cpool.BindNativeFunc("to_bytes", natToBytes);
+	// to_bytes_mutable is unsafe!
+	p.cpool.BindNativeFunc("to_bytes_mutable", natToBytesMutable);
+	p.cpool.BindNativeFunc("memset", natMemSet);
+	p.cpool.BindNativeFunc("memcmp", natMemCmp);
+	p.cpool.BindNativeFunc("memcpy", natMemCpy);
 }
 
 

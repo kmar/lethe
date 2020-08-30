@@ -269,10 +269,14 @@ native int __da_upper_bound(int elem);
 native int __da_find_sorted(int elem);
 native int __da_insert_sorted(int elem);
 native int __da_insert_sorted_unique(int elem);
-// priority_queue:
-native void __da_push_heap(int elem);
-native int __da_pop_heap();
 native int __da_slice(int from, int to = -1);
+
+native const_byte[] to_bytes(...);
+native void memset(byte[] dst, int filler = 0);
+native int memcmp(const byte[] src0, const byte[] src1);
+native void memcpy(byte[] dst, const byte[] src);
+// unsafe!
+native byte[] to_bytes_mutable(...);
 )#"
 
 #if LETHE_32BIT
