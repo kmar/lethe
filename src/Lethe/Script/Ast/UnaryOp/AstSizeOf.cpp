@@ -75,6 +75,8 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 	case AST_TYPEID:
 		nn = new AstConstName(qdt.GetName(), location);
 		break;
+
+	default:;
 	}
 
 	AstNode *newNode = type == AST_TYPEID ? static_cast<AstNode *>(nn.Detach()) : static_cast<AstNode *>(n.Detach());
