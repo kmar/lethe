@@ -1110,6 +1110,9 @@ DataTypeEnum AstNode::TypeEnumFromNode(const AstNode *n)
 	case AST_TYPE_STRING:
 		return DT_STRING;
 
+	case AST_TYPE_ARRAY_REF:
+		return DT_ARRAY_REF;
+
 	default:;
 	}
 

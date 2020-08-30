@@ -10,14 +10,10 @@ namespace lethe
 
 AstNode *AstTextConstant::ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p)
 {
-	(void)p;
-
-	if (dte != DT_STRING && dte != DT_NAME)
+	if (dte != DT_STRING && dte != DT_NAME && dte != DT_ARRAY_REF)
 	{
-		// allowing to fail silently, useful to convert string to const_byte[] (string ref)
-		//p.Error(this, "cannot convert constant");
-		//return nullptr;
-		return this;
+		p.Error(this, "cannot convert constant");
+		return nullptr;
 	}
 
 	AstNode *conv = nullptr;

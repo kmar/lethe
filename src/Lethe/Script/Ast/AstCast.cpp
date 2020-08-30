@@ -15,7 +15,18 @@ bool AstCast::FoldConst(const CompiledProgram &p)
 		return res;
 
 	nodes[1]->qualifiers |= AST_Q_NO_WARNINGS;
-	LETHE_RET_FALSE(nodes[1]->ConvertConstTo(GetTypeDesc(p).GetTypeEnum(), p));
+	auto dte = GetTypeDesc(p).GetTypeEnum();
+
+	if (dte == DT_NONE)
+		return res;
+
+	auto *oldn = nodes[1];
+	auto *newn = nodes[1]->ConvertConstTo(dte, p);
+
+	if (!newn || newn == oldn)
+		return res;
+
+	res = true;
 
 	auto *n = nodes[1];
 	nodes.Resize(1);

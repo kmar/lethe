@@ -216,6 +216,10 @@ DataTypeEnum DataType::ComposeTypeEnum(DataTypeEnum t0, DataTypeEnum t1)
 		;
 	}
 
+	// allow string + presumably string_view => string
+	if (t0 == DT_STRING && t1 == DT_ARRAY_REF)
+		return t0;
+
 	// invalid if we get here
 	return DT_NONE;
 }
