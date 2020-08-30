@@ -73,7 +73,7 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 	}
 
 	case AST_TYPEID:
-		nn = new AstConstName(qdt.GetType().GetName(), location);
+		nn = new AstConstName(qdt.GetName(), location);
 		break;
 	}
 
