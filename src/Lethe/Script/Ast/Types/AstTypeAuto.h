@@ -24,10 +24,12 @@ public:
 	void CopyTo(AstNode *n) const override;
 
 private:
+	AstNode *GetExprNode() const;
 	AstNode *GetAutoType() const;
 	mutable AstNode *typeCache = nullptr;
 	mutable bool lockFlag = false;
 	mutable bool reportedFlag = false;
+	mutable Int typeLockCount = 0;
 };
 
 

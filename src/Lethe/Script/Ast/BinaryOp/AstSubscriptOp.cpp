@@ -196,7 +196,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 	}
 
 	if (!allowConst && qdt.IsConst())
-		return p.Error(this, "cannot modify constant");
+		return p.Error(this, "cannot modify a constant");
 
 	const DataType &dt = qdt.GetType();
 

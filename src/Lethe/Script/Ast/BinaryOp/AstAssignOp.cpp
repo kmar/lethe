@@ -406,7 +406,7 @@ bool AstAssignOp::CodeGenCommon(CompiledProgram &p, bool needConv, bool asRef, b
 		return p.Error(this, "cannot assign to nocopy variable");
 
 	if (!allowConst && dst.IsConst() && !(qualifiers & AST_Q_CAN_MODIFY_CONSTANT))
-		return p.Error(this, "cannot modify constant");
+		return p.Error(this, "cannot modify a constant");
 
 	auto ste = src.GetTypeEnum();
 	auto dte = dst.GetTypeEnum();

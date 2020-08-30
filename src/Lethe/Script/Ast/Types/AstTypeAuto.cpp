@@ -1,6 +1,8 @@
 #include "AstTypeAuto.h"
 #include "AstTypeClass.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
+#include "../NamedScope.h"
+#include "../AstSymbol.h"
 
 namespace lethe
 {
@@ -42,16 +44,46 @@ bool AstTypeAuto::TypeGen(CompiledProgram &)
 
 const AstNode *AstTypeAuto::GetTypeNode() const
 {
+	// avoid problems like auto a=a
+	if (++typeLockCount >= 100)
+		return nullptr;
+
 	const auto *atype = GetAutoType();
 	LETHE_RET_FALSE(atype);
 	const AstNode *res = atype->GetTypeNode();
+
+	--typeLockCount;
+
 	return res ? res : this;
 }
 
 AstNode *AstTypeAuto::GetAutoType() const
 {
-	AstNode *res = nullptr;
+	auto *res = GetExprNode();
+
+	if (res)
+	{
+		auto *nres = const_cast<AstNode *>(res->GetTypeNode());
+
+		if (nres)
+			res = nres;
+
+		if (res->type == AST_ENUM_ITEM)
+		{
+			// we have to switch to underlying type!
+			LETHE_ASSERT(res->parent && res->parent->type == AST_ENUM);
+			res = res->parent;
+			typeCache = res;
+		}
+	}
+
+	return res;
+}
+
+AstNode *AstTypeAuto::GetExprNode() const
+{
 	AstNode *vdecl;
+	AstNode *res = nullptr;
 
 	switch (parent->type)
 	{
@@ -85,22 +117,6 @@ AstNode *AstTypeAuto::GetAutoType() const
 	default:;
 	}
 
-	if (res)
-	{
-		auto *nres = const_cast<AstNode *>(res->GetTypeNode());
-
-		if (nres)
-			res = nres;
-
-		if (res->type == AST_ENUM_ITEM)
-		{
-			// we have to switch to underlying type!
-			LETHE_ASSERT(res->parent && res->parent->type == AST_ENUM);
-			res = res->parent;
-			typeCache = res;
-		}
-	}
-
 	return res;
 }
 
@@ -125,6 +141,20 @@ QDataType AstTypeAuto::GetTypeDesc(const CompiledProgram &p) const
 	if (tnode)
 	{
 		res = tnode->GetTypeDesc(p);
+
+		LETHE_ASSERT(parent);
+
+		if ((qualifiers & AST_Q_REFERENCE) && !(res.qualifiers & AST_Q_STATIC) && parent->scopeRef->IsConstMethod())
+		{
+			auto *at = GetExprNode();
+			auto *sym = at->FindVarSymbolNode();
+
+			if (sym && sym->symScopeRef && sym->symScopeRef->IsBaseOf(parent->scopeRef->FindThis()))
+			{
+				// force const
+				res.qualifiers |= AST_Q_CONST;
+			}
+		}
 
 		if (res.GetTypeEnum() == DT_CLASS)
 			res = AstStaticCast<const AstTypeClass *>(tnode)->GetTypeDescPtr(DT_STRONG_PTR);
@@ -155,6 +185,7 @@ void AstTypeAuto::CopyTo(AstNode *n) const
 	tmp->typeCache = typeCache;
 	tmp->lockFlag = lockFlag;
 	tmp->reportedFlag = reportedFlag;
+	tmp->typeLockCount = typeLockCount;
 }
 
 
