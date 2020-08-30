@@ -1595,6 +1595,8 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 	{
 		// make sure we don't cast out const
 		LETHE_RET_FALSE(ref->elemType.IsConst() || !o.ref->elemType.IsConst());
+
+		return *ref->elemType.ref == *o.ref->elemType.ref;
 	}
 
 	if (dte == DT_DYNAMIC_ARRAY)
