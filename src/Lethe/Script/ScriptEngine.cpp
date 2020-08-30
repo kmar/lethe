@@ -74,19 +74,21 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 	const char * const boolStr[2] = {"false", "true"};
 
 	internalProg.Format(
-		"constexpr bool DEBUG = %s;\nconstexpr bool OS_WINDOWS=%s;\n",
+		"constexpr bool DEBUG = %s;\nconstexpr bool OS_WINDOWS = %s;constexpr bool BIG_ENDIAN = %s;\n",
 		boolStr[!program->GetUnsafe()],
 #if LETHE_OS_WINDOWS
-		"true"
+		"true",
 #else
-		"false"
+		"false",
 #endif
+		boolStr[Endian::IsBig()]
 	);
 
 	// define some useful type aliases
 
 	internalProg +=
 		R"#(
+constexpr bool LITTLE_ENDIAN = !BIG_ENDIAN;
 typedef const bool const_bool;
 typedef const byte const_byte;
 typedef const sbyte const_sbyte;

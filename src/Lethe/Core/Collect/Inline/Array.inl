@@ -713,7 +713,7 @@ Array<T,S,A> &Array<T,S,A>::Erase(S index, S count)
 {
 	if (count)
 	{
-		CORE_ASSERT(index >= 0 && index < this->size);
+		LETHE_ASSERT(index >= 0 && index < this->size);
 
 		if (count < 0 || count > this->size - index)
 			count = this->size - index;
