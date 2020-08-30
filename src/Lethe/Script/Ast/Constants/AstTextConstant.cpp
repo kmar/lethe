@@ -44,4 +44,9 @@ Int AstTextConstant::ToBoolConstant(const CompiledProgram &)
 	return !text.IsEmpty();
 }
 
+bool AstTextConstant::IsZeroConstant(const CompiledProgram &) const
+{
+	return text.IsEmpty();
+}
+
 }

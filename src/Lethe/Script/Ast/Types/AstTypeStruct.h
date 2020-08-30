@@ -29,10 +29,10 @@ public:
 	{
 	}
 
-	// get custom constructor node, returns 0 if none
+	// get custom constructor node, returns nullptr if none
 	AstFunc *GetCustomCtor();
 
-	// get custom destructor node, returns 0 if none
+	// get custom destructor node, returns nullptr if none
 	AstFunc *GetCustomDtor();
 
 	bool BeginCodegen(CompiledProgram &p) override;

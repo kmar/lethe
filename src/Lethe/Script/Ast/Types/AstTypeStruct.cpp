@@ -77,10 +77,18 @@ AstFunc *AstTypeStruct::GetCustomCtor()
 		AstNode *n = nodes[i];
 
 		if (n->type == AST_FUNC && (n->qualifiers & AST_Q_CTOR))
-			return AstStaticCast<AstFunc *>(n);
+		{
+			auto *res = AstStaticCast<AstFunc *>(n);
+
+			if (AstFunc::IDX_BODY >= res->nodes.GetSize())
+				return res;
+
+			auto *fbody = res->nodes[AstFunc::IDX_BODY];
+			return fbody->nodes.IsEmpty() ? nullptr : res;
+		}
 	}
 
-	return 0;
+	return nullptr;
 }
 
 AstFunc *AstTypeStruct::GetCustomDtor()
@@ -93,7 +101,7 @@ AstFunc *AstTypeStruct::GetCustomDtor()
 			return AstStaticCast<AstFunc *>(n);
 	}
 
-	return 0;
+	return nullptr;
 }
 
 AstNode::ResolveResult AstTypeStruct::Resolve(const ErrorHandler &e)
@@ -543,6 +551,12 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 	dt->ctorRef = GetCustomCtor();
 	dt->funcRef = GetCustomDtor();
 	dt->structScopeRef = scopeRef;
+
+	if (type == AST_STRUCT && !dt->ctorRef && (typeRef.qualifiers & AST_Q_CTOR) && !(dt->baseType.qualifiers & AST_Q_CTOR))
+	{
+		// we may optimize the ctor flag away
+		typeRef.qualifiers &= ~AST_Q_CTOR;
+	}
 
 	if (typeRef.HasCtor())
 		typeRef.qualifiers |= AST_Q_CTOR;

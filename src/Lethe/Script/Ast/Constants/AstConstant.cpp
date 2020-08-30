@@ -228,6 +228,11 @@ AstNode *AstConstant::ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p)
 
 Int AstConstant::ToBoolConstant(const CompiledProgram &p)
 {
+	return ToBoolConstantInternal(p);
+}
+
+Int AstConstant::ToBoolConstantInternal(const CompiledProgram &p) const
+{
 	QDataType qdt = GetTypeDesc(p);
 	DataTypeEnum dte = qdt.GetTypeEnum();
 
@@ -261,6 +266,11 @@ Int AstConstant::ToBoolConstant(const CompiledProgram &p)
 	}
 
 	return -1;
+}
+
+bool AstConstant::IsZeroConstant(const CompiledProgram &p) const
+{
+	return AstConstant::ToBoolConstantInternal(p) == 0;
 }
 
 #undef AST_CONST_CONV_TO

@@ -412,6 +412,9 @@ public:
 	// <0 => not a constant
 	virtual Int ToBoolConstant(const CompiledProgram &p);
 
+	// returns true if constant literal can be zero-inited
+	virtual bool IsZeroConstant(const CompiledProgram &p) const;
+
 	// try to dereference symbolic constant, null if none
 	virtual AstNode *DerefConstant(const CompiledProgram &p);
 

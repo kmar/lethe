@@ -266,6 +266,12 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			if (n->nodes[ofs]->type != AST_IDENT)
 				return;
 
+			auto *expr = n->nodes[ofs+1];
+
+			// init optimization
+			if (n->type == AST_VAR_DECL && expr->IsZeroConstant(p))
+				return;
+
 			AstNode *asgn = new AstBinaryAssignAllowConst(nloc);
 			AstSymbol *resIdent = new AstSymbol("", nloc);
 			resIdent->text = AstStaticCast<AstText *>(n->nodes[ofs])->text;
@@ -279,7 +285,6 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			resIdent->symScopeRef = n->nodes[ofs]->symScopeRef;
 
 			asgn->Add(resIdent);
-			auto expr = n->nodes[ofs+1];
 			expr->parent = nullptr;
 			asgn->Add(expr);
 			n->nodes.Resize(ofs+1);

@@ -20,6 +20,7 @@ public:
 
 	AstNode *ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p) override;
 	Int ToBoolConstant(const CompiledProgram &p) override;
+	bool IsZeroConstant(const CompiledProgram &p) const override;
 };
 
 }

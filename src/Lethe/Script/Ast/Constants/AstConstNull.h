@@ -16,6 +16,9 @@ public:
 
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 	bool CodeGen(CompiledProgram &p) override;
+
+	// null is always 0
+	bool IsZeroConstant(const CompiledProgram &) const override {return true;}
 };
 
 

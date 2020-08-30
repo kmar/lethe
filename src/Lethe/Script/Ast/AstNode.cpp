@@ -553,6 +553,11 @@ Int AstNode::ToBoolConstant(const CompiledProgram &)
 	return -1;
 }
 
+bool AstNode::IsZeroConstant(const CompiledProgram &) const
+{
+	return false;
+}
+
 AstNode *AstNode::DerefConstant(const CompiledProgram &)
 {
 	return 0;
