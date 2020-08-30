@@ -469,7 +469,7 @@ const AstNode *AstNode::FindDefinition(Int col, Int line, const String &filename
 AstNode *AstNode::Add(AstNode *n)
 {
 	LETHE_ASSERT(n && !n->parent);
-	nodes.Add(n);
+	n->cachedIndex = nodes.Add(n);
 	n->parent = this;
 	return n;
 }
@@ -477,8 +477,9 @@ AstNode *AstNode::Add(AstNode *n)
 AstNode *AstNode::UnbindNode(Int idx)
 {
 	AstNode *res = nodes[idx];
-	nodes[idx] = 0;
-	res->parent = 0;
+	nodes[idx] = nullptr;
+	res->parent = nullptr;
+	res->cachedIndex = -1;
 	return res;
 }
 
@@ -486,13 +487,18 @@ AstNode *AstNode::BindNode(Int idx, AstNode *n)
 {
 	LETHE_ASSERT(!n->parent && !nodes[idx]);
 	n->parent = this;
+	n->cachedIndex = idx;
 	nodes[idx] = n;
 	return n;
 }
 
 bool AstNode::ReplaceChild(AstNode *oldc, AstNode *newc)
 {
-	for (Int i=0; i<nodes.GetSize(); i++)
+	Int start = oldc ? oldc->cachedIndex : 0;
+
+	start *= (UInt)start < (UInt)nodes.GetSize() && nodes[start] == oldc;
+
+	for (Int i=start; i<nodes.GetSize(); i++)
 	{
 		if (nodes[i] == oldc)
 		{
@@ -504,6 +510,7 @@ bool AstNode::ReplaceChild(AstNode *oldc, AstNode *newc)
 
 			newc->parent = this;
 			newc->location = oldc->location;
+			newc->cachedIndex = i;
 			nodes[i] = newc;
 
 			return true;

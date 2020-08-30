@@ -299,6 +299,8 @@ public:
 		Double d;
 	} num;
 	TokenLocation location;
+	// cached index at parent
+	Int cachedIndex;
 
 	enum ResolveResult
 	{
