@@ -1,6 +1,7 @@
 #include "AstConstant.h"
 #include "AstConstBool.h"
 #include "AstConstInt.h"
+#include "AstConstChar.h"
 #include "AstConstUInt.h"
 #include "AstConstLong.h"
 #include "AstConstULong.h"
@@ -22,49 +23,49 @@ namespace lethe
 #define AST_CONST_CONV_TO(T, id, src, res, OP)	\
 	switch(src) {	\
 	case DT_BOOL:	\
-		res->num.id = static_cast<T>(num.i OP);	\
-		AST_CONST_CONV_WARN_IF((!!(res->num.id)) != num.i); \
+		res->num.id = static_cast<T>(tmp.i OP);	\
+		AST_CONST_CONV_WARN_IF((!!(res->num.id)) != tmp.i); \
 		break; \
 	case DT_SBYTE:	\
-		res->num.id = static_cast<T>(num.i OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<SByte>(res->num.id) != num.i); \
+		res->num.id = static_cast<T>(tmp.i OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<SByte>(res->num.id) != tmp.i); \
 		break; \
 	case DT_BYTE:	\
-		res->num.id = static_cast<T>(num.i OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<Byte>(res->num.id) != num.i); \
+		res->num.id = static_cast<T>(tmp.i OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Byte>(res->num.id) != tmp.i); \
 		break; \
 	case DT_SHORT:	\
-		res->num.id = static_cast<T>(num.i OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<Short>(res->num.id) != num.i); \
+		res->num.id = static_cast<T>(tmp.i OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Short>(res->num.id) != tmp.i); \
 		break; \
 	case DT_USHORT:	\
-		res->num.id = static_cast<T>(num.i OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<UShort>(res->num.id) != num.i); \
+		res->num.id = static_cast<T>(tmp.i OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<UShort>(res->num.id) != tmp.i); \
 		break; \
 	case DT_CHAR:	\
 	case DT_INT:	\
-		res->num.id = static_cast<T>(num.i OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<Int>(res->num.id) != num.i); \
+		res->num.id = static_cast<T>(tmp.i OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Int>(res->num.id) != tmp.i); \
 		break;	\
 	case DT_UINT:	\
-		res->num.id = static_cast<T>(num.ui OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<UInt>(res->num.id) != num.ui); \
+		res->num.id = static_cast<T>(tmp.ui OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<UInt>(res->num.id) != tmp.ui); \
 		break;	\
 	case DT_LONG:	\
-		res->num.id = static_cast<T>(num.l OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<Long>(res->num.id) != num.l); \
+		res->num.id = static_cast<T>(tmp.l OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Long>(res->num.id) != tmp.l); \
 		break;	\
 	case DT_ULONG:	\
-		res->num.id = static_cast<T>(num.ul OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<ULong>(res->num.id) != num.ul); \
+		res->num.id = static_cast<T>(tmp.ul OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<ULong>(res->num.id) != tmp.ul); \
 		break;	\
 	case DT_FLOAT:	\
-		res->num.id = static_cast<T>(num.f OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<Float>(res->num.id) != num.f); \
+		res->num.id = static_cast<T>(tmp.f OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Float>(res->num.id) != tmp.f); \
 		break;	\
 	case DT_DOUBLE:	\
-		res->num.id = static_cast<T>(num.d OP);	\
-		AST_CONST_CONV_WARN_IF(static_cast<Double>(res->num.id) != num.d); \
+		res->num.id = static_cast<T>(tmp.d OP);	\
+		AST_CONST_CONV_WARN_IF(static_cast<Double>(res->num.id) != tmp.d); \
 		break;	\
 	default:;	\
 	}
@@ -104,9 +105,11 @@ namespace lethe
 	default:;	\
 }
 
-AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const CompiledProgram &p) const
+AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const CompiledProgram &p)
 {
 	AstNode *res = nullptr;
+
+	auto tmp = num;
 
 	switch(dte)
 	{
@@ -116,27 +119,27 @@ AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const C
 		break;
 
 	case DT_BYTE:
-		res = new AstConstInt(location);
+		res = type == AST_CONST_INT ? this : new AstConstInt(location);
 		AST_CONST_CONV_TO(Byte, i, dt.type, res,);
 		break;
 
 	case DT_SBYTE:
-		res = new AstConstInt(location);
+		res = type == AST_CONST_INT ? this : new AstConstInt(location);
 		AST_CONST_CONV_TO(SByte, i, dt.type, res,);
 		break;
 
 	case DT_SHORT:
-		res = new AstConstInt(location);
+		res = type == AST_CONST_INT ? this : new AstConstInt(location);
 		AST_CONST_CONV_TO(Short, i, dt.type, res,);
 		break;
 
 	case DT_USHORT:
-		res = new AstConstInt(location);
+		res = type == AST_CONST_INT ? this : new AstConstInt(location);
 		AST_CONST_CONV_TO(UShort, i, dt.type, res,);
 		break;
 
 	case DT_CHAR:
-		res = new AstConstInt(location);
+		res = new AstConstChar(location);
 		AST_CONST_CONV_TO(Int, i, dt.type, res,);
 		break;
 
@@ -220,9 +223,13 @@ AstNode *AstConstant::ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p)
 		return nullptr;
 	}
 
-	res->parent = parent;
-	LETHE_VERIFY(parent->ReplaceChild(this, res));
-	delete this;
+	if (res != this)
+	{
+		res->parent = parent;
+		LETHE_VERIFY(parent->ReplaceChild(this, res));
+		delete this;
+	}
+
 	return res;
 }
 
