@@ -19,6 +19,7 @@ AstUnaryRef::~AstUnaryRef()
 
 bool AstUnaryRef::TypeGen(CompiledProgram &p)
 {
+	(void)GetTypeNode();
 	return GetArrayRefNode()->TypeGen(p);
 }
 
