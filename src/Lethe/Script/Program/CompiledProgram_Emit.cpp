@@ -418,6 +418,33 @@ void CompiledProgram::EmitI24(Int ins, Int offset)
 
 void CompiledProgram::Emit(UInt ins)
 {
+	// optimization to speed up arrayref=>bool conversion
+	if (ins == OPC_POP + 256 && emitOptBase <= instructions.GetSize()-1)
+	{
+		auto oins = instructions.Back();
+		auto itype = oins & 255;
+
+		if (itype == OPC_LPUSHPTR || itype == OPC_GLOADPTR)
+		{
+			// squash push + pop1 => nothing
+			instructions.Pop();
+			return;
+		}
+
+		if (itype == OPC_PLOADPTR_IMM && emitOptBase <= instructions.GetSize()-2)
+		{
+			auto itype2 = instructions[instructions.GetSize()-2] & 255;
+
+			if (itype2 == OPC_PUSHTHIS_TEMP || itype2 == OPC_PUSHTHIS)
+			{
+				// squash pushthis_adr + ploadptr_imm => nothing
+				instructions.Pop();
+				instructions.Pop();
+				return;
+			}
+		}
+	}
+
 	EmitInternal(ins);
 
 	Int num = instructions.GetSize();
@@ -1712,6 +1739,16 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const DataType
 			default:
 				;
 			}
+		}
+
+		if (edst == ECONV_BOOL && src.type == DT_ARRAY_REF)
+		{
+			// we have: pointer, size, just drop pointer and convert to nonzero
+			EmitI24(OPC_POP, 1);
+			Emit(OPC_ICMPNZ);
+			PopStackType(true);
+			PushStackType(QDataType::MakeConstType(elemTypes[DT_BOOL]));
+			return true;
 		}
 
 		return Error(n, String::Printf("cannot convert from %s to %s", src.GetName().Ansi(), dst.GetName().Ansi()));
