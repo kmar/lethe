@@ -48,6 +48,7 @@
 #include <Lethe/Script/Ast/UnaryOp/AstUnaryMinus.h>
 #include <Lethe/Script/Ast/UnaryOp/AstUnaryNot.h>
 #include <Lethe/Script/Ast/UnaryOp/AstUnaryLNot.h>
+#include <Lethe/Script/Ast/UnaryOp/AstUnaryRef.h>
 #include <Lethe/Script/Ast/UnaryOp/AstUnaryNew.h>
 #include <Lethe/Script/Ast/UnaryOp/AstSizeOf.h>
 

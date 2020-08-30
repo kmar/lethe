@@ -390,6 +390,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_NOT:
 		case TOK_INC:
 		case TOK_DEC:
+		case TOK_AND:
 		case TOK_KEY_NEW:
 		case TOK_KEY_SIZEOF:
 		case TOK_KEY_OFFSETOF:
@@ -422,6 +423,10 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 
 			case TOK_DEC:
 				tmp = NewAstNode<AstUnaryPreOp>(AST_UOP_PREDEC, t.location);
+				break;
+
+			case TOK_AND:
+				tmp = NewAstNode<AstUnaryRef>(t.location);
 				break;
 
 			case TOK_KEY_NEW:

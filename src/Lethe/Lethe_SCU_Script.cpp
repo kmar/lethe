@@ -85,6 +85,7 @@
 #include "Script/Ast/UnaryOp/AstUnaryOp.cpp"
 #include "Script/Ast/UnaryOp/AstUnaryPostOp.cpp"
 #include "Script/Ast/UnaryOp/AstUnaryPreOp.cpp"
+#include "Script/Ast/UnaryOp/AstUnaryRef.cpp"
 #include "Script/Compiler/Compiler.cpp"
 #include "Script/Compiler/Compiler_Declaration.cpp"
 #include "Script/Compiler/Compiler_Expression.cpp"

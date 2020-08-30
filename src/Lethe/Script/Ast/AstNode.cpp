@@ -65,6 +65,7 @@ static const char *AST_TYPE_NAMES[] =
 	"AST_UOP_PREDEC",
 	"AST_UOP_POSTINC",
 	"AST_UOP_POSTDEC",
+	"AST_UOP_REF",
 	"AST_OP_MUL",
 	"AST_OP_DIV",
 	"AST_OP_MOD",
