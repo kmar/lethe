@@ -10,11 +10,8 @@
 #include <stdlib.h>
 
 // TODO:
-// - lower_bound/upper_bound for set
-// - erase for set
 // - erase should return next index
 // - remove to remove element(s)
-// - get min/max for set + pred/succ
 
 namespace lethe
 {
@@ -1487,8 +1484,9 @@ static void natMemSet(Stack &stk)
 	ArgParser ap(stk);
 	auto dst = ap.Get<ArrayRef<Byte>>();
 	auto filler = ap.Get<Int>();
+	auto count = Min(ap.Get<Int>(), dst.GetSize());
 
-	if (!dst.IsEmpty())
+	if (count > 0)
 		MemSet(dst.GetData(), filler, dst.GetSize());
 }
 
@@ -1497,26 +1495,28 @@ static void natMemCpy(Stack &stk)
 	ArgParser ap(stk);
 	auto dst = ap.Get<ArrayRef<Byte>>();
 	auto src = ap.Get<ArrayRef<Byte>>();
+	auto limit = ap.Get<Int>();
 
 	Int toCopy = Min(dst.GetSize(), src.GetSize());
+	toCopy = Min(limit, toCopy);
 
-	if (toCopy > 0)
-	{
-		auto *ptr0 = dst.GetData();
-		auto *ptr1 = src.GetData();
+	if (toCopy <= 0)
+		return;
 
-		if (ptr0 == ptr1)
-			return;
+	auto *ptr0 = dst.GetData();
+	auto *ptr1 = src.GetData();
 
-		auto *end0 = ptr0 + toCopy;
-		auto *end1 = ptr1 + toCopy;
+	if (ptr0 == ptr1)
+		return;
 
-		// check for overlap
-		if (end0 < ptr1 || ptr0 > end1)
-			MemCpy(dst.GetData(), src.GetData(), toCopy);
-		else
-			MemMove(dst.GetData(), src.GetData(), toCopy);
-	}
+	auto *end0 = ptr0 + toCopy;
+	auto *end1 = ptr1 + toCopy;
+
+	// check for overlap
+	if (end0 < ptr1 || ptr0 > end1)
+		MemCpy(dst.GetData(), src.GetData(), toCopy);
+	else
+		MemMove(dst.GetData(), src.GetData(), toCopy);
 }
 
 static void natMemCmp(Stack &stk)
@@ -1524,14 +1524,18 @@ static void natMemCmp(Stack &stk)
 	ArgParser ap(stk);
 	auto dst = ap.Get<ArrayRef<Byte>>();
 	auto src = ap.Get<ArrayRef<Byte>>();
+	auto limit = ap.Get<Int>();
 	auto &res = ap.Get<Int>();
 
-	Int toCmp = Min(dst.GetSize(), src.GetSize());
+	auto dsize = Min(dst.GetSize(), limit);
+	auto ssize = Min(src.GetSize(), limit);
+
+	Int toCmp = Min(dsize, ssize);
 
 	res = toCmp > 0 ? MemCmp(dst.GetData(), src.GetData(), toCmp) : 0;
 
-	if (!res && src.GetSize() != dst.GetSize())
-		res = (dst.GetSize() > src.GetSize()) - (dst.GetSize() < src.GetSize());
+	if (!res && ssize != dsize)
+		res = (dsize > ssize) - (dsize < ssize);
 }
 
 void NativeHelpers::Init(CompiledProgram &p)

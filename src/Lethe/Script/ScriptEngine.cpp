@@ -274,9 +274,9 @@ native int __da_insert_sorted_unique(int elem);
 native int __da_slice(int from, int to = -1);
 
 native const_byte[] to_bytes(...);
-native void memset(byte[] dst, int filler = 0);
-native int memcmp(const byte[] src0, const byte[] src1);
-native void memcpy(byte[] dst, const byte[] src);
+native void memset(byte[] dst, int filler = 0, int limit = 0x7fffffff);
+native int memcmp(const byte[] src0, const byte[] src1, int limit = 0x7fffffff);
+native void memcpy(byte[] dst, const byte[] src, int limit = 0x7fffffff);
 // unsafe!
 native byte[] to_bytes_mutable(...);
 )#"
