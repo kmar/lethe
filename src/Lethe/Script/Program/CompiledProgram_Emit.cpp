@@ -1518,7 +1518,7 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const DataType
 	}
 
 	// handle string vs array ref of const bytes now
-	if (dst.type == DT_STRING && src.type == DT_ARRAY_REF && src.name == "[](const byte)")
+	if (dst.type == DT_STRING && src.type == DT_ARRAY_REF && src.elemType.GetTypeEnum() == DT_BYTE)
 	{
 		EmitI24(OPC_BCALL, BUILTIN_CONV_AREF_TO_STR);
 		PopStackType(true);
