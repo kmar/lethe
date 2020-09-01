@@ -1317,6 +1317,18 @@ bool QDataType::IsReference() const
 	return (qualifiers & AST_Q_REFERENCE) != 0;
 }
 
+bool QDataType::IsStatic() const
+{
+	return (qualifiers & AST_Q_STATIC) != 0;
+}
+
+bool QDataType::IsElementary() const
+{
+	const auto dte = GetTypeEnum();
+
+	return IsNumber() || dte == DT_NAME || dte == DT_STRING;
+}
+
 bool QDataType::HasArrayRef() const
 {
 	return GetType().HasArrayRef();

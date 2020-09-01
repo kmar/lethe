@@ -144,14 +144,18 @@ QDataType AstTypeAuto::GetTypeDesc(const CompiledProgram &p) const
 
 		LETHE_ASSERT(parent);
 
-		if ((qualifiers & AST_Q_REFERENCE) && !(res.qualifiers & AST_Q_STATIC) && parent->scopeRef->IsConstMethod())
+		auto *at = (qualifiers & AST_Q_REFERENCE) ? GetExprNode() : nullptr;
+
+		// for auto-ref, copy const qualifier
+		res.qualifiers |= at ? at->GetTypeDesc(p).qualifiers & AST_Q_CONST : 0;
+
+		if (at && !(res.qualifiers & AST_Q_STATIC) && parent->scopeRef->IsConstMethod())
 		{
-			auto *at = GetExprNode();
 			auto *sym = at->FindVarSymbolNode();
 
 			if (sym && sym->symScopeRef && sym->symScopeRef->IsBaseOf(parent->scopeRef->FindThis()))
 			{
-				// force const
+				// force const for refs to members inside const methods
 				res.qualifiers |= AST_Q_CONST;
 			}
 		}
