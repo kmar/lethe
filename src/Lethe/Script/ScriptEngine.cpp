@@ -229,7 +229,7 @@ namespace __string
 
 // intrinsic support for string and dynamic arrays
 native int __strlen();
-native int __str_trim();
+native void __str_trim();
 // returns new length
 native int __str_insert(int pos, string what);
 native int __str_find(string what, int pos=0);
