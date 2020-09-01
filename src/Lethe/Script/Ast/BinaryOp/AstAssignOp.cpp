@@ -249,8 +249,8 @@ bool AstAssignOp::CodeGenDoAssign(AstNode *n, CompiledProgram &p, const QDataTyp
 		dte = DT_STRUCT;
 	}
 
-	// FIXME: better! cannot assign static arrays...
-	if (!(dte <= DT_STRING || dte == DT_STRUCT || dte == DT_ARRAY_REF || dte == DT_DYNAMIC_ARRAY || dte == DT_DELEGATE || dte == DT_STRONG_PTR || dte == DT_WEAK_PTR))
+	// cannot assign static arrays, plain class shouldn't happen here and neither does null, everything else is assignable
+	if (dte == DT_STATIC_ARRAY || dte == DT_NULL || dte == DT_CLASS)
 		return p.Error(n, "cannot assign to this type");
 
 	if (dte == DT_DYNAMIC_ARRAY)
