@@ -1190,6 +1190,44 @@ void Opcode_DecObjCounter(Stack &stk)
 	Atomic::Decrement(stk.GetConstantPool().liveScriptObjects);
 }
 
+struct ArrayRef_Placeholder
+{
+	UIntPtr ptr;
+	UInt size;
+};
+
+void Opcode_SliceFwd_Inplace(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto elemSize = ap.Get<UInt>();
+	auto count = ap.Get<UInt>();
+	auto *aref = ap.Get<ArrayRef_Placeholder *>();
+
+	aref->ptr += (UIntPtr)count * elemSize;
+
+	auto osize = aref->size;
+	auto nsize = osize - count;
+	nsize *= nsize <= osize;
+
+	aref->size = nsize;
+}
+
+void Opcode_SliceFwd(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto elemSize = ap.Get<UInt>();
+	auto count = ap.Get<UInt>();
+	auto &aref = ap.Get<ArrayRef_Placeholder>();
+	aref.ptr += (UIntPtr)count * elemSize;
+
+	auto osize = aref.size;
+	auto nsize = osize - count;
+	nsize *= nsize <= osize;
+
+	aref.size = nsize;
+	stk.Pop(2);
+}
+
 typedef void (*BuiltinCallback)(Stack &);
 
 struct BuiltinTable
@@ -1340,6 +1378,9 @@ static const BuiltinTable BUILTIN_TABLE[] =
 
 	{ BUILTIN_INC_OBJECT_COUNTER, "*INCOBJCOUNTER",     Opcode_IncObjCounter    },
 	{ BUILTIN_DEC_OBJECT_COUNTER, "*DECOBJCOUNTER",     Opcode_DecObjCounter    },
+
+	{ BUILTIN_SLICEFWD_INPLACE,  "*SLICEFWD_INPLACE",   Opcode_SliceFwd_Inplace },
+	{ BUILTIN_SLICEFWD,          "*SLICEFWD",           Opcode_SliceFwd         },
 
 	{ -1, 0, 0 }
 };

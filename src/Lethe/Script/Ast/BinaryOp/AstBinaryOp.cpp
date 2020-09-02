@@ -325,6 +325,15 @@ QDataType AstBinaryOp::GetTypeDesc(const CompiledProgram &p) const
 	const auto &dt0 = nodes[0]->GetTypeDesc(p);
 	const auto &dt1 = nodes[1]->GetTypeDesc(p);
 
+	if (type == AST_OP_ADD)
+	{
+		if (dt0.GetTypeEnum() == DT_ARRAY_REF && dt1.IsNumber())
+			return dt0;
+
+		if (dt1.GetTypeEnum() == DT_ARRAY_REF && dt0.IsNumber())
+			return dt1;
+	}
+
 	switch(type)
 	{
 	case AST_OP_LT:
@@ -387,29 +396,42 @@ QDataType AstBinaryOp::GetTypeDesc(const CompiledProgram &p) const
 			   p.elemTypes[DataType::ComposeTypeEnum(dt0.GetTypeEnum(), dt1.GetTypeEnum())]);
 }
 
-bool AstBinaryOp::IsCommutative(const CompiledProgram &p) const
+Int AstBinaryOp::IsCommutative(const CompiledProgram &p) const
 {
 	// note: logical and and or are technically commutative,
 	// but since we use this for optimization (reordering),
 	// we can't reorder && and ||, we rely on the programmer
 
+	auto ltype = nodes[IDX_LEFT]->GetTypeDesc(p);
+	auto rtype = nodes[IDX_RIGHT]->GetTypeDesc(p);
+
 	// note: this optimization cannot be used for strings and custom operators!
 	switch(type)
 	{
 	case AST_OP_ADD:
+		// for array refs, we always want ref + num
+		if (rtype.GetTypeEnum() == DT_ARRAY_REF)
+			return -1;
+
+		// fall through
 	case AST_OP_MUL:
+		// we must be strict for floating point, unfortunately
+		if (ltype.IsFloatingPoint() || rtype.IsFloatingPoint())
+			return 0;
+
+		// fall through
 	case AST_OP_AND:
 	case AST_OP_OR:
 	case AST_OP_XOR:
 	case AST_OP_EQ:
 	case AST_OP_NEQ:
-		return nodes[IDX_LEFT]->GetTypeDesc(p).IsNumber() && nodes[IDX_RIGHT]->GetTypeDesc(p).IsNumber();
+		return ltype.IsNumber() && rtype.IsNumber();
 
 	default:
 		;
 	}
 
-	return false;
+	return 0;
 }
 
 namespace
@@ -782,9 +804,11 @@ bool AstBinaryOp::CodeGen(CompiledProgram &p)
 
 bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 {
-	if (IsCommutative(p))
+	auto comm = IsCommutative(p);
+
+	if (comm)
 	{
-		if ((nodes[0]->IsConstant() && !nodes[1]->IsConstant()) || (nodes[0]->GetDepth() < nodes[1]->GetDepth()))
+		if (comm < 0 || (nodes[0]->IsConstant() && !nodes[1]->IsConstant()) || (nodes[0]->GetDepth() < nodes[1]->GetDepth()))
 		{
 			// reorder because opcode optimizer is more efficient for things like i+1 instead of 1+i
 			Swap(nodes[0], nodes[1]);
@@ -812,7 +836,7 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	DataTypeEnum dt = dtdst.type;
 	auto dtr = dt;
 
-	if (IsShift() && leftType.IsLongInt())
+	if ((IsShift() && leftType.IsLongInt()) || leftType.GetTypeEnum() == DT_ARRAY_REF)
 	{
 		dtr = DT_UINT;
 		dtdstr = &p.elemTypes[DT_UINT];
@@ -846,7 +870,7 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 			if (dt0enum != dt1enum)
 				return p.Error(this, "incompatible enum types");
 
-	if (dt0.GetTypeEnum() != dt)
+	if (dt0.GetTypeEnum() != dt && dt0.GetTypeEnum() != DT_ARRAY_REF)
 	{
 		// convert
 		LETHE_RET_FALSE(p.EmitConv(nodes[0], dt0, dtdst, 0));
@@ -866,6 +890,14 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	}
 
 	LETHE_ASSERT(p.exprStack.GetSize() >= 2);
+
+	if (type == AST_OP_ADD && dt0.GetTypeEnum() == DT_ARRAY_REF)
+	{
+		p.EmitIntConst(dt0.GetType().elemType.GetSize());
+		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD);
+		p.PopStackType(true);
+		return true;
+	}
 
 	bool eqCmp = type == AST_OP_EQ || type == AST_OP_NEQ;
 

@@ -571,11 +571,6 @@ AstNode *AstNode::DerefConstant(const CompiledProgram &)
 	return 0;
 }
 
-bool AstNode::IsCommutative(const CompiledProgram &) const
-{
-	return 0;
-}
-
 bool AstNode::IsConstExpr() const
 {
 	for (Int i=0; i<nodes.GetSize(); i++)

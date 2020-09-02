@@ -24,7 +24,6 @@ public:
 	bool CodeGen(CompiledProgram &p) override;
 	bool CodeGenRef(CompiledProgram &p, bool allowConst = false, bool derefPtr = false) override;
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
-	bool IsCommutative(const CompiledProgram &p) const override;
 
 	bool IsCompare() const;
 	bool IsShift() const;
@@ -34,6 +33,9 @@ public:
 	static const AstNode *FindUserDefOperatorType(const char *opName, const AstNode *type0, const AstNode *type1);
 
 protected:
+	// 1 = yes, 0 = no, -1 = force swap
+	Int IsCommutative(const CompiledProgram &p) const;
+
 	bool CodeGenOperator(CompiledProgram &p);
 	bool CodeGenCommon(CompiledProgram &p, bool asRef = false);
 

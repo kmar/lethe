@@ -1414,6 +1414,12 @@ bool QDataType::IsNumber() const
 	return dte > DT_NONE && dte <= DT_DOUBLE;
 }
 
+bool QDataType::IsFloatingPoint() const
+{
+	auto dte = GetTypeEnum();
+	return dte == DT_FLOAT || dte == DT_DOUBLE;
+}
+
 DataTypeEnum QDataType::GetTypeEnum() const
 {
 	return ref->type;

@@ -1,6 +1,7 @@
 #include "AstUnaryPreOp.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
+#include <Lethe/Script/Vm/Stack.h>
 #include <Lethe/Script/Ast/CodeGenTables.h>
 
 namespace lethe
@@ -11,8 +12,10 @@ namespace lethe
 bool AstUnaryPreOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool)
 {
 	LETHE_RET_FALSE(CodeGen(p));
-	p.EmitI24(OPC_POP, 1);
+
+	p.EmitI24(OPC_POP, p.exprStack.Back().GetSize() / Stack::WORD_SIZE);
 	p.PopStackType(1);
+
 	return nodes[0]->CodeGenRef(p, allowConst);
 }
 
@@ -29,7 +32,7 @@ bool AstUnaryPreOp::CodeGen(CompiledProgram &p)
 			return p.Error(this, "unary preop must return a reference value");
 
 		p.PopStackType(1);
-		p.Emit(OPC_POP + (1 << 8));
+		p.EmitI24(OPC_POP, 1);
 	}
 
 	if (dt.IsStruct())
@@ -42,12 +45,35 @@ bool AstUnaryPreOp::CodeGen(CompiledProgram &p)
 
 	LETHE_RET_FALSE(tnode && tnode->CodeGenRef(p));
 
+	bool pop = ShouldPop();
+
+	if (type == AST_UOP_PREINC && dt.GetTypeEnum() == DT_ARRAY_REF)
+	{
+		// allow preinc for array refs
+		p.EmitIntConst(1);
+		p.EmitIntConst(dt.GetType().elemType.GetSize());
+		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD_INPLACE);
+		p.EmitI24(OPC_POP, 2);
+
+		if (pop)
+		{
+			p.PopStackType(true);
+			p.EmitI24(OPC_POP, 1);
+		}
+		else
+		{
+			p.PopStackType(true);
+			LETHE_RET_FALSE(EmitPtrLoad(dt, p));
+		}
+
+		return true;
+	}
+
 	if (dt.GetTypeEnum() <= DT_BOOL || dt.GetTypeEnum() >= DT_FLOAT)
 		return p.Error(this, "invalid type for pre-op");
 
 	const Int amt = type == AST_UOP_PREINC ? 1 : -1;
 
-	bool pop = ShouldPop();
 	Int &lins = p.instructions.Back();
 	UInt linsOpc = lins & 255u;
 

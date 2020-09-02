@@ -403,8 +403,6 @@ public:
 	// is constant expression?
 	// only some AST nodes returns 0
 	virtual bool IsConstExpr() const;
-	// is commutative binary op?
-	virtual bool IsCommutative(const CompiledProgram &p) const;
 
 	// returns 1 if AST node is a constant (=literal)
 	bool IsConstant() const;

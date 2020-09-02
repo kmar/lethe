@@ -158,6 +158,25 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 		return true;
 	}
 
+	if (type == AST_OP_ADD_ASSIGN && leftType.GetTypeEnum() == DT_ARRAY_REF)
+	{
+		LETHE_RET_FALSE(nodes[IDX_LEFT]->CodeGenRef(p));
+		LETHE_RET_FALSE(nodes[IDX_RIGHT]->CodeGen(p));
+		LETHE_RET_FALSE(p.EmitConv(nodes[IDX_RIGHT], nodes[IDX_RIGHT]->GetTypeDesc(p), p.elemTypes[DT_UINT]));
+		p.EmitIntConst(leftType.GetType().elemType.GetSize());
+		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD_INPLACE);
+		p.PopStackType(true);
+		p.EmitI24(OPC_POP, 2);
+
+		if (pop)
+		{
+			p.PopStackType(true);
+			p.EmitI24(OPC_POP, 1);
+		}
+
+		return true;
+	}
+
 	if (type == AST_OP_ADD_ASSIGN && leftType.GetTypeEnum() == DT_STRING)
 	{
 		// special case for strings because current approach (load/op/store) is very slow!

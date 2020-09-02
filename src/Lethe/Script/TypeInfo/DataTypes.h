@@ -128,6 +128,8 @@ struct LETHE_API QDataType
 	bool IsSmallNumber() const;
 	// is elementary numeric type?
 	bool IsNumber() const;
+	// is floating point numeric type?
+	bool IsFloatingPoint() const;
 	// is long integer type (64-bit)?
 	bool IsLongInt() const;
 	// is func_ptr to method?
