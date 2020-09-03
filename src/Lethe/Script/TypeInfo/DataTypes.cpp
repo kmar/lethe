@@ -220,10 +220,6 @@ DataTypeEnum DataType::ComposeTypeEnum(DataTypeEnum t0, DataTypeEnum t1)
 	if (t0 == DT_STRING && t1 == DT_ARRAY_REF)
 		return t0;
 
-	// fix to allow to return delegates from methods
-	if (t1 == DT_DELEGATE && t0 == DT_FUNC_PTR)
-		return t1;
-
 	// invalid if we get here
 	return DT_NONE;
 }

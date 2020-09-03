@@ -313,10 +313,9 @@ ExecResult ScriptContext::CallDelegate(const ScriptDelegate &dg)
 	// if LSBit is 1, it's not an actual pointer but rather a vtbl index
 	if (vidx & 1)
 	{
-		auto &stk = *vmStack;
 		vidx &= 0xffffffffu;
 		vidx >>= 1;
-		const void * const *vtbl = *static_cast<const void * const * const *>(&static_cast<const BaseObject *>(stk.GetThis())->scriptVtbl);
+		const void * const *vtbl = *static_cast<const void * const * const *>(&static_cast<const BaseObject *>(dg.instancePtr)->scriptVtbl);
 		ptr = reinterpret_cast<const void * const *>(vtbl)[vidx];
 	}
 

@@ -352,6 +352,9 @@ QDataType AstBinaryOp::GetTypeDesc(const CompiledProgram &p) const
 	// FIXME: better!!!
 	if (type == AST_OP_ASSIGN)
 	{
+		if (dt0.GetTypeEnum() == DT_DELEGATE && dt1.GetTypeEnum() == DT_FUNC_PTR)
+			return dt0;
+
 		if (dt0.GetTypeEnum() == DT_ARRAY_REF || dt0.GetTypeEnum() == DT_DYNAMIC_ARRAY)
 			return dt0;
 

@@ -236,12 +236,15 @@ const AstNode *AstCall::GetTypeNode() const
 			LETHE_ASSERT(targ);
 	}
 
-	if (targ->type == AST_FUNC)
+	bool isFunc = targ->type == AST_FUNC;
+
+	if (isFunc)
 		targ = const_cast<AstNode *>(targ->nodes[0]->GetTypeNode());
 	else
 		targ = const_cast<AstNode *>(targ->GetTypeNode());
 
-	if (targ && (targ->type == AST_TYPE_DELEGATE || targ->type == AST_TYPE_FUNC_PTR))
+	// this condition prevents auto x = function_returning_delegate!
+	if (!isFunc && targ && (targ->type == AST_TYPE_DELEGATE || targ->type == AST_TYPE_FUNC_PTR))
 		targ = targ->nodes[0]->GetTypeNode();
 
 	return targ;
