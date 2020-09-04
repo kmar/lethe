@@ -1212,15 +1212,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 		case OPC_AADD:
 		{
 			VMJITX86_CAN_CHAIN_AADD();
-			reg = GetInt(0);
-
-			if (IsX64)
-			{
-				// unfortunately we have to sign-extend to 64-bit to avoid crashes when indexing with negative_var + constant
-				DontFlush _(*this);
-				reg = reg.ToRegPtr();
-				Movsxd(reg, reg.ToReg32());
-			}
+			reg = GetIntSignExtend(0);
 
 			Int scl = DecodeUImm24(ins);
 
@@ -1239,15 +1231,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 		{
 			VMJITX86_CAN_CHAIN_AADD();
 			Int ofs = DecodeUImm16Top(ins);
-			reg = GetInt(ofs);
-
-			if (IsX64)
-			{
-				// unfortunately we have to sign-extend to 64-bit to avoid crashes when indexing with negative_var + constant
-				DontFlush _(*this);
-				reg = reg.ToRegPtr();
-				Movsxd(reg, reg.ToReg32());
-			}
+			reg = GetIntSignExtend(ofs);
 
 			Int scl = DecodeUImm8(ins, 0);
 
@@ -1891,8 +1875,8 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 						break;
 					}
 				case BUILTIN_CONV_UITOL:
-					// this should be a nop, hopefully
-					// but we won't risk it
+					// note: this can't be a nop because sometimes we sign-extend regs in 64-bit mode
+					// (index address)
 					{
 						DontFlush _(*this);
 						reg = GetPtrNoAdr(0);

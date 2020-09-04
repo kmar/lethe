@@ -606,9 +606,13 @@ void AsmX86::Movsxd(const RegExpr &dst, const RegExpr &src)
 {
 	LETHE_ASSERT(IsX64 && dst.IsRegister() && dst.GetSize() == MEM_QWORD && src.GetSize() == MEM_DWORD);
 	EmitNew();
-	EmitRex(src, dst);
+	EmitRex(dst, src);
 	Emit(0x63);
-	EmitModRm(src, dst);
+
+	if (dst.IsRegister() && src.IsRegister())
+		EmitModRm(src, dst);
+	else
+		EmitModRm(dst, src);
 }
 
 void AsmX86::Movsx(const RegExpr &dst, const RegExpr &src)
@@ -972,6 +976,11 @@ void AsmX86::RPop(const RegExpr &dst)
 
 void AsmX86::Mov(const RegExpr &dst_, const RegExpr &src)
 {
+	if (forceMovsxd && dst_.GetSize() == MEM_DWORD && src.GetSize() == MEM_DWORD)
+	{
+		return Movsxd(dst_.ToRegPtr(), src);
+	}
+
 	auto dst = dst_;
 
 	if (IsX64 && dst.base >= RAX && dst.base <= R15 && src.IsImmediate() && dst.IsRegister())

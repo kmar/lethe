@@ -243,6 +243,41 @@ RegExpr VmJitX86::GetInt(Int i)
 	return reg;
 }
 
+RegExpr VmJitX86::GetIntSignExtend(Int i)
+{
+	Int old = lastIns;
+
+	if (IsX64)
+	{
+		ForceMovsxd(true);
+	}
+
+	auto reg = GetInt(i);
+
+	if (IsX64)
+	{
+		ForceMovsxd(false);
+
+		reg = reg.ToRegPtr();
+
+		// if last instruction is movsxd, we're done
+		if (lastIns != old)
+		{
+			if (lastIns+1 <= code.GetSize() && code[lastIns] == 0x63)
+				return reg;
+
+			if (lastIns+2 <= code.GetSize() && code[lastIns] == 0x48 && code[lastIns+1] == 0x63)
+				return reg;
+		}
+
+		// unfortunately we have to sign-extend to 64-bit to avoid crashes when indexing with negative_var + constant
+		DontFlush _(*this);
+		Movsxd(reg, reg.ToReg32());
+	}
+
+	return reg;
+}
+
 RegExpr VmJitX86::GetFloat(Int i)
 {
 	DontFlush _(*this);

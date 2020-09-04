@@ -176,6 +176,9 @@ private:
 	void PushIntAccum(const RegExpr &nreg, bool isPtr = 0);
 	// load stk-rel int into accum
 	RegExpr GetInt(Int i);
+	// get sign-extended int in 64-bit mode => used by AADD_xxx
+	RegExpr GetIntSignExtend(Int i);
+
 	// load stk-rel float into xmm accum
 	RegExpr GetFloat(Int i);
 	RegExpr GetDouble(Int i);

@@ -473,10 +473,18 @@ public:
 	static constexpr bool IsX64 = true;
 #endif
 
+	inline void ForceMovsxd(bool mask)
+	{
+		if (IsX64)
+			forceMovsxd = mask;
+	}
+
 protected:
 	Int lastIns = -1;
 	// last REX prefix position (x64 only)
 	Int lastRex = -1;
+	// force movsxd for next mov
+	bool forceMovsxd = false;
 };
 
 }
