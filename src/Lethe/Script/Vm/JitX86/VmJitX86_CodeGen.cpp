@@ -1213,6 +1213,15 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 		{
 			VMJITX86_CAN_CHAIN_AADD();
 			reg = GetInt(0);
+
+			if (IsX64)
+			{
+				// unfortunately we have to sign-extend to 64-bit to avoid crashes when indexing with negative_var + constant
+				DontFlush _(*this);
+				reg = reg.ToRegPtr();
+				Movsxd(reg, reg.ToReg32());
+			}
+
 			Int scl = DecodeUImm24(ins);
 
 			if (!IsNiceScale(scl))
@@ -1231,6 +1240,15 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 			VMJITX86_CAN_CHAIN_AADD();
 			Int ofs = DecodeUImm16Top(ins);
 			reg = GetInt(ofs);
+
+			if (IsX64)
+			{
+				// unfortunately we have to sign-extend to 64-bit to avoid crashes when indexing with negative_var + constant
+				DontFlush _(*this);
+				reg = reg.ToRegPtr();
+				Movsxd(reg, reg.ToReg32());
+			}
+
 			Int scl = DecodeUImm8(ins, 0);
 
 			if (!IsNiceScale(scl))
