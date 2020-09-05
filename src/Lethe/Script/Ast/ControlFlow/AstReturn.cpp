@@ -43,6 +43,8 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 
 			LETHE_RET_FALSE(lv->CodeGenRef(p, 1));
 
+			auto *oldLv = lv;
+
 			auto *lvNode = lv->FindVarSymbolNode();
 			const auto *lvScope = lvNode ? lvNode->scopeRef : scopeRef;
 
@@ -54,7 +56,10 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 
 			if (lvScope && !(lvdt.qualifiers & AST_Q_STATIC))
 			{
-				if (lvScope->IsLocal() && !lvdt.IsReference())
+				// if we're dereferencing a pointer, then it's okay even if it's in local scope...
+				bool ok = lvdt.IsPointer() && oldLv->type == AST_OP_DOT;
+
+				if (!ok && lvScope->IsLocal() && !lvdt.IsReference())
 					return p.Error(lv, "returning address of a local variable");
 
 				// make sure we don't return non-const member ref from a const method
