@@ -141,6 +141,7 @@ QDataType AstTypeAuto::GetTypeDesc(const CompiledProgram &p) const
 	if (tnode)
 	{
 		res = tnode->GetTypeDesc(p);
+		res.qualifiers &= ~AST_Q_CONST;
 
 		LETHE_ASSERT(parent);
 
