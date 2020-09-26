@@ -27,7 +27,7 @@ bool AstSymbol::FoldConst(const CompiledProgram &p)
 	LETHE_RET_FALSE(ctarget);
 	auto dt = GetTypeDesc(p);
 	auto *conv = ctarget->ConvertConstNode(ctarget->GetTypeDesc(p).GetType(), dt.GetTypeEnum(), p);
-	LETHE_RET_FALSE(conv);
+	LETHE_RET_FALSE(conv && conv != ctarget);
 	conv->parent = parent;
 	LETHE_VERIFY(parent->ReplaceChild(this, conv));
 	delete this;
