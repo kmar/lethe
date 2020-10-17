@@ -32,7 +32,7 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 	LETHE_RET_FALSE(tn);
 
 	LETHE_RET_FALSE(TryTypeGen(tn, p));
-	auto qdt = nodes[0]->GetTypeDesc(p);
+	auto qdt = tn->GetTypeDesc(p);
 
 	switch(type)
 	{
@@ -58,6 +58,9 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 			break;
 
 		auto ctype = sr->node->GetTypeDesc(p);
+
+		if (!TryTypeGen(sr->node, p))
+			break;
 
 		auto &txt = AstStaticCast<AstText *>(nodes[0])->text;
 
