@@ -33,6 +33,7 @@ enum MemSize
 struct LETHE_API RegExpr
 {
 	RegExpr() : base(NoRegister), index(NoRegister), offset(0), scale(1), mem(MEM_NONE)  {}
+	RegExpr(const RegExpr &o) = default;
 	RegExpr(GprEnum nreg) : base(nreg), index(NoRegister), offset(0), scale(1), mem(MEM_NONE) {}
 	RegExpr(Int ofs) : base(NoRegister), index(NoRegister), offset(ofs), scale(1), mem(MEM_NONE) {}
 	RegExpr(UInt ofs) : base(NoRegister), index(NoRegister), offset((Int)ofs), scale(1), mem(MEM_NONE) {}

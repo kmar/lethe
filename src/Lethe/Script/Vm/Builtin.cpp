@@ -1322,10 +1322,10 @@ static const BuiltinTable BUILTIN_TABLE[] =
 	{ BUILTIN_LADD,             "*LADD",                Opcode_LADD             },
 	{ BUILTIN_LSUB,             "*LSUB",                Opcode_LSUB             },
 	{ BUILTIN_LMUL,             "*LMUL",                Opcode_LMUL             },
-	{ BUILTIN_LMOD,             "*LMOD",                (BuiltinCallback)Opcode_LMOD },
-	{ BUILTIN_ULMOD,            "*ULMOD",               (BuiltinCallback)Opcode_ULMOD },
-	{ BUILTIN_LDIV,             "*LDIV",                (BuiltinCallback)Opcode_LDIV },
-	{ BUILTIN_ULDIV,            "*ULDIV",               (BuiltinCallback)Opcode_ULDIV },
+	{ BUILTIN_LMOD,             "*LMOD",                (BuiltinCallback)(void *)Opcode_LMOD },
+	{ BUILTIN_ULMOD,            "*ULMOD",               (BuiltinCallback)(void *)Opcode_ULMOD },
+	{ BUILTIN_LDIV,             "*LDIV",                (BuiltinCallback)(void *)Opcode_LDIV },
+	{ BUILTIN_ULDIV,            "*ULDIV",               (BuiltinCallback)(void *)Opcode_ULDIV },
 	{ BUILTIN_LSAR,             "*LSAR",                Opcode_LSAR             },
 	{ BUILTIN_LSHR,             "*LSHR",                Opcode_LSHR             },
 	{ BUILTIN_LAND,             "*LAND",                Opcode_LAND             },
@@ -1374,7 +1374,7 @@ static const BuiltinTable BUILTIN_TABLE[] =
 	{ BUILTIN_INTRIN_POPCNTL,   "*POPCNTL",             Opcode_POPCNTL          },
 	{ BUILTIN_INTRIN_BSWAPL,    "*BSWAPL",              Opcode_BSWAPL           },
 
-	{ BUILTIN_SET_STATE_LABEL,  "*SETSTATELABEL",       (BuiltinCallback)Opcode_SetStateLabel    },
+	{ BUILTIN_SET_STATE_LABEL,  "*SETSTATELABEL",       (BuiltinCallback)(void *)Opcode_SetStateLabel    },
 
 	{ BUILTIN_INC_OBJECT_COUNTER, "*INCOBJCOUNTER",     Opcode_IncObjCounter    },
 	{ BUILTIN_DEC_OBJECT_COUNTER, "*DECOBJCOUNTER",     Opcode_DecObjCounter    },

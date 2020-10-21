@@ -1504,7 +1504,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_BCALL_TRAP:
 			{
-				auto *trapMsg = ((ConstPool::NativeCallbackTrap)cpool.nFunc[DecodeUImm24(ins)])(stk);
+				auto *trapMsg = ((ConstPool::NativeCallbackTrap)(void *)cpool.nFunc[DecodeUImm24(ins)])(stk);
 
 				if (trapMsg)
 					return RuntimeException(iptr, trapMsg);
