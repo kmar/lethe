@@ -997,36 +997,46 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		return p.Error(this, String::Printf("not enough arguments to call `%s'; got %d expected %d", fname.Ansi(), callArgs, minValidArgs));
 
 	Array<DataTypeEnum> formatTypes;
-	bool checkFormat = 0;
+	bool checkFormat = false;
+
+	// format string arg index
+	Int formatString = -1;
+	auto *fnargs = fn->GetArgs();
 
 	if (fn->qualifiers & AST_Q_FORMAT)
 	{
-		if (fn->HasEllipsis() && args->nodes.GetSize() == 2 && args->nodes[0]->type == AST_ARG)
+		auto nargs = fnargs ? fnargs->nodes.GetSize() : 0;
+		formatString = nargs-2;
+
+		if (fn->HasEllipsis() && formatString >= 0 && args->nodes.GetSize() > formatString && args->nodes.GetSize() >= 2 && args->nodes[formatString]->type == AST_ARG)
 		{
-			if (!args->nodes[0]->nodes.IsEmpty())
+			if (!args->nodes[formatString]->nodes.IsEmpty())
 			{
-				auto ntype = args->nodes[0]->nodes[0]->type;
+				auto ntype = args->nodes[formatString]->nodes[0]->type;
 				checkFormat = (ntype == AST_TYPE_STRING || ntype == AST_TYPE_NAME);
 			}
 		}
+
+		if (!checkFormat)
+			return p.Error(this, "couldn't find format string");
 	}
 
 	if (checkFormat)
 	{
-		checkFormat = 0;
+		checkFormat = false;
 
-		if (nodes.GetSize() > 1)
+		if (nodes.GetSize() > formatString+1)
 		{
-			auto ntype = nodes[1]->type;
+			auto ntype = nodes[formatString+1]->type;
 
 			if (ntype == AST_CONST_STRING || ntype == AST_CONST_NAME)
 			{
-				AnalyzeFormatStr(AstStaticCast<AstText *>(nodes[1])->text, formatTypes);
+				AnalyzeFormatStr(AstStaticCast<AstText *>(nodes[formatString+1])->text, formatTypes);
 
-				if (nodes.GetSize()-2 != formatTypes.GetSize())
-					return p.Error(this, String::Printf("format error: argument count mismatch (got %d expected %d)", nodes.GetSize()-2, formatTypes.GetSize()));
+				if (nodes.GetSize()-2-formatString != formatTypes.GetSize())
+					return p.Error(this, String::Printf("format error: argument count mismatch (got %d expected %d)", nodes.GetSize()-2-formatString, formatTypes.GetSize()));
 
-				checkFormat = 1;
+				checkFormat = true;
 			}
 		}
 	}
@@ -1141,9 +1151,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		if (top.IsMethodPtr() && tdesc.GetTypeEnum() == DT_FUNC_PTR)
 			return p.Error(argValue, "cannot pass method");
 
-		if (checkFormat && i > 1)
+		if (checkFormat && i > formatString+1)
 		{
-			auto ftype = formatTypes[i-2];
+			auto ftype = formatTypes[i-formatString-2];
 			auto atype = top.GetTypeEnum();
 
 			if (!FormatTypeOk(atype, ftype))
