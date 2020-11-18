@@ -4,6 +4,7 @@
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
 #include <Lethe/Script/Ast/Types/AstTypeBool.h>
+#include <Lethe/Script/Ast/Types/AstTypeInt.h>
 #include <Lethe/Script/Ast/Function/AstFunc.h>
 #include <Lethe/Script/Ast/AstText.h>
 
@@ -323,6 +324,17 @@ const AstNode *AstUnaryOp::GetTypeNode() const
 		// return bool
 		static AstTypeBool tnode{TokenLocation()};
 		return &tnode;
+	}
+
+	if (tpe && (type == AST_UOP_PLUS || type == AST_UOP_MINUS))
+	{
+		auto dte = TypeEnumFromNode(tpe);
+
+		if (dte >= DT_BOOL && dte < DT_INT)
+		{
+			static AstTypeInt tnode{TokenLocation()};
+			return &tnode;
+		}
 	}
 
 	return tpe;

@@ -4,6 +4,7 @@
 #include "AstText.h"
 #include "AstSymbol.h"
 #include <Lethe/Script/Ast/Types/AstTypeStruct.h>
+#include <Lethe/Script/Ast/Types/AstTypeInt.h>
 
 #include "Constants/AstConstInt.h"
 #include "Constants/AstConstUInt.h"
@@ -1089,11 +1090,23 @@ DataTypeEnum AstNode::TypeEnumFromNode(const AstNode *n)
 	switch(n->type)
 	{
 	case AST_TYPE_BOOL:
+		return DT_BOOL;
+
 	case AST_TYPE_BYTE:
+		return DT_BYTE;
+
 	case AST_TYPE_SBYTE:
+		return DT_SBYTE;
+
 	case AST_TYPE_SHORT:
+		return DT_SHORT;
+
 	case AST_TYPE_USHORT:
+		return DT_USHORT;
+
 	case AST_TYPE_CHAR:
+		return DT_CHAR;
+
 	case AST_TYPE_INT:
 		return DT_INT;
 
@@ -1141,6 +1154,12 @@ const AstNode *AstNode::CoerceTypes(const AstNode *type0, const AstNode *type1)
 
 	if (cdte == DT_NONE)
 		return nullptr;
+
+	if (cdte == DT_INT && cdte != dte0 && cdte != dte1)
+	{
+		static AstTypeInt tnode{TokenLocation()};
+		return &tnode;
+	}
 
 	return cdte == dte0 ? type0 : type1;
 }
