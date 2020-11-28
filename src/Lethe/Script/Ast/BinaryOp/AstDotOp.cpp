@@ -15,6 +15,9 @@ LETHE_BUCKET_ALLOC_DEF(AstDotOp)
 
 bool AstDotOp::FoldConst(const CompiledProgram &p)
 {
+	if (Super::FoldConst(p))
+		return true;
+
 	auto tn = target;
 
 	LETHE_RET_FALSE(tn);
