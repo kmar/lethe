@@ -17,6 +17,9 @@ public:
 	static void *AllocateExecutableMemory(size_t &size);
 	// size = rounded size from previous call to AllocateExecutablePages
 	static void FreeExecutableMemory(void *ptr, size_t size);
+	// enable/disable write protection for executable memory region
+	// returns true on success
+	static bool WriteProtectExecutableMemory(void *ptr, size_t size, bool enable);
 };
 
 }

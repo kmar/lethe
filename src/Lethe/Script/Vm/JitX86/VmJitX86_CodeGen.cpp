@@ -405,6 +405,9 @@ bool VmJitX86::CodeGen(CompiledProgram &prog)
 	funcCodeOfs.Reset();
 	funcOfs.Reset();
 
+	// security: write protect once done; we only JIT once
+	code.WriteProtect();
+
 	return true;
 }
 

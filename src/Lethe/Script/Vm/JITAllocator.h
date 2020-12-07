@@ -49,6 +49,17 @@ struct JITPageAlloc
 		return -1;
 	}
 
+	LETHE_NOINLINE bool WriteProtectMemory(bool enable = true)
+	{
+		bool res = true;
+
+		for (auto &&it : liveBlocks)
+			if (!Heap::WriteProtectExecutableMemory(it.ptr, it.size, enable))
+				res = false;
+
+		return res;
+	}
+
 	LETHE_NOINLINE void Free(T *ptr)
 	{
 		if (!ptr)
@@ -68,6 +79,19 @@ template<typename T>
 class JITPageAlignedArray : public Array<T, Int, JITPageAlloc<T>>
 {
 public:
+	~JITPageAlignedArray()
+	{
+#if LETHE_DEBUG
+		// unprotect because of debug fill
+		WriteProtect(false);
+#endif
+	}
+
+	LETHE_NOINLINE bool WriteProtect(bool enable = true)
+	{
+		return this->WriteProtectMemory(enable);
+	}
+
 	inline void SwapWith(JITPageAlignedArray &o)
 	{
 		Swap(this->liveBlocks, o.liveBlocks);

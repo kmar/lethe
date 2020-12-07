@@ -14,6 +14,11 @@
 #	include <unistd.h>
 #endif
 
+#if LETHE_OS_OSX || LETHE_OS_IOS
+// note: needs Leopard or higher
+#	include <libkern/OSCacheControl.h>
+#endif
+
 namespace lethe
 {
 
@@ -57,6 +62,19 @@ static void FreeSegment(void *ptr, size_t size)
 	}
 }
 
+static bool WriteProtectSegment(void *ptr, size_t size, bool enable)
+{
+	LETHE_ASSERT(ptr && size);
+
+	DWORD tmp;
+	bool res = VirtualProtect(ptr, size, enable ? PAGE_EXECUTE_READ : PAGE_EXECUTE_READWRITE, &tmp) != FALSE;
+
+	if (FlushInstructionCache(GetCurrentProcess(), ptr, size) != TRUE)
+		res = false;
+
+	return res;
+}
+
 #else
 
 // OSX fix
@@ -87,6 +105,23 @@ static void FreeSegment(void *ptr, size_t size)
 	munmap(ptr, size);
 }
 
+static bool WriteProtectSegment(void *ptr, size_t size, bool enable)
+{
+	LETHE_ASSERT(ptr && size);
+
+	bool res = !mprotect(ptr, size, enable ? PROT_READ|PROT_EXEC : PROT_READ|PROT_WRITE|PROT_EXEC);
+
+	// hmm, how to flush icache here in a portable way?!
+
+#if LETHE_OS_OSX || LETHE_OS_IOS
+	sys_icache_invalidate(ptr, size);
+#elif LETHE_OS_LINUX || LETHE_OS_ANDROID
+	__builtin___clear_cache(ptr, (void *)((char *)ptr+size));
+#endif
+
+	return res;
+}
+
 #endif
 
 // Heap
@@ -94,6 +129,11 @@ static void FreeSegment(void *ptr, size_t size)
 void *Heap::AllocateExecutableMemory(size_t &size)
 {
 	return AllocSegment(size, true);
+}
+
+bool Heap::WriteProtectExecutableMemory(void *ptr, size_t size, bool enable)
+{
+	return WriteProtectSegment(ptr, size, enable);
 }
 
 void Heap::FreeExecutableMemory(void *ptr, size_t size)
