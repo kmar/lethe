@@ -116,7 +116,7 @@ static bool WriteProtectSegment(void *ptr, size_t size, bool enable)
 #if LETHE_OS_OSX || LETHE_OS_IOS
 	sys_icache_invalidate(ptr, size);
 #elif LETHE_OS_LINUX || LETHE_OS_ANDROID
-	__builtin___clear_cache(ptr, (void *)((char *)ptr+size));
+	__builtin___clear_cache((char *)ptr, ((char *)ptr+size));
 #endif
 
 	return res;
