@@ -11,7 +11,6 @@ Stack::Stack(Int size)
 	, context(nullptr)
 	, insPtr(nullptr)
 	, programCounter(-1)
-	, breakpointHit(0)
 	, nesting(0)
 	, breakExecution(0)
 {

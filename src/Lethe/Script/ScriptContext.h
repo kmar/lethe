@@ -190,7 +190,6 @@ private:
 	Array<ProfileStack> profStack;
 	HashMap<Int, ProfileInfo> profiling;
 	Int profParent = -1;
-	Int profLevel = 0;
 
 	friend class ScriptEngine;
 
@@ -207,8 +206,6 @@ private:
 	EngineMode mode;
 
 	mutable Mutex mutex;
-
-	AtomicInt breakMode;
 
 	void OnRuntimeError(const char *msg);
 	bool OnDebugBreak(ScriptContext &ctx, ExecResult &res);

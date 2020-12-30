@@ -184,8 +184,6 @@ private:
 	// instruction ptr for extracting call stack
 	const Instruction *insPtr;
 	Int programCounter;
-	// breakpoint hit flag
-	Int breakpointHit;
 	// nested script call flag
 	Int nesting;
 	// break program flag

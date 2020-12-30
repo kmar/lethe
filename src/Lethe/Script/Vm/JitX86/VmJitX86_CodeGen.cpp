@@ -2394,7 +2394,6 @@ ExecResult VmJitX86::ExecScriptFuncPtr(Vm &vm, const void *codeadr)
 	// TODO: 64-bit stub...
 	LETHE_ASSERT(fastCall);
 
-#	if LETHE_COMPILER_MSC_ONLY
 	const void *param[] =
 	{
 		stktop,
@@ -2404,24 +2403,26 @@ ExecResult VmJitX86::ExecScriptFuncPtr(Vm &vm, const void *codeadr)
 		stk.GetConstantPool().GetGlobalData(),
 		code.GetData()
 	};
+#	if LETHE_COMPILER_MSC_ONLY
 	VmJitX64_Stub(param);
 #	else
-	auto gdata = stk.cpool->data.GetData();
-	auto gcode = code.GetData();
 	// the rest of the world (gcc/clang) having inline assembly
+	// unfortunately, some clang versions report "inline assembly requires more registers than available"
+	// so I have to use a temporary buffer
 	asm(
-		"movq %0, %%rdi;"
-		"movq %1, %%r12;"
-		"movq %2, %%rax;"
-		"movq %3, %%rcx;"
-		"movq %4, %%rsi;"
-		"movq %5, %%r13;"
+		"movq %0, %%rax;"
+		"movq 0*8(%%rax), %%rdi;"
+		"movq 1*8(%%rax), %%r12;"
+		"movq 3*8(%%rax), %%rcx;"
+		"movq 4*8(%%rax), %%rsi;"
+		"movq 5*8(%%rax), %%r13;"
+		"movq 2*8(%%rax), %%rax;"
 		"pushq %%rbp;"
 		"movq %%rcx, %%rbp;"
 		"call *%%rax;"
 		"popq %%rbp;"
 		"movq %%rdi, 0(%%r12);"
-		: : "m"(stktop), "m"(stkadr), "m"(codeadr), "m"(thisadr), "m"(gdata), "m"(gcode) :
+		: : "r"(param) :
 		"cc", "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r12", "r13", "r14",
 		"xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"
 	);

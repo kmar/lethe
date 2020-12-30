@@ -12,7 +12,6 @@ ScriptContext::ScriptContext(Int stkSize)
 	: vmJit(nullptr)
 	, mode(ENGINE_JIT)
 	, mutex(Mutex::Recursive())
-	, breakMode(0)
 {
 	if (stkSize <= 0)
 		stkSize = 65536;
@@ -26,7 +25,7 @@ ScriptContext::ScriptContext(Int stkSize)
 
 	// default debug break, assuming context is bound to a thread,
 	// waits for break mode flag to be reset from the outside, ready to process next instruction
-	onDebugBreak = [this](ScriptContext &ctx, ExecResult &)->bool
+	onDebugBreak = [](ScriptContext &ctx, ExecResult &)->bool
 	{
 		auto tmp = ctx.GetCallStack();
 
