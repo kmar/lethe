@@ -35,7 +35,7 @@ UInt CompiledProgram::GenFloatConst(Float fconst)
 {
 	auto val = fconst;
 
-	if (val == (Int)val && CanEncodeI24((Int)val))
+	if (Abs(val) <= Limits<Int>::Max() && val == (Int)val && CanEncodeI24((Int)val))
 	{
 		if (GetJitFriendly())
 			cpool.Add(val);
@@ -51,7 +51,7 @@ UInt CompiledProgram::GenDoubleConst(Double dconst)
 {
 	auto val = dconst;
 
-	if (val == (Int)val && CanEncodeI24((Int)val))
+	if (Abs(val) <= Limits<Int>::Max() && val == (Int)val && CanEncodeI24((Int)val))
 	{
 		if (GetJitFriendly())
 			cpool.Add(val);
