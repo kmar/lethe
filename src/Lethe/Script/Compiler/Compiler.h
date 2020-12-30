@@ -98,7 +98,6 @@ private:
 		}
 
 	private:
-		ULong qualifiers;
 		ULong oldStructAccess;
 		Compiler *comp;
 	};
