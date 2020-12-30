@@ -86,10 +86,10 @@ private:
 	struct AccessGuard
 	{
 		AccessGuard(Compiler *ncomp, ULong nqualifiers)
-			: qualifiers(nqualifiers)
-			, oldStructAccess(ncomp->structAccess)
+			: oldStructAccess(ncomp->structAccess)
 			, comp(ncomp)
 		{
+			comp->structAccess = nqualifiers;
 		}
 
 		~AccessGuard()
