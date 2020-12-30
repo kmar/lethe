@@ -5,7 +5,7 @@
 
 #include "Inline/NetOsIncludes.inl"
 
-#if LETHE_OS_WINDOWS
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
 // link to ws2_32.lib
 #	pragma comment(lib, "ws2_32.lib")
 #endif

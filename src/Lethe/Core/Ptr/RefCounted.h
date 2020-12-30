@@ -89,6 +89,10 @@ public:
 		return res;
 	}
 
+#if CORE_COMPILER_GCC || CORE_COMPILER_CLANG
+	// necessary because we abuse vtable to store custom deleter
+	__attribute__((no_sanitize("undefined")))
+#endif
 	static inline UInt ReleaseWeak(const RefCounted *self)
 	{
 		UInt res = Atomic::Decrement(self->weakRefCount);
@@ -100,6 +104,10 @@ public:
 		return res;
 	}
 
+#if CORE_COMPILER_GCC || CORE_COMPILER_CLANG
+	// necessary because we abuse vtable to store custom deleter
+	__attribute__((no_sanitize("undefined")))
+#endif
 	static inline bool HasStrongRef(const RefCounted *self)
 	{
 		return Atomic::Load(self->strongRefCount) != 0;
