@@ -212,6 +212,9 @@ bool Compiler::InstantiateTemplates(ErrorHandler &eh)
 
 			auto *argtype = instPoint->nodes[i];
 
+			if (!arg.typedefNode)
+				return eh.Error(argtype, "template arg without type (script limitation)");
+
 			auto *n = argtype;
 
 			if (n->type == AST_OP_SCOPE_RES)
