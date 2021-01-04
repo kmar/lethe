@@ -126,7 +126,7 @@ this is very useful for vectors:
 	my_vector v;
 	v[0] = 42;
 ```
-simple generics can be used with structs, but no specalization and no inheritance
+simple generics can be used with structs, but no specialization and no nested generics
 ```cpp
 	struct generic<T>
 	{
