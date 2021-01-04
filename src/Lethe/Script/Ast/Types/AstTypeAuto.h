@@ -21,6 +21,8 @@ public:
 	bool TypeGen(CompiledProgram &p) override;
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 
+	bool FoldConst(const CompiledProgram &p) override;
+
 	void CopyTo(AstNode *n) const override;
 
 private:

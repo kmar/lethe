@@ -120,6 +120,16 @@ AstNode *AstTypeAuto::GetExprNode() const
 	return res;
 }
 
+bool AstTypeAuto::FoldConst(const CompiledProgram &p)
+{
+	auto res = Super::FoldConst(p);
+
+	// flush typecache => this fixes a rare crash in auto a = typeid(this.member);
+	typeCache = nullptr;
+
+	return res;
+}
+
 QDataType AstTypeAuto::GetTypeDesc(const CompiledProgram &p) const
 {
 	QDataType res;
