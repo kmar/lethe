@@ -202,11 +202,20 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 	UniquePtr<AstNode> res;
 	AstNode *bottom = nullptr;
 
+	Int openBraces = 0;
+
 	for(;;)
 	{
 		const Token &t = ts->PeekToken();
 
 		TokenType castExpect = TOK_INVALID;
+
+		if (t.type == TOK_RBR && openBraces)
+		{
+			ts->ConsumeToken();
+			--openBraces;
+			continue;
+		}
 
 		switch(t.type)
 		{
@@ -225,7 +234,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_KEY_TYPE_NAME:
 		case TOK_KEY_TYPE_STRING:
 		{
-			if (bottom && bottom->type == AST_SIZEOF)
+			if (bottom && (bottom->type == AST_SIZEOF || bottom->type == AST_ALIGNOF || bottom->type == AST_TYPEID))
 			{
 				auto *tmp = ParseType(depth+1);
 				LETHE_RET_FALSE(tmp);
@@ -397,7 +406,8 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_KEY_ALIGNOF:
 		case TOK_KEY_TYPEID:
 		{
-			AstNode *tmp = 0;
+			AstNode *tmp = nullptr;
+			bool testBrace = false;
 
 			switch(t.type)
 			{
@@ -435,10 +445,12 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 
 			case TOK_KEY_SIZEOF:
 				tmp = NewAstNode<AstSizeOf>(AST_SIZEOF, t.location);
+				testBrace = true;
 				break;
 
 			case TOK_KEY_ALIGNOF:
 				tmp = NewAstNode<AstSizeOf>(AST_ALIGNOF, t.location);
+				testBrace = true;
 				break;
 
 			case TOK_KEY_OFFSETOF:
@@ -447,6 +459,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 
 			case TOK_KEY_TYPEID:
 				tmp = NewAstNode<AstSizeOf>(AST_TYPEID, t.location);
+				testBrace = true;
 				break;
 
 			default:
@@ -462,6 +475,12 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				res = tmp;
 
 			bottom = tmp;
+
+			if (testBrace && ts->PeekToken().type == TOK_LBR)
+			{
+				ts->ConsumeToken();
+				++openBraces;
+			}
 		}
 		break;
 
