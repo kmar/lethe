@@ -1045,6 +1045,7 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	// now we might support inheritance...
 	UniquePtr<AstNode> base;
 	const Token &bt = ts->PeekToken();
+	AstNode *baseNamePtr = nullptr;
 
 	if (bt.type == TOK_COLON)
 	{
@@ -1053,6 +1054,9 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 		ULong iqual = ParseQualifiers();
 		UniquePtr<AstNode> baseName = ParseScopeResolution(depth+1);
 		LETHE_RET_FALSE(baseName);
+
+		baseNamePtr = baseName.Get();
+
 		baseName->qualifiers |= iqual;
 		base->Add(baseName.Detach());
 	}
@@ -1136,7 +1140,6 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 
 			AstTypeStruct::TemplateArg arg;
 			arg.name = argname;
-			arg.typedefNode = nullptr;
 
 			arg.typedefNode = AstStaticCast<AstTypeDef *>(NewAstNode<AstTypeDef>(nnamePtr->location));
 			arg.typedefNode->Add(NewAstNode<AstTypeVoid>(nnamePtr->location));
@@ -1146,6 +1149,22 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			arg.typedefNode->Add(tdefName);
 
 			arg.typedefNode->flags |= AST_F_SKIP_CGEN;
+
+			// mark template args same as struct as resolved, so that we can do B<T> : A<T> later
+			if (baseNamePtr)
+			{
+				for (auto *nit : baseNamePtr->nodes)
+				{
+					LETHE_ASSERT(nit->type == AST_IDENT);
+
+					// use fast compare => only possible because we collect unique refcounted strings
+					if (AstStaticCast<AstText *>(nit)->text.Ansi() == argname.Ansi())
+					{
+						nit->scopeRef = ntype->scopeRef;
+						break;
+					}
+				}
+			}
 
 			ntype->Add(arg.typedefNode);
 

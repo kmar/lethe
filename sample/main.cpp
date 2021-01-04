@@ -397,8 +397,21 @@ int main()
 		}
 	}
 
+	struct tB<T>
+	{
+		T memberB;
+	}
+
+	struct tA<T> : tB<T>
+	{
+		T memberA;
+	}
+
 	void main()
 	{
+		tA<float> ta = {1.2, 3.4};
+		"ta=%t\n", ta;
+
 		"props::foo=%t\n", props::foo;
 		props proptest;
 		proptest.x += 55;
