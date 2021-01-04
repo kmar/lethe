@@ -204,20 +204,39 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 
 	Int openBraces = 0;
 
+	auto cleanup = [&]()->bool
+	{
+		while (openBraces > 0)
+		{
+			if (ts->GetToken().type != TOK_RBR)
+				return ExpectPrev(false, "unexpected token");
+
+			--openBraces;
+		}
+
+		return true;
+	};
+
 	for(;;)
 	{
 		const Token &t = ts->PeekToken();
 
 		TokenType castExpect = TOK_INVALID;
 
-		if (t.type == TOK_RBR && openBraces)
+		auto ttype = t.type;
+
+		bool canAcceptType = bottom && (bottom->type == AST_SIZEOF || bottom->type == AST_ALIGNOF || bottom->type == AST_TYPEID);
+
+		if (canAcceptType && t.type == TOK_IDENT)
 		{
-			ts->ConsumeToken();
-			--openBraces;
-			continue;
+			StringRef sr(t.text);
+
+			// a hack to treat array/array_view as types
+			if (sr == "array" || sr == "array_view")
+				ttype = TOK_KEY_TYPE_BOOL;
 		}
 
-		switch(t.type)
+		switch(ttype)
 		{
 		case TOK_KEY_TYPE_BOOL:
 		case TOK_KEY_TYPE_BYTE:
@@ -234,7 +253,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_KEY_TYPE_NAME:
 		case TOK_KEY_TYPE_STRING:
 		{
-			if (bottom && (bottom->type == AST_SIZEOF || bottom->type == AST_ALIGNOF || bottom->type == AST_TYPEID))
+			if (canAcceptType)
 			{
 				auto *tmp = ParseType(depth+1);
 				LETHE_RET_FALSE(tmp);
@@ -284,7 +303,10 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 			bottom = nbottom;
 
 			if (!cont)
+			{
+				LETHE_RET_FALSE(cleanup());
 				return res.Detach();
+			}
 		}
 		break;
 
@@ -303,6 +325,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				res = tmp;
 			}
 
+			LETHE_RET_FALSE(cleanup());
 			return res.Detach();
 		}
 		break;
@@ -321,6 +344,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				res = nptr;
 			}
 
+			LETHE_RET_FALSE(cleanup());
 			return res.Detach();
 		}
 		break;
@@ -343,6 +367,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				res = num;
 			}
 
+			LETHE_RET_FALSE(cleanup());
 			return res.Detach();
 		}
 		break;
@@ -389,6 +414,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				res = lit;
 			}
 
+			LETHE_RET_FALSE(cleanup());
 			return res.Detach();
 		}
 		break;
@@ -541,6 +567,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 					LETHE_RET_FALSE(Expect(0, "expected unary op target"));
 			}
 
+			LETHE_RET_FALSE(cleanup());
 			return res.Detach();
 		}
 	}
