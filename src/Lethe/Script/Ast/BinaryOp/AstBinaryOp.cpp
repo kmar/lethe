@@ -284,9 +284,6 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 		break;
 
 	case DT_NAME:
-		LETHE_ASSERT(0 && "cannot coerce to name!");
-		return false;
-
 	case DT_STRING:
 	{
 		const auto &v0 = AstStaticCast<const AstText *>(nodes[0])->text;
