@@ -221,6 +221,7 @@ bool Compiler::InstantiateTemplates(ErrorHandler &eh)
 				n->Resolve(eh);
 
 			argtype = n->Clone();
+
 			auto *old = arg.typedefNode->nodes[0];
 			arg.typedefNode->ReplaceChild(old, argtype);
 			delete old;

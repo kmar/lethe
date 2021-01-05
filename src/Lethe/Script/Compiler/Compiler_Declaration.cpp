@@ -1141,10 +1141,10 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			AstTypeStruct::TemplateArg arg;
 			arg.name = argname;
 
-			arg.typedefNode = AstStaticCast<AstTypeDef *>(NewAstNode<AstTypeDef>(nnamePtr->location));
-			arg.typedefNode->Add(NewAstNode<AstTypeVoid>(nnamePtr->location));
+			arg.typedefNode = AstStaticCast<AstTypeDef *>(NewAstNode<AstTypeDef>(it->location));
+			arg.typedefNode->Add(NewAstNode<AstTypeVoid>(it->location));
 
-			auto *tdefName = NewAstText<AstText>(argname.Ansi(), AST_IDENT,  nnamePtr->location);
+			auto *tdefName = NewAstText<AstText>(argname.Ansi(), AST_IDENT,  it->location);
 			tdefName->flags |= AST_F_RESOLVED;
 			arg.typedefNode->Add(tdefName);
 

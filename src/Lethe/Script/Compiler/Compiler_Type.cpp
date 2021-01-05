@@ -206,26 +206,12 @@ AstNode *Compiler::ParseStructName(Int depth)
 	// parse struct template
 	ts->ConsumeToken();
 
-	Array<String> usedNames;
-
 	for (;;)
 	{
 		auto *argname = ParseName(depth+1);
 		LETHE_RET_FALSE(argname);
 
 		argname->flags |= AST_F_RESOLVED | AST_F_SKIP_CGEN;
-
-		const auto &ntext = AstStaticCast<AstText *>(argname)->text;
-
-		if (usedNames.FindIndex(ntext) >= 0)
-		{
-			delete argname;
-			delete res;
-			ExpectPrev(false, "template argument names must be unique");
-			return nullptr;
-		}
-
-		usedNames.Add(ntext);
 
 		res->Add(argname);
 
