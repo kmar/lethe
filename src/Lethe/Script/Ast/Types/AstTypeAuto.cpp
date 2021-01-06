@@ -125,7 +125,8 @@ bool AstTypeAuto::FoldConst(const CompiledProgram &p)
 	auto res = Super::FoldConst(p);
 
 	// flush typecache => this fixes a rare crash in auto a = typeid(this.member);
-	typeCache = nullptr;
+	if (typeCache && typeCache->type != AST_ENUM)
+		typeCache = nullptr;
 
 	return res;
 }
