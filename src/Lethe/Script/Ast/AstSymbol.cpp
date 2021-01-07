@@ -469,15 +469,15 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 			if (!thisScope)
 				return p.Error(this, "this not accessible - can't create delegate");
 
-			if (thisScope->type != NSCOPE_CLASS)
-				return p.Error(this, "delegates can only be used with classes");
+			bool structFlag = thisScope->type != NSCOPE_CLASS;
 
 			if (fn->vtblIndex >= 0 && !(qualifiers & AST_Q_NON_VIRT))
 			{
-				// new delegates: if LSBit is 1, funptr is actually vtbl index*2 (=dynamic vtbl binding)
+				// new delegates: if LSBit is 1, funptr is actually vtbl index*4 (=dynamic vtbl binding)
+				// bit 1 marks a struct
 				// this new way is necessary to work as expected with dynamic vtable changes
 				p.EmitI24(OPC_PUSHZ_RAW, 1);
-				p.EmitIntConst(fn->vtblIndex*2 + 1);
+				p.EmitIntConst(fn->vtblIndex*4 + 1);
 				p.EmitI24(OPC_LSTORE32, 1);
 				// we now have vfunc ptr on stack
 			}
@@ -493,6 +493,9 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 			}
 
 			p.Emit(OPC_PUSHTHIS_TEMP);
+
+			if (structFlag)
+				p.EmitI24(OPC_BCALL, BUILTIN_MARK_STRUCT_DELEGATE);
 
 			p.PushStackType(fn->GetTypeDesc(p));
 			return true;

@@ -1314,7 +1314,7 @@ static void objClassNameFromDelegate(Stack &stk)
 	auto &res = ap.Get<Name>();
 	res = Name();
 
-	if (!sd.instancePtr)
+	if (!sd.instancePtr || sd.IsStruct())
 		return;
 
 	const auto *dt = static_cast<ScriptBaseObject *>(sd.instancePtr)->GetScriptClassType();

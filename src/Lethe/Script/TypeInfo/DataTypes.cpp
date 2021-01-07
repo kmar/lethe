@@ -2020,13 +2020,17 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 		{
 			if (type == DT_DELEGATE)
 			{
-				sb += String::Printf("obj: %p ", ptrval);
 				auto vidx = (UIntPtr)funptr;
+				sb += String::Printf((vidx & 2) ? "struct: %p " : "obj: %p ", ptrval);
 
 				if (vidx & 1)
-					sb += String::Printf("vtblidx: %d", vidx >> 1);
+					sb += String::Printf("vtblidx: %d", vidx >> 2);
 				else
+				{
+					vidx &= ~(UIntPtr)3;
+					funptr = (const void *)vidx;
 					sb += String::Printf("funptr: %p", funptr);
+				}
 			}
 			else
 				sb += String::Printf("funptr: %p", funptr);
@@ -2105,11 +2109,12 @@ String DataType::FindMethodName(const ScriptDelegate &dg, const CompiledProgram 
 	{
 		// vtbl index
 		fptr &= 0xffffffffu;
-		fptr >>= 1;
+		fptr >>= 2;
 		return FindMethodName(-(Int)fptr);
 	}
 
 	// otherwise it's instruction ptr
+	fptr &= ~(UIntPtr)3;
 	auto pc = Int(static_cast<const Instruction *>(dg.funcPtr) - prog.instructions.GetData());
 	return FindMethodName(pc);
 }

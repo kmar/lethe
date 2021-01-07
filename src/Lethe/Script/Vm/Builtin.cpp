@@ -1228,6 +1228,15 @@ void Opcode_SliceFwd(Stack &stk)
 	stk.Pop(2);
 }
 
+void Opcode_MarkStructDg(Stack &stk)
+{
+	auto *ptr = stk.GetPtr(1);
+	auto val = (UIntPtr)ptr;
+	// set bit 1 to mark as a delegate pointing to a struct instead of a class
+	val |= 2;
+	stk.SetPtr(1, (const void *)val);
+}
+
 typedef void (*BuiltinCallback)(Stack &);
 
 struct BuiltinTable
@@ -1381,6 +1390,8 @@ static const BuiltinTable BUILTIN_TABLE[] =
 
 	{ BUILTIN_SLICEFWD_INPLACE,  "*SLICEFWD_INPLACE",   Opcode_SliceFwd_Inplace },
 	{ BUILTIN_SLICEFWD,          "*SLICEFWD",           Opcode_SliceFwd         },
+
+	{ BUILTIN_MARK_STRUCT_DELEGATE, "*MARK_STR_DG",     Opcode_MarkStructDg     },
 
 	{ -1, 0, 0 }
 };

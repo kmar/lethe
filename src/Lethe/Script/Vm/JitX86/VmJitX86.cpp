@@ -1818,7 +1818,7 @@ void VmJitX86::EmitFCallDg()
 	auto jump0 = code.GetSize();
 	Emit(0xff);
 
-	Shr(Eax, 1);
+	Shr(Eax, 2);
 
 	// load vtbl
 	Mov(Edx.ToRegPtr(), MemPtr(Ebp + BaseObject::OFS_VTBL));
@@ -1838,6 +1838,7 @@ void VmJitX86::EmitFCallDg()
 	code[jump0] += Byte(code.GetSize() - jump0);
 
 	// call eax
+	And(Eax.ToRegPtr(), -4);
 	EmitNew(0xff);
 	Emit(0xd0);
 

@@ -74,6 +74,11 @@ struct ScriptDelegate : public lethe::ScriptDelegateBase
 	{
 		return !IsEmpty() && ((UIntPtr)funcPtr & 1) != 0;
 	}
+
+	inline bool IsStruct() const
+	{
+		return !IsEmpty() && ((UIntPtr)funcPtr & 2) != 0;
+	}
 };
 
 struct LETHE_API QDataType

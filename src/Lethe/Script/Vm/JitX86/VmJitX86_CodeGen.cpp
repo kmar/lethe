@@ -587,7 +587,7 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 		if (i == nextFunc)
 		{
 			nextFunc = funcOfs[++nextFuncIndex];
-			// note: must align functions to at least 2 bytes because of fcall_dg!!!
+			// note: must align functions to at least 4 bytes because of fcall_dg!!!
 			AlignCode(16, true);
 			funcCodeOfs.Add(code.GetSize());
 		}

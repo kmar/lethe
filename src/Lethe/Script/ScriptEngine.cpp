@@ -830,7 +830,7 @@ const void *ScriptEngine::MethodIndexToPointer(Int idx) const
 	if (idx < 0)
 	{
 		// virtual; simply store special vtbl index
-		res = (const void *)(UIntPtr)(-idx*2 + 1);
+		res = (const void *)(UIntPtr)(-idx*4 + 1);
 	}
 	else
 	{
@@ -910,11 +910,20 @@ String ScriptEngine::FindMethodName(ScriptDelegate dg) const
 
 	if (vmJit && !((UIntPtr)dg.funcPtr & 1))
 	{
-		Int pc = vmJit->FindFunctionPC(dg.funcPtr);
+		UIntPtr ptr = (UIntPtr)dg.funcPtr;
+		auto optr = ptr;
+		ptr &= ~(UIntPtr)3;
+		Int pc = vmJit->FindFunctionPC((const void *)ptr);
 		LETHE_ASSERT(pc >= 0);
 
 		if (pc >= 0)
-			dg.funcPtr = program->instructions.GetData() + pc;
+		{
+			const void *nptr = program->instructions.GetData() + pc;
+			// keep struct flag
+			optr &= 2;
+			optr |= (UIntPtr)nptr;
+			dg.funcPtr = (void *)optr;
+		}
 	}
 
 	return dt->FindMethodName(dg, *program);

@@ -76,9 +76,14 @@ LETHE_NOINLINE ExecResult Vm::DoFCall(const Instruction *&iptr, Stack &stk)
 		if (vidx & 1)
 		{
 			vidx &= 0xffffffffu;
-			vidx >>= 1;
+			vidx >>= 2;
 			const void * const *vtbl = *static_cast<const void * const * const *>(&static_cast<const BaseObject *>(stk.GetThis())->scriptVtbl);
 			newPtr = reinterpret_cast<const Instruction * const *>(vtbl)[vidx];
+		}
+		else
+		{
+			vidx &= ~(UIntPtr)3;
+			newPtr = (const void *)vidx;
 		}
 	}
 

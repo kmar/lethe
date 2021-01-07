@@ -313,9 +313,14 @@ ExecResult ScriptContext::CallDelegate(const ScriptDelegate &dg)
 	if (vidx & 1)
 	{
 		vidx &= 0xffffffffu;
-		vidx >>= 1;
+		vidx >>= 2;
 		const void * const *vtbl = *static_cast<const void * const * const *>(&static_cast<const BaseObject *>(dg.instancePtr)->scriptVtbl);
 		ptr = reinterpret_cast<const void * const *>(vtbl)[vidx];
+	}
+	else
+	{
+		vidx &= ~(UIntPtr)3;
+		ptr = (void *)vidx;
 	}
 
 	return CallMethodByPointer(ptr, dg.instancePtr);
