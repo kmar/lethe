@@ -3,6 +3,7 @@
 #include "../NamedScope.h"
 #include "../AstVarDecl.h"
 #include <Lethe/Script/Ast/Constants/AstConstInt.h>
+#include <Lethe/Script/Ast/Function/AstFunc.h>
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
 
@@ -165,6 +166,57 @@ bool AstDotOp::CodeGen(CompiledProgram &p)
 		UnlockProp();
 
 		return res;
+	}
+
+	const bool isFuncLoad = right->type == AST_IDENT && right->target->type == AST_FUNC;
+
+	if (isFuncLoad)
+	{
+		// we'll be loading a funcptr or delegate
+		auto *fn = AstStaticCast<AstFunc *>(right->target);
+
+		if (fn->qualifiers & AST_Q_STATIC)
+		{
+				if (fn->offset >= 0)
+					p.EmitBackwardJump(OPC_PUSH_FUNC, fn->offset);
+				else
+					fn->AddForwardRef(p.EmitForwardJump(OPC_PUSH_FUNC));
+
+				p.PushStackType(fn->GetTypeDesc(p));
+				return true;
+		}
+
+		// check if struct
+		auto *fscope = fn->scopeRef->FindThis();
+
+		if (!fscope || fscope->type != NSCOPE_CLASS)
+			return p.Error(this, "delegates can only be used with classes");
+
+		if (fn->vtblIndex >= 0 && !(qualifiers & AST_Q_NON_VIRT))
+		{
+			// new delegates: if LSBit is 1, funptr is actually vtbl index*2 (=dynamic vtbl binding)
+			// this new way is necessary to work as expected with dynamic vtable changes
+			p.EmitI24(OPC_PUSHZ_RAW, 1);
+			p.EmitIntConst(fn->vtblIndex*2 + 1);
+			p.EmitI24(OPC_LSTORE32, 1);
+			// we now have vfunc ptr on stack
+		}
+		else
+		{
+			if (fn->offset >= 0)
+				p.EmitBackwardJump(OPC_PUSH_FUNC, fn->offset);
+			else
+				fn->AddForwardRef(p.EmitForwardJump(OPC_PUSH_FUNC));
+		}
+
+		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_FUNC_PTR]));
+
+		LETHE_RET_FALSE(left->CodeGenRef(p, 1, 1));
+		p.PopStackType(1);
+		p.PopStackType(1);
+
+		p.PushStackType(fn->GetTypeDesc(p));
+		return true;
 	}
 
 	LETHE_RET_FALSE(left->CodeGenRef(p, 1, 1));
