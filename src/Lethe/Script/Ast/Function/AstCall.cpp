@@ -403,6 +403,7 @@ bool AstCall::TypeGen(CompiledProgram &p)
 
 			if (refn)
 			{
+				refn->qualifiers |= AST_Q_FUNC_REFERENCED;
 				replaceProp();
 				return res;
 			}
@@ -411,6 +412,9 @@ bool AstCall::TypeGen(CompiledProgram &p)
 
 	// ditto for native props
 	auto targ = nodes[0]->GetResolveTarget();
+
+	if (targ && targ->type == AST_FUNC)
+		targ->qualifiers |= AST_Q_FUNC_REFERENCED;
 
 	if (!targ || targ->type != AST_NPROP)
 		return res;
@@ -735,6 +739,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		opname += forceFunc->GetTypeDesc(p).GetName();
 		fname = opname.Ansi();
 	}
+
+	if (fdef->flags & AST_F_SKIP_CGEN)
+		return p.Error(this, "attempting to call a removed function!");
 
 	bool isStateBreak = fdef && (fdef->qualifiers & AST_Q_STATEBREAK) != 0;
 	const bool isLatent = fdef && (fdef->qualifiers & AST_Q_LATENT) != 0;

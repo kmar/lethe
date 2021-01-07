@@ -394,6 +394,10 @@ bool AstSymbol::TypeGen(CompiledProgram &p)
 		}
 	}
 
+	// mark funcptr/delegates as referenced but don't mark self as this is a symbol
+	if (target->type == AST_FUNC && parent && parent->type != AST_FUNC)
+		target->qualifiers |= AST_Q_FUNC_REFERENCED;
+
 	return res;
 }
 

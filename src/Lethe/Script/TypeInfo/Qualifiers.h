@@ -68,7 +68,9 @@ enum AstQualifier : ULong
 	AST_Q_PROPERTY = (ULong)1 << 42,
 	// for constant folding to avoid warnings on cast
 	AST_Q_NO_WARNINGS = (ULong)1 << 43,
-	// note: 20 left
+	// referenced function
+	AST_Q_FUNC_REFERENCED = (ULong)1 << 44,
+	// note: 19 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

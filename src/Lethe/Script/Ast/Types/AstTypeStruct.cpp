@@ -176,6 +176,29 @@ bool AstTypeStruct::CodeGenComposite(CompiledProgram &p)
 
 	QDataType qdt = GetTypeDesc(p);
 
+	// remove unused non-virtual non-native template functions
+	// this is necessary if function body is invalid for a certain type,
+	// like sort relying on relational ops but instantiated with a type that doesn't define them
+	// as a bonus, we save time by not generating code for unused func bodies
+	// also: you must be careful to not call these removed functions from C++!
+	if (qualifiers & AST_Q_TEMPLATE_INSTANTIATED)
+	{
+		for (auto *n : nodes)
+		{
+			if (n->type != AST_FUNC)
+				continue;
+
+			if (n->qualifiers & (AST_Q_NATIVE|AST_Q_VIRTUAL|AST_Q_FUNC_REFERENCED))
+				continue;
+
+			// FIXME: make sure we don't remove operators; this a hack at the moment
+			if (scopeRef->operators.FindIndex(n) >= 0)
+				continue;
+
+			n->flags |= AST_F_SKIP_CGEN;
+		}
+	}
+
 	// it's safe to remove virtual properties from members now
 	// it's necessary for auto-indexed structs to work properly
 	qdt.RemoveVirtualProps();

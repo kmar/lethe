@@ -402,6 +402,9 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 				UniquePtr<AstNode> pfun = ParseFuncDecl(ftype, fname, depth+1);
 				LETHE_RET_FALSE(pfun);
 
+				// FIXME: a hack to always force virtual prop getters/setters to be referenced
+				pfun->qualifiers |= AST_Q_FUNC_REFERENCED;
+
 				LETHE_RET_FALSE(ValidateVirtualProp(pfun, isGetter));
 
 				if (currentScope->IsComposite() && !(pfun->qualifiers & AST_Q_STATIC))
