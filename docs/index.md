@@ -144,10 +144,6 @@ simple generics can be used with structs, but no specialization and no nested ge
 class instances must be created using the new keyword or passed in externally as pointers
 only single inheritance is support and unlike C++, the default accessibility in a class is public instead of private
 
-delegates also only work with classes
-
-unlike structs, classes cannot be nested
-
 intrinsic class methods:
 
 	final bool is(name base_class_name) const;
@@ -250,7 +246,7 @@ this may change in the future so that the check is automatic, doing nothing if n
 ```cpp
 	if (my_func_ptr) my_func_ptr()
 ```
-a delegate points to a method within object, they need classes to work. they can only be bound from within a method of an object to bind to:
+a delegate points to a method within an object/struct (but struct delegates cannot be manually serialized).
 ```cpp
 	void delegate() dg;
 
