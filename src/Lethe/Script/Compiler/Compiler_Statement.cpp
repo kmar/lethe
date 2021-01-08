@@ -575,6 +575,15 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			break;
 		}
 
+		case TOK_KEY_TYPEDEF:
+		case TOK_KEY_USING:
+		{
+			auto *tmp = nt.type == TOK_KEY_TYPEDEF ? ParseTypeDef(depth+1) : ParseUsing(depth+1);
+			LETHE_RET_FALSE(tmp);
+			res->Add(tmp);
+			break;
+		}
+
 		case TOK_IDENT:
 			// this stupid and potentially slow check is necessary to detect labels
 			// FIXME: better!
