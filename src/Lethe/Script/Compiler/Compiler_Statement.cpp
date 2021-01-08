@@ -572,7 +572,7 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			auto tokLine = nt.location.line;
 			ts->ConsumeToken();
 			LETHE_RET_FALSE(ParseDirective(tokLine));
-			break;
+			continue;
 		}
 
 		case TOK_KEY_TYPEDEF:
@@ -581,7 +581,7 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			auto *tmp = nt.type == TOK_KEY_TYPEDEF ? ParseTypeDef(depth+1) : ParseUsing(depth+1);
 			LETHE_RET_FALSE(tmp);
 			res->Add(tmp);
-			break;
+			continue;
 		}
 
 		case TOK_IDENT:

@@ -488,16 +488,9 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 		break;
 
 		case TOK_KEY_TYPEDEF:
-		{
-			UniquePtr<AstNode> tdef = ParseTypeDef(depth+1);
-			LETHE_RET_FALSE(tdef);
-			cur->Add(tdef.Detach());
-		}
-		break;
-
 		case TOK_KEY_USING:
 		{
-			UniquePtr<AstNode> tdef = ParseUsing(depth+1);
+			UniquePtr<AstNode> tdef = t.type == TOK_KEY_TYPEDEF ? ParseTypeDef(depth+1) : ParseUsing(depth+1);
 			LETHE_RET_FALSE(tdef);
 			cur->Add(tdef.Detach());
 		}
