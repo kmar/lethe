@@ -46,7 +46,7 @@ bool AstSwitch::CompareConst(AstNode *n0, AstNode *n1)
 	return false;
 }
 
-bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx)
+bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx, bool removeBreak)
 {
 	// if it's the last node, it's not a fallthrough case
 	if (nodeIdx+1 == node->parent->nodes.GetSize())
@@ -56,11 +56,27 @@ bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx)
 
 	// if it ends with a break, not a fallthrough
 	if (last->type == AST_BREAK)
+	{
+		if (removeBreak)
+		{
+			delete last;
+			node->nodes.Pop();
+		}
+
 		return false;
+	}
 
 	// if it's a single block with the last statement being a break, it's not a fallthrough
-	if (node->nodes.GetSize() == 1 + (node->type == AST_CASE) && last->type == AST_BLOCK && !last->nodes.IsEmpty())
-		return last->nodes.Back()->type != AST_BREAK;
+	if (node->nodes.GetSize() == 1 + (node->type == AST_CASE) && last->type == AST_BLOCK && !last->nodes.IsEmpty() &&
+		last->nodes.Back()->type == AST_BREAK)
+	{
+		if (removeBreak)
+		{
+			delete last->nodes.Back();
+			last->nodes.Pop();
+		}
+		return false;
+	}
 
 	return true;
 }
@@ -235,7 +251,7 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 			// - fallthrough is present
 			// x goto is present (this won't work due to parse restrictions - one less case to handle)
 
-			if (!Fallsthrough(matchNode, matchNodeIndex))
+			if (!Fallsthrough(matchNode, matchNodeIndex, true))
 			{
 				for (Int j = startIndex; j < matchNode->nodes.GetSize(); j++)
 				{
@@ -252,10 +268,12 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 
 		if (!failed)
 		{
-			p.FlushOpt();
+			if (scopeRef->HasBreakHandles())
+			{
+				p.FlushOpt();
 
-			scopeRef->FixupBreakHandles(p);
-
+				scopeRef->FixupBreakHandles(p);
+			}
 			return true;
 		}
 	}

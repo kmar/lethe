@@ -524,6 +524,11 @@ void NamedScope::AddContinueHandle(Int handle)
 	continueHandles.Add(handle);
 }
 
+bool NamedScope::HasBreakHandles() const
+{
+	return !breakHandles.IsEmpty();
+}
+
 bool NamedScope::FixupBreakHandles(CompiledProgram &p)
 {
 	return p.FixupHandles(breakHandles);

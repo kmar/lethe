@@ -107,6 +107,8 @@ public:
 	void AddBreakHandle(Int handle);
 	void AddContinueHandle(Int handle);
 
+	bool HasBreakHandles() const;
+
 	bool FixupBreakHandles(CompiledProgram &p);
 	bool FixupContinueHandles(CompiledProgram &p);
 
