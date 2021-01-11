@@ -3,6 +3,7 @@
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
 #include <Lethe/Script/Ast/Constants/AstTextConstant.h>
+#include <Lethe/Script/Compiler/Warnings.h>
 
 namespace lethe
 {
@@ -43,6 +44,25 @@ bool AstSwitch::CompareConst(AstNode *n0, AstNode *n1)
 	}
 
 	return false;
+}
+
+bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx)
+{
+	// if it's the last node, it's not a fallthrough case
+	if (nodeIdx+1 == node->parent->nodes.GetSize())
+		return false;
+
+	auto *last = node->nodes.Back();
+
+	// if it ends with a break, not a fallthrough
+	if (last->type == AST_BREAK)
+		return false;
+
+	// if it's a single block with the last statement being a break, it's not a fallthrough
+	if (node->nodes.GetSize() == 1 + (node->type == AST_CASE) && last->type == AST_BLOCK && !last->nodes.IsEmpty())
+		return last->nodes.Back()->type != AST_BREAK;
+
+	return true;
 }
 
 bool AstSwitch::CodeGen(CompiledProgram &p)
@@ -174,12 +194,19 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 	if (isConst)
 	{
 		AstNode *defaultNode = nullptr;
+		Int defaultNodeIndex = -1;
+		AstNode *matchNode = nullptr;
+		Int matchNodeIndex = -1;
+		Int startIndex = 0;
 
-		for (auto *n : body->nodes)
+		for (Int nidx=0; nidx<body->nodes.GetSize(); nidx++)
 		{
+			auto *n = body->nodes[nidx];
+
 			if (n->type == AST_CASE_DEFAULT)
 			{
 				defaultNode = n;
+				defaultNodeIndex = nidx;
 				continue;
 			}
 
@@ -188,30 +215,49 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 			if (!CompareConst(expr, caseExpr))
 				continue;
 
-			for (Int j = 1; j < n->nodes.GetSize(); j++)
-			{
-				p.SetLocation(n->nodes[j]->location);
-				LETHE_RET_FALSE(n->nodes[j]->CodeGen(p));
-			}
-
-			defaultNode = nullptr;
+			matchNode = n;
+			matchNodeIndex = nidx;
+			startIndex = 1;
 			break;
 		}
 
-		if (defaultNode)
+		if (!matchNode)
 		{
-			for (Int j = 0; j < defaultNode->nodes.GetSize(); j++)
+			matchNode = defaultNode;
+			matchNodeIndex = defaultNodeIndex;
+		}
+
+		bool failed = false;
+
+		if (matchNode)
+		{
+			// this optimization is dangerous if:
+			// - fallthrough is present
+			// x goto is present (this won't work due to parse restrictions - one less case to handle)
+
+			if (!Fallsthrough(matchNode, matchNodeIndex))
 			{
-				p.SetLocation(defaultNode->nodes[j]->location);
-				LETHE_RET_FALSE(defaultNode->nodes[j]->CodeGen(p));
+				for (Int j = startIndex; j < matchNode->nodes.GetSize(); j++)
+				{
+					p.SetLocation(matchNode->nodes[j]->location);
+					LETHE_RET_FALSE(matchNode->nodes[j]->CodeGen(p));
+				}
+			}
+			else
+			{
+				failed = true;
+				p.Warning(matchNode, "couldn't optimize switch(const) due to fallthrough", WARN_PERF);
 			}
 		}
 
-		p.FlushOpt();
+		if (!failed)
+		{
+			p.FlushOpt();
 
-		scopeRef->FixupBreakHandles(p);
+			scopeRef->FixupBreakHandles(p);
 
-		return true;
+			return true;
+		}
 	}
 
 	LETHE_RET_FALSE(expr->CodeGen(p));

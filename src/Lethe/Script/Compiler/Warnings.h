@@ -21,7 +21,9 @@ enum Warnings
 	// integer constant overflow
 	WARN_OVERFLOW,
 	// NRVO optimization prevented
-	WARN_NRVO_PREVENTED
+	WARN_NRVO_PREVENTED,
+	// generic performance warning
+	WARN_PERF
 };
 
 }

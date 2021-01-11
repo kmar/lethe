@@ -24,6 +24,8 @@ public:
 
 private:
 	static bool CompareConst(AstNode *n0, AstNode *n1);
+	// fallthrough test
+	static bool Fallsthrough(AstNode *node, Int nodeIdx);
 };
 
 
