@@ -559,6 +559,9 @@ AstNode *Compiler::ParseTypeWithQualifiers(Int depth, ULong nqualifiers, bool in
 	else
 		nres = NewAstNode<AstTypeDelegate>(res->location);
 
+	// copy __format to func ptrs as well
+	nres->qualifiers = res->qualifiers & (AST_Q_FORMAT);
+
 	nres->Add(res.Detach());
 	nres->Add(args.Detach());
 	Swap(res, nres);
