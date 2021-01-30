@@ -7,6 +7,8 @@
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
 
+#include <Lethe/Script/Compiler/Warnings.h>
+
 namespace lethe
 {
 
@@ -232,6 +234,9 @@ bool AstDotOp::CodeGen(CompiledProgram &p)
 		// handle native props
 		if (right->target->type == AST_NPROP)
 		{
+			if (parent && parent->type == AST_EXPR)
+				p.Warning(this, "discarding result of a native property", WARN_DISCARD);
+
 			nscope = right->symScopeRef;
 			auto sym = nscope->FindSymbol(text->text);
 			LETHE_ASSERT(sym);
