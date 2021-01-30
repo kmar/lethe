@@ -70,7 +70,9 @@ enum AstQualifier : ULong
 	AST_Q_NO_WARNINGS = (ULong)1 << 43,
 	// referenced function
 	AST_Q_FUNC_REFERENCED = (ULong)1 << 44,
-	// note: 19 left
+	// don't discard result
+	AST_Q_NODISCARD = (ULong)1 << 45,
+	// note: 18 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

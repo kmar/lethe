@@ -15,6 +15,8 @@
 #include <Lethe/Script/Utils/FormatStr.h>
 #include <Lethe/Core/String/StringBuilder.h>
 
+#include <Lethe/Script/Compiler/Warnings.h>
+
 namespace lethe
 {
 
@@ -933,6 +935,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 		// reserve result
 		QDataType tdesc = res->GetTypeDesc(p);
+
+		if ((tdesc.qualifiers & AST_Q_NODISCARD) && parent && parent->type == AST_EXPR)
+			p.Warning(this, "discarding result of a function call", WARN_DISCARD);
 
 		if (resElem | resSlice)
 		{

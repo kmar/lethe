@@ -87,6 +87,7 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"endclass", TOK_KEY_ENDCLASS},
 	{"statebreak", TOK_KEY_STATEBREAK},
 	{"nontrivial", TOK_KEY_NONTRIVIAL},
+	{"nodiscard", TOK_KEY_NODISCARD},
 
 	{nullptr, TOK_INVALID}
 };

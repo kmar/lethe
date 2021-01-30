@@ -111,25 +111,25 @@ typedef const_byte[] string_view;
 native char decode_utf8(string_view &sw);
 
 // serialization helpers
-native static float float_from_binary(uint binary_value);
-native static uint float_to_binary(float value);
+nodiscard native static float float_from_binary(uint binary_value);
+nodiscard native static uint float_to_binary(float value);
 
-native static double double_from_binary(ulong binary_value);
-native static ulong double_to_binary(double value);
+nodiscard native static double double_from_binary(ulong binary_value);
+nodiscard native static ulong double_to_binary(double value);
 
 // base Object
 __intrinsic class object
 {
 	// is derived from n?
-	native __intrinsic final bool is(name n) const;
+	nodiscard native __intrinsic final bool is(name n) const;
 	// get class name
-	native final name class_name() const;
+	nodiscard native final name class_name() const;
 	// get non-state class name
-	native final name nonstate_class_name() const;
+	nodiscard native final name nonstate_class_name() const;
 	// this handles class inheritance, so base state class gets mapped to actual state class in derived class
-	native final name fix_state_name(name state_class_name) const;
+	nodiscard native final name fix_state_name(name state_class_name) const;
 	// state helper
-	native static name class_name_from_delegate(void delegate() dg);
+	nodiscard native static name class_name_from_delegate(void delegate() dg);
 
 	// set vtable
 	native bool vtable(name className);
@@ -137,111 +137,111 @@ __intrinsic class object
 
 namespace __int
 {
-	inline noinit int abs(int x) {return x < 0 ? -x : x;}
-	inline noinit int min(int x, int y) {return x <= y ? x : y;}
-	inline noinit int max(int x, int y) {return x >= y ? x : y;}
-	inline noinit int clamp(int value, int minv, int maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
-	inline noinit int sign(int value) {return (value > 0)-(value < 0);}
+	nodiscard inline noinit int abs(int x) {return x < 0 ? -x : x;}
+	nodiscard inline noinit int min(int x, int y) {return x <= y ? x : y;}
+	nodiscard inline noinit int max(int x, int y) {return x >= y ? x : y;}
+	nodiscard inline noinit int clamp(int value, int minv, int maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
+	nodiscard inline noinit int sign(int value) {return (value > 0)-(value < 0);}
 }
 
 namespace __uint
 {
 	// bit intrinsics
-	native __intrinsic noinit int bsf(uint v);
-	native __intrinsic noinit int bsr(uint v);
-	native __intrinsic noinit int popcnt(uint v);
-	native __intrinsic noinit uint bswap(uint v);
+	nodiscard native __intrinsic noinit int bsf(uint v);
+	nodiscard native __intrinsic noinit int bsr(uint v);
+	nodiscard native __intrinsic noinit int popcnt(uint v);
+	nodiscard native __intrinsic noinit uint bswap(uint v);
 
-	inline noinit uint min(uint x, uint y) {return x <= y ? x : y;}
-	inline noinit uint max(uint x, uint y) {return x >= y ? x : y;}
-	inline noinit uint clamp(uint value, uint minv, uint maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
+	nodiscard inline noinit uint min(uint x, uint y) {return x <= y ? x : y;}
+	nodiscard inline noinit uint max(uint x, uint y) {return x >= y ? x : y;}
+	nodiscard inline noinit uint clamp(uint value, uint minv, uint maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
 }
 
 namespace __long
 {
-	inline noinit long abs(long x) {return x < 0 ? -x : x;}
-	inline noinit long min(long x, long y) {return x <= y ? x : y;}
-	inline noinit long max(long x, long y) {return x >= y ? x : y;}
-	inline noinit long clamp(long value, long minv, long maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
-	inline noinit int sign(long value) {return (value > 0)-(value < 0);}
+	nodiscard inline noinit long abs(long x) {return x < 0 ? -x : x;}
+	nodiscard inline noinit long min(long x, long y) {return x <= y ? x : y;}
+	nodiscard inline noinit long max(long x, long y) {return x >= y ? x : y;}
+	nodiscard inline noinit long clamp(long value, long minv, long maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
+	nodiscard inline noinit int sign(long value) {return (value > 0)-(value < 0);}
 }
 
 namespace __ulong
 {
 	// bit intrinsics
-	native __intrinsic noinit int bsf(ulong v);
-	native __intrinsic noinit int bsr(ulong v);
-	native __intrinsic noinit int popcnt(ulong v);
-	native __intrinsic noinit ulong bswap(ulong v);
+	nodiscard native __intrinsic noinit int bsf(ulong v);
+	nodiscard native __intrinsic noinit int bsr(ulong v);
+	nodiscard native __intrinsic noinit int popcnt(ulong v);
+	nodiscard native __intrinsic noinit ulong bswap(ulong v);
 
-	inline noinit ulong min(ulong x, ulong y) {return x <= y ? x : y;}
-	inline noinit ulong max(ulong x, ulong y) {return x >= y ? x : y;}
-	inline noinit ulong clamp(ulong value, ulong minv, ulong maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
+	nodiscard inline noinit ulong min(ulong x, ulong y) {return x <= y ? x : y;}
+	nodiscard inline noinit ulong max(ulong x, ulong y) {return x >= y ? x : y;}
+	nodiscard inline noinit ulong clamp(ulong value, ulong minv, ulong maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
 }
 
 namespace __float
 {
 	// math
-	native __intrinsic noinit float sqrt(float v);
+	nodiscard native __intrinsic noinit float sqrt(float v);
 
-	inline noinit float abs(float x) {return x < 0 ? -x : x;}
-	inline noinit float min(float x, float y) {return x <= y ? x : y;}
-	inline noinit float max(float x, float y) {return x >= y ? x : y;}
-	inline noinit float clamp(float value, float minv, float maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
-	inline noinit float saturate(float value) {return value < cast float 0.0 ? cast float 0.0 : value > cast float 1.0 ? cast float 1.0 : value;}
-	inline noinit float lerp(float a, float b, float t) {return a*(1.0-t) + b*t;}
-	inline noinit int sign(float value) {return (value > cast float 0.0)-(value < cast float 0.0);}
+	nodiscard inline noinit float abs(float x) {return x < 0 ? -x : x;}
+	nodiscard inline noinit float min(float x, float y) {return x <= y ? x : y;}
+	nodiscard inline noinit float max(float x, float y) {return x >= y ? x : y;}
+	nodiscard inline noinit float clamp(float value, float minv, float maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
+	nodiscard inline noinit float saturate(float value) {return value < cast float 0.0 ? cast float 0.0 : value > cast float 1.0 ? cast float 1.0 : value;}
+	nodiscard inline noinit float lerp(float a, float b, float t) {return a*(1.0-t) + b*t;}
+	nodiscard inline noinit int sign(float value) {return (value > cast float 0.0)-(value < cast float 0.0);}
 
-	native noinit float floor(float value);
-	native noinit float ceil(float value);
+	nodiscard native noinit float floor(float value);
+	nodiscard native noinit float ceil(float value);
 
-	native static uint hash(float value);
+	nodiscard native static uint hash(float value);
 }
 
 namespace __double
 {
 	// math
-	native __intrinsic noinit double sqrt(double v);
+	nodiscard native __intrinsic noinit double sqrt(double v);
 
-	inline noinit double abs(double x) {return x < 0 ? -x : x;}
-	inline noinit double min(double x, double y) {return x <= y ? x : y;}
-	inline noinit double max(double x, double y) {return x >= y ? x : y;}
-	inline noinit double clamp(double value, double minv, double maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
-	inline noinit double saturate(double value) {return value < cast double 0.0 ? cast double 0.0 : value > cast double 1.0 ? cast double 1.0 : value;}
-	inline noinit double lerp(double a, double b, double t) {return a*(cast double 1.0-t) + b*t;}
-	inline noinit int sign(double value) {return (value > cast double 0.0)-(value < cast double 0.0);}
+	nodiscard inline noinit double abs(double x) {return x < 0 ? -x : x;}
+	nodiscard inline noinit double min(double x, double y) {return x <= y ? x : y;}
+	nodiscard inline noinit double max(double x, double y) {return x >= y ? x : y;}
+	nodiscard inline noinit double clamp(double value, double minv, double maxv) {return value < minv ? minv : value > maxv ? maxv : value;}
+	nodiscard inline noinit double saturate(double value) {return value < cast double 0.0 ? cast double 0.0 : value > cast double 1.0 ? cast double 1.0 : value;}
+	nodiscard inline noinit double lerp(double a, double b, double t) {return a*(cast double 1.0-t) + b*t;}
+	nodiscard inline noinit int sign(double value) {return (value > cast double 0.0)-(value < cast double 0.0);}
 
-	native noinit double floor(double value);
-	native noinit double ceil(double value);
+	nodiscard native noinit double floor(double value);
+	nodiscard native noinit double ceil(double value);
 
-	native static uint hash(double value);
+	nodiscard native static uint hash(double value);
 }
 
 namespace __name
 {
-	native static uint hash(name value);
+	nodiscard native static uint hash(name value);
 }
 
 namespace __string
 {
-	native static uint hash(string value);
+	nodiscard native static uint hash(string value);
 }
 
 // intrinsic support for string and dynamic arrays
-native int __strlen();
+nodiscard native int __strlen();
 native void __str_trim();
 // returns new length
 native int __str_insert(int pos, string what);
-native int __str_find(string what, int pos=0);
-native bool __str_starts_with(string what);
-native bool __str_ends_with(string what);
+nodiscard native int __str_find(string what, int pos=0);
+nodiscard native bool __str_starts_with(string what);
+nodiscard native bool __str_ends_with(string what);
 // return true if replaced
 native bool __str_replace(string what, string rwith);
 // erase (returns new length)
 native int __str_erase(int pos, int count=-1);
-native string_view __str_slice(int from, int to=-1);
+nodiscard native string_view __str_slice(int from, int to=-1);
 // split based on charset; keepEmpty: true to keep empty parts
-native array<string> __str_split(string chset, bool keepEmpty=false);
+nodiscard native array<string> __str_split(string chset, bool keepEmpty=false);
 // inplace-conversion to uppercase/lowercase
 native void __str_toupper();
 native void __str_tolower();
@@ -265,20 +265,20 @@ native void __da_assign(int aref);
 native void __da_push(int elem);
 native void __da_push_unique(int elem);
 native void __da_insert(int elem, int before);
-native int __da_find(int elem);
-native int __da_lower_bound(int elem);
-native int __da_upper_bound(int elem);
-native int __da_find_sorted(int elem);
+nodiscard native int __da_find(int elem);
+nodiscard native int __da_lower_bound(int elem);
+nodiscard native int __da_upper_bound(int elem);
+nodiscard native int __da_find_sorted(int elem);
 native int __da_insert_sorted(int elem);
 native int __da_insert_sorted_unique(int elem);
-native int __da_slice(int from, int to = -1);
+nodiscard native int __da_slice(int from, int to = -1);
 
-native const_byte[] to_bytes(...);
+nodiscard native const_byte[] to_bytes(...);
 native void memset(byte[] dst, int filler = 0, int limit = 0x7fffffff);
-native int memcmp(const byte[] src0, const byte[] src1, int limit = 0x7fffffff);
+nodiscard native int memcmp(const byte[] src0, const byte[] src1, int limit = 0x7fffffff);
 native void memcpy(byte[] dst, const byte[] src, int limit = 0x7fffffff);
 // unsafe!
-native byte[] to_bytes_mutable(...);
+nodiscard native byte[] to_bytes_mutable(...);
 )#"
 
 #if LETHE_32BIT

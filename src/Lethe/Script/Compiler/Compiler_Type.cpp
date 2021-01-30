@@ -60,6 +60,10 @@ ULong Compiler::ParseQualifiers(bool ref)
 			res |= AST_Q_NONTRIVIAL;
 			break;
 
+		case TOK_KEY_NODISCARD:
+			res |= AST_Q_NODISCARD;
+			break;
+
 		case TOK_KEY_RAW:
 			res |= AST_Q_RAW;
 			break;

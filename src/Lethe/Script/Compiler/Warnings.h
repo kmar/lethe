@@ -23,7 +23,9 @@ enum Warnings
 	// NRVO optimization prevented
 	WARN_NRVO_PREVENTED,
 	// generic performance warning
-	WARN_PERF
+	WARN_PERF,
+	// discarding result of a nodiscard function call
+	WARN_DISCARD
 };
 
 }

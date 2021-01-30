@@ -509,6 +509,7 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 		case TOK_KEY_NOBOUNDS:
 		case TOK_KEY_NOINIT:
 		case TOK_KEY_NONTRIVIAL:
+		case TOK_KEY_NODISCARD:
 		case TOK_KEY_TRANSIENT:
 		case TOK_KEY_FINAL:
 		case TOK_KEY_INLINE:
