@@ -67,37 +67,40 @@ struct queue<T>
 	}
 
 	//---------------------------------------------------------------------
-	inline T front() const
+	nodiscard inline T front() const
 	{
 		return data[fix_index(0)];
 	}
 
 	//---------------------------------------------------------------------
-	inline T back() const
+	nodiscard inline T back() const
 	{
 		return data[fix_index(count-1)];
 	}
 
 	//---------------------------------------------------------------------
-	inline int size() const
+	int size:
 	{
-		return count;
+		nodiscard inline noinit int get() const
+		{
+			return count;
+		}
 	}
 
 	//---------------------------------------------------------------------
-	inline bool empty() const
+	nodiscard inline bool empty() const
 	{
 		return !count;
 	}
 
 	//---------------------------------------------------------------------
-	static inline T operator[](const queue &q, int index)
+	nodiscard static inline T operator[](const queue &q, int index)
 	{
 		return q.data[q.fix_index(index)];
 	}
 
 	//---------------------------------------------------------------------
-	static inline T &operator[](queue &q, int index)
+	nodiscard static inline T &operator[](queue &q, int index)
 	{
 		return q.data[q.fix_index(index)];
 	}

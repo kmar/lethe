@@ -14,7 +14,7 @@ struct map<K, V>
 	}
 
 	//---------------------------------------------------------------------
-	inline bool empty() const
+	nodiscard inline bool empty() const
 	{
 		return keys.empty();
 	}
@@ -22,7 +22,7 @@ struct map<K, V>
 	//---------------------------------------------------------------------
 	int size:
 	{
-		inline noinit int get() const
+		nodiscard inline noinit int get() const
 		{
 			return keys.size;
 		}
@@ -50,28 +50,28 @@ struct map<K, V>
 	}
 
 	//---------------------------------------------------------------------
-	inline const V &find_value(K key) const
+	nodiscard inline const V &find_value(K key) const
 	{
 		return values[keys.find(key)];
 	}
 
 	//---------------------------------------------------------------------
 	// get key at index
-	inline const K &get_key(int index) const
+	nodiscard inline const K &get_key(int index) const
 	{
 		return keys.get(index);
 	}
 
 	//---------------------------------------------------------------------
 	// get value at index
-	inline const V &get(int index) const
+	nodiscard inline const V &get(int index) const
 	{
 		return values[index];
 	}
 
 	//---------------------------------------------------------------------
 	// get value at index (alias)
-	inline const V &get_value(int index) const
+	nodiscard inline const V &get_value(int index) const
 	{
 		return values[index];
 	}
@@ -84,14 +84,14 @@ struct map<K, V>
 
 	//---------------------------------------------------------------------
 	// note: returns const array reference
-	inline __const_V[] get_values() const
+	nodiscard inline __const_V[] get_values() const
 	{
 		return values;
 	}
 
 	//---------------------------------------------------------------------
 	// because scripting language doesn't have function overloads...
-	inline V[] get_values_mutable()
+	nodiscard inline V[] get_values_mutable()
 	{
 		return values;
 	}
@@ -129,14 +129,14 @@ struct map<K, V>
 
 	//---------------------------------------------------------------------
 	// boolean test
-	inline bool contains(K key) const
+	nodiscard inline bool contains(K key) const
 	{
 		return keys.contains(key);
 	}
 
 	//---------------------------------------------------------------------
 	// returns entry index, -1 if not found
-	inline int find(K key) const
+	nodiscard inline int find(K key) const
 	{
 		return keys.find(key);
 	}
@@ -168,21 +168,21 @@ struct map<K, V>
 	//---------------------------------------------------------------------
 	// get index of next collision, -1 if none
 	// note: chain is broken if set is modified during iteration
-	int next_collision(int index) const
+	nodiscard int next_collision(int index) const
 	{
 		return keys.next_collision(index);
 	}
 
 	//---------------------------------------------------------------------
 	// access operator, assume not multimap
-	static V operator[](const map &m, K key)
+	nodiscard static V operator[](const map &m, K key)
 	{
 		return m.find_value(key);
 	}
 
 	//---------------------------------------------------------------------
 	// write-access operator
-	static V &operator[](map &m, K key)
+	nodiscard static V &operator[](map &m, K key)
 	{
 		auto res = m.keys.insert(key);
 

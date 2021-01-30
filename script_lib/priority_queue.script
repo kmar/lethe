@@ -21,21 +21,24 @@ struct priority_queue<T>
 
 	//---------------------------------------------------------------------
 	// top (minimum)
-	inline T top() const
+	nodiscard inline T top() const
 	{
 		return data[0];
 	}
 
 	//---------------------------------------------------------------------
-	inline bool empty() const
+	nodiscard inline bool empty() const
 	{
 		return data.size == 0;
 	}
 
 	//---------------------------------------------------------------------
-	inline bool size() const
+	int size:
 	{
-		return data.size;
+		nodiscard inline noinit int get() const
+		{
+			return data.size;
+		}
 	}
 
 	//---------------------------------------------------------------------

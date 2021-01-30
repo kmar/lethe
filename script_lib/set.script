@@ -17,7 +17,7 @@ struct set<T>
 	protected array<int> table;
 
 	//---------------------------------------------------------------------
-	inline bool empty() const
+	nodiscard inline bool empty() const
 	{
 		return entries.size == 0;
 	}
@@ -25,7 +25,7 @@ struct set<T>
 	//---------------------------------------------------------------------
 	int size:
 	{
-		inline noinit int get() const
+		nodiscard inline noinit int get() const
 		{
 			return entries.size;
 		}
@@ -53,7 +53,7 @@ struct set<T>
 	}
 
 	//---------------------------------------------------------------------
-	inline const T &get(int index) const
+	nodiscard inline const T &get(int index) const
 	{
 		return entries[index].key;
 	}
@@ -87,20 +87,20 @@ struct set<T>
 
 	//---------------------------------------------------------------------
 	// boolean test
-	inline bool contains(T key) const
+	nodiscard inline bool contains(T key) const
 	{
 		return find_internal(key) >= 0;
 	}
 
 	//---------------------------------------------------------------------
 	// returns entry index or -1 if not found
-	inline int find(T key) const
+	nodiscard inline int find(T key) const
 	{
 		return find_internal(key);
 	}
 
 	//---------------------------------------------------------------------
-	inline const T &find_value(T key) const
+	nodiscard inline const T &find_value(T key) const
 	{
 		return entries[find_internal(key)].key;
 	}
@@ -136,7 +136,7 @@ struct set<T>
 	//---------------------------------------------------------------------
 	// get index of next collision, -1 if none
 	// note: chain is broken if set is modified during iteration
-	int next_collision(int index) const
+	nodiscard int next_collision(int index) const
 	{
 		return index >= 0 ? entries[index].next : -1;
 	}
@@ -166,7 +166,7 @@ struct set<T>
 
 	//---------------------------------------------------------------------
 	// returns entry index or -1 if not found
-	int find_internal(const T &key) const
+	private int find_internal(const T &key) const
 	{
 		auto sz = table.size;
 

@@ -3,7 +3,7 @@
 //-----------------------------------------------------------------------------
 struct hash_integer<T>
 {
-	static uint hash(T v)
+	nodiscard static uint hash(T v)
 	{
 		constexpr uint KEY1 = 0xdb91908du;
 		constexpr uint KEY2 = 0x6be5be6fu;
@@ -19,7 +19,7 @@ struct hash_integer<T>
 }
 
 //-----------------------------------------------------------------------------
-inline uint hash_merge(uint h1, uint h2)
+nodiscard inline uint hash_merge(uint h1, uint h2)
 {
 	constexpr int amount = 9;
 	auto rot9 = (h1 >> amount) | (h1 << (32-amount));
@@ -28,13 +28,13 @@ inline uint hash_merge(uint h1, uint h2)
 }
 
 //-----------------------------------------------------------------------------
-inline uint hash_merge3(uint h1, uint h2, uint h3)
+nodiscard inline uint hash_merge3(uint h1, uint h2, uint h3)
 {
 	return hash_merge(hash_merge(h1, h2), h3);
 }
 
 //-----------------------------------------------------------------------------
-inline uint hash_merge4(uint h1, uint h2, uint h3, uint h4)
+nodiscard inline uint hash_merge4(uint h1, uint h2, uint h3, uint h4)
 {
 	return hash_merge(hash_merge3(h1, h2, h3), h4);
 }
@@ -42,7 +42,7 @@ inline uint hash_merge4(uint h1, uint h2, uint h3, uint h4)
 // ... since we don't support function overloads ...
 namespace __int
 {
-	static inline uint hash(int value)
+	nodiscard static inline uint hash(int value)
 	{
 		return hash_integer<uint>::hash(value);
 	}
@@ -50,7 +50,7 @@ namespace __int
 
 namespace __uint
 {
-	static inline uint hash(uint value)
+	nodiscard static inline uint hash(uint value)
 	{
 		return hash_integer<uint>::hash(value);
 	}
@@ -58,7 +58,7 @@ namespace __uint
 
 namespace __long
 {
-	static inline uint hash(long value)
+	nodiscard static inline uint hash(long value)
 	{
 		return hash_integer<ulong>::hash(value);
 	}
@@ -66,7 +66,7 @@ namespace __long
 
 namespace __ulong
 {
-	static inline uint hash(ulong value)
+	nodiscard static inline uint hash(ulong value)
 	{
 		return hash_integer<ulong>::hash(value);
 	}
