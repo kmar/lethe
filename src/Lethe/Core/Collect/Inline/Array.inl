@@ -196,7 +196,7 @@ Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve)
 				 static_cast<T *>(this->Realloc(
 					this->reserve < 0 ? static_cast<T *>(0) : this->data,
 					(size_t)(newReserve) * sizeof(T),
-					Max<Int>(-this->reserve, 0))) : nullptr;
+					(size_t)Max<S>(-this->reserve, 0))) : nullptr;
 	S newSize = Min(this->size, newReserve);
 
 	if (newData != this->data)
