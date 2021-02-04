@@ -2069,7 +2069,7 @@ const DataType *DataType::GetPointerType(DataTypeEnum dte) const
 	return nullptr;
 }
 
-Int DataType::FindMethodOffset(const StringRef &mname) const
+Int DataType::FindMethodOffset(const StringRef &mname, bool ignoreNative) const
 {
 	const auto ci = methods.Find(mname);
 
@@ -2079,7 +2079,10 @@ Int DataType::FindMethodOffset(const StringRef &mname) const
 	if (baseType.GetTypeEnum() == DT_NONE)
 		return 0;
 
-	return baseType.GetType().FindMethodOffset(mname);
+	if (ignoreNative && (baseType.qualifiers & AST_Q_NATIVE))
+		return 0;
+
+	return baseType.GetType().FindMethodOffset(mname, ignoreNative);
 }
 
 String DataType::FindMethodName(Int idx) const

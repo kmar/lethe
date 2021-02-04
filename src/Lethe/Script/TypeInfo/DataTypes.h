@@ -258,7 +258,8 @@ public:
 	const DataType *GetPointerType(DataTypeEnum dte) const;
 
 	// returns method special index or 0 if not found
-	Int FindMethodOffset(const StringRef &mname) const;
+	// ignoreNative: ignore native bases
+	Int FindMethodOffset(const StringRef &mname, bool ignoreNative = false) const;
 
 	// find method name for special index (<0 = -vtbl idx, 0 = none, > 0 = PC)
 	// returns empty string if not found
