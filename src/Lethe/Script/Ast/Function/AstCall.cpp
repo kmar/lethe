@@ -742,7 +742,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		fname = opname.Ansi();
 	}
 
-	if (fdef->type == AST_FUNC && (fdef->flags & AST_F_SKIP_CGEN))
+	if (fdef->type == AST_FUNC && (fdef->flags & AST_F_SKIP_CGEN) && !(fdef->qualifiers & AST_Q_FUNC_REFERENCED))
 		return p.Error(this, "attempting to call a removed function!");
 
 	bool isStateBreak = fdef && (fdef->qualifiers & AST_Q_STATEBREAK) != 0;

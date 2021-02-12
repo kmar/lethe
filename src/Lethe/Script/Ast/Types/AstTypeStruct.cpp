@@ -180,7 +180,7 @@ bool AstTypeStruct::CodeGenComposite(CompiledProgram &p)
 	// this is necessary if function body is invalid for a certain type,
 	// like sort relying on relational ops but instantiated with a type that doesn't define them
 	// as a bonus, we save time by not generating code for unused func bodies
-	// also: you must be careful to not call these removed functions from C++!
+	// also: you must be careful not to call these removed functions from C++!
 	if (qualifiers & AST_Q_TEMPLATE_INSTANTIATED)
 	{
 		for (auto *n : nodes)
@@ -191,7 +191,7 @@ bool AstTypeStruct::CodeGenComposite(CompiledProgram &p)
 			if (n->qualifiers & (AST_Q_NATIVE|AST_Q_VIRTUAL|AST_Q_FUNC_REFERENCED))
 				continue;
 
-			// FIXME: make sure we don't remove operators; this a hack at the moment
+			// FIXME: make sure we don't remove operators; this is a hack at the moment
 			if (scopeRef->operators.FindIndex(n) >= 0)
 				continue;
 
