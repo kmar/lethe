@@ -25,7 +25,9 @@ enum Warnings
 	// generic performance warning
 	WARN_PERF,
 	// discarding result of a nodiscard function call
-	WARN_DISCARD
+	WARN_DISCARD,
+	// division by zero
+	WARN_DIV_BY_ZERO
 };
 
 }

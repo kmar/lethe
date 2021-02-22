@@ -27,6 +27,7 @@ public:
 
 	bool IsCompare() const;
 	bool IsShift() const;
+	bool IsShiftOrDiv() const;
 
 	const AstNode *GetTypeNode() const override;
 
@@ -39,8 +40,8 @@ protected:
 	bool CodeGenOperator(CompiledProgram &p);
 	bool CodeGenCommon(CompiledProgram &p, bool asRef = false);
 
-	template<typename T>
-	bool ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1) const;
+	template<typename T, typename L>
+	bool ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1, const char *&warn) const;
 	template<typename T>
 	bool ApplyConstBinaryOpFloat(Int &bres, T &res, const T &v0, const T &v1) const;
 
@@ -49,6 +50,8 @@ private:
 	const AstNode *FindUserDefOperatorType(const AstNode *type0, const AstNode *type1) const;
 
 	bool ReturnsBool() const;
+
+	void CheckWarn(const DataType &ldt, const CompiledProgram &p, const AstNode *n);
 
 	static AstTypeBool boolType;
 };

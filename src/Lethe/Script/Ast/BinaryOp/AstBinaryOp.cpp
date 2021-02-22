@@ -15,6 +15,8 @@
 #include <Lethe/Script/Ast/Constants/AstConstString.h>
 #include <Lethe/Script/Ast/AstText.h>
 
+#include <Lethe/Script/Compiler/Warnings.h>
+
 namespace lethe
 {
 
@@ -100,21 +102,50 @@ bool AstBinaryOp::IsShift() const
 	return false;
 }
 
-template<typename T>
-bool AstBinaryOp::ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1) const
+bool AstBinaryOp::IsShiftOrDiv() const
 {
+	if (IsShift())
+		return true;
+
+	switch(type)
+	{
+	case AST_OP_DIV:
+	case AST_OP_DIV_ASSIGN:
+	case AST_OP_MOD:
+	case AST_OP_MOD_ASSIGN:
+		return true;
+
+	default:;
+	}
+
+	return false;
+}
+
+template<typename T, typename L>
+bool AstBinaryOp::ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1, const char *&warn) const
+{
+	warn = nullptr;
+
+#define LETHE_EVAL_CONST_OP(v0, op, v1) \
+	do { \
+		L ltmp = (L)v0 op (L)v1; \
+		res = (T)ltmp; \
+		if (ltmp != res) \
+			warn = "arithmetic overflow"; \
+	} while(false)
+
 	switch(type)
 	{
 	case AST_OP_ADD:
-		res = v0 + v1;
+		LETHE_EVAL_CONST_OP(v0, +, v1);
 		break;
 
 	case AST_OP_SUB:
-		res = v0 - v1;
+		LETHE_EVAL_CONST_OP(v0, -, v1);
 		break;
 
 	case AST_OP_MUL:
-		res = v0 * v1;
+		LETHE_EVAL_CONST_OP(v0, *, v1);
 		break;
 
 	case AST_OP_DIV:
@@ -140,11 +171,15 @@ bool AstBinaryOp::ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1
 		break;
 
 	case AST_OP_SHL:
-		res = v0 << (v1 & (8*sizeof(T)-1));
-		break;
-
 	case AST_OP_SHR:
-		res = v0 >> (v1 & (8*sizeof(T)-1));
+		if (v1 < 0 || v1 >= 8*sizeof(T))
+			warn = "shift operand out of range";
+
+		if (type == AST_OP_SHL)
+			LETHE_EVAL_CONST_OP(v0, <<, (v1 & (8*sizeof(T)-1)));
+		else
+			LETHE_EVAL_CONST_OP(v0, >>, (v1 & (8*sizeof(T)-1)));
+
 		break;
 
 	case AST_OP_EQ:
@@ -172,10 +207,12 @@ bool AstBinaryOp::ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1
 		break;
 
 	default:
-		return 0;
+		return false;
 	}
 
-	return 1;
+#undef LETHE_EVAL_CONST_OP
+
+	return true;
 }
 
 template<typename T>
@@ -251,6 +288,8 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 
 	UniquePtr<AstNode> res = AstCreateConstNode(isCmp ? DT_BOOL : tdt, location);
 
+	const char *warn = nullptr;
+
 	// ok now apply operator
 	switch(tdt)
 	{
@@ -260,19 +299,23 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 	case DT_USHORT:
 	case DT_SHORT:
 	case DT_INT:
-		LETHE_RET_FALSE(ApplyConstBinaryOp<Int>(res->num.i, res->num.i, nodes[0]->num.i, nodes[1]->num.i));
+		if (!ApplyConstBinaryOp<Int, Long>(res->num.i, res->num.i, nodes[0]->num.i, nodes[1]->num.i, warn))
+			return false;
 		break;
 
 	case DT_UINT:
-		LETHE_RET_FALSE(ApplyConstBinaryOp<UInt>(res->num.i, res->num.ui, nodes[0]->num.ui, nodes[1]->num.ui));
+		if (!ApplyConstBinaryOp<UInt, ULong>(res->num.i, res->num.ui, nodes[0]->num.ui, nodes[1]->num.ui, warn))
+			return false;
 		break;
 
 	case DT_LONG:
-		LETHE_RET_FALSE(ApplyConstBinaryOp<Long>(res->num.i, res->num.l, nodes[0]->num.l, nodes[1]->num.l));
+		if (!ApplyConstBinaryOp<Long, Long>(res->num.i, res->num.l, nodes[0]->num.l, nodes[1]->num.l, warn))
+			return false;
 		break;
 
 	case DT_ULONG:
-		LETHE_RET_FALSE(ApplyConstBinaryOp<ULong>(res->num.i, res->num.ul, nodes[0]->num.ul, nodes[1]->num.ul));
+		if (!ApplyConstBinaryOp<ULong, ULong>(res->num.i, res->num.ul, nodes[0]->num.ul, nodes[1]->num.ul, warn))
+			return false;
 		break;
 
 	case DT_FLOAT:
@@ -309,6 +352,9 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 	default:
 		;
 	}
+
+	if (warn)
+		p.Warning(this, warn, WARN_OVERFLOW);
 
 	parent->ReplaceChild(this, res.Detach());
 	delete this;
@@ -851,6 +897,12 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	auto dt0 = nodes[0]->GetTypeDesc(p);
 	auto dt1 = nodes[1]->GetTypeDesc(p);
 
+	if (nodes[1]->IsConstant() && IsShiftOrDiv())
+	{
+		// perform some warning checks, like division by zero or shift overflow
+		CheckWarn(dtdst, p, nodes[1]);
+	}
+
 	LETHE_RET_FALSE(asRef ? nodes[0]->CodeGenRef(p) : nodes[0]->CodeGen(p));
 
 	if (p.exprStack.IsEmpty())
@@ -1109,6 +1161,56 @@ bool AstBinaryOp::ReturnsBool() const
 	}
 
 	return false;
+}
+
+void AstBinaryOp::CheckWarn(const DataType &ldt, const CompiledProgram &p, const AstNode *n)
+{
+	ULong rv = 0;
+
+	switch(n->type)
+	{
+	case AST_CONST_BOOL:
+	case AST_CONST_CHAR:
+	case AST_CONST_INT:
+		rv = n->num.i;
+		break;
+
+	case AST_CONST_UINT:
+		rv = n->num.ui;
+		break;
+
+	case AST_CONST_LONG:
+		rv = n->num.l;
+		break;
+
+	case AST_CONST_ULONG:
+		rv = n->num.ul;
+		break;
+
+	default:
+		return;
+	}
+
+	if (IsShift())
+	{
+		// shift: make sure we're in range
+		if (rv >= 8u*ldt.size)
+			p.Warning(this, "shift operand out of range", WARN_OVERFLOW);
+
+		return;
+	}
+
+	// mod/div: check for division by zero
+	if (rv)
+		return;
+
+	// hack: don't warn if inside __assert function
+	auto fscope = scopeRef->FindFunctionScope();
+
+	if (fscope && fscope->node && fscope->node->qualifiers & AST_Q_ASSERT)
+		return;
+
+	p.Warning(this, "division by zero", WARN_DIV_BY_ZERO);
 }
 
 const AstNode *AstBinaryOp::GetTypeNode() const
