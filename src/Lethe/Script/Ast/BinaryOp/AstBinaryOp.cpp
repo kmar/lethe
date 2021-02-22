@@ -172,7 +172,7 @@ bool AstBinaryOp::ApplyConstBinaryOp(Int &bres, T &res, const T &v0, const T &v1
 
 	case AST_OP_SHL:
 	case AST_OP_SHR:
-		if (v1 < 0 || v1 >= 8*sizeof(T))
+		if (v1 < 0 || v1 >= (T)(8*sizeof(T)))
 			warn = "shift operand out of range";
 
 		if (type == AST_OP_SHL)
