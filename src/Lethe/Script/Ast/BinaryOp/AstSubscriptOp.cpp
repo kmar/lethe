@@ -62,6 +62,8 @@ const AstNode *AstSubscriptOp::GetTypeNode() const
 {
 	const auto *res = GetResolveTarget();
 
+	LETHE_RET_FALSE(res != this);
+
 	if (res)
 		res = res->GetTypeNode();
 
