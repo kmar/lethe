@@ -5,6 +5,7 @@
 #include <Lethe/Script/Ast/CodeGenTables.h>
 #include <Lethe/Script/Ast/Function/AstCall.h>
 #include <Lethe/Script/Ast/Function/AstFunc.h>
+#include <Lethe/Script/Ast/Constants/AstConstChar.h>
 #include "../AstText.h"
 #include "AstBinaryOp.h"
 
@@ -78,6 +79,12 @@ AstNode *AstSubscriptOp::GetResolveTarget() const
 
 	if (tn->type == AST_TYPE_ARRAY || tn->type == AST_TYPE_DYNAMIC_ARRAY || tn->type == AST_TYPE_ARRAY_REF)
 		return tn->nodes[0]->GetResolveTarget();
+
+	if (tn->type == AST_TYPE_STRING)
+	{
+		static AstConstChar ccType(TokenLocation{0, 0, String()});
+		return &ccType;
+	}
 
 	if (tn->type == AST_STRUCT && tn->scopeRef)
 	{
