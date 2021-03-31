@@ -42,6 +42,8 @@ static const int BITS = 32;
 	|| defined(_X86_) || defined(__X86__) || defined(__I86__)
 #	define LETHE_CPU					"x86"
 #	define LETHE_CPU_X86				1
+#else
+#	define LETHE_CPU					"unknown"
 #endif
 
 #if defined(_MSC_VER)
@@ -50,11 +52,11 @@ static const int BITS = 32;
 #		define LETHE_COMPILER_ICC	1
 #		define LETHE_COMPILER		"icc"
 #	else
-#		define LETHE_COMPILER		"msc"
+#		define LETHE_COMPILER		"msvc"
 #	endif
 #elif defined(__GNUC__)
 #	define LETHE_COMPILER_GCC		1
-#	define LETHE_COMPILER			"gcc";
+#	define LETHE_COMPILER			"gcc"
 #else
 #	define LETHE_COMPILER_UNKNOWN	1
 #	define LETHE_COMPILER			"unknown"
@@ -66,13 +68,15 @@ static const int BITS = 32;
 
 #if defined(__clang__)
 #	define LETHE_COMPILER_CLANG		1
+#	undef LETHE_COMPILER
+#	define LETHE_COMPILER			"clang"
 #endif
 
 #if defined(_WIN32)
 #	define LETHE_OS_WINDOWS			1
 #	define LETHE_OS_FAMILY_WINDOWS	1
 #	define LETHE_OS					"windows"
-#	define LETHE_OS_FAMILY			"windows";
+#	define LETHE_OS_FAMILY			"windows"
 #elif defined(__ANDROID__)
 #	define LETHE_OS_ANDROID			1
 #	define LETHE_OS_FAMILY_ANDROID	1
