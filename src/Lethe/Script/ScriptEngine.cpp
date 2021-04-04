@@ -46,12 +46,13 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 {
 	// check if JIT available
 	// FIXME: better!
-#if LETHE_CPU_X86
+#if LETHE_CPU_X86 && (LETHE_OS_WINDOWS || LETHE_64BIT)
 	if (emode == ENGINE_JIT)
 		vmJit = new VmJitX86;
 #else
 	// no JIT
-	mode = ENGINE_RELEASE;
+	if (emode == ENGINE_JIT)
+		mode = ENGINE_RELEASE;
 #endif
 
 	MemSet(&compileStats, 0, sizeof(compileStats));
