@@ -7,6 +7,28 @@ namespace lethe
 
 // AstTernaryOp
 
+bool AstTernaryOp::FoldConst(const CompiledProgram &p)
+{
+	if (!nodes[0]->IsConstant() || !nodes[1]->IsConstant() || !nodes[2]->IsConstant())
+		return Super::FoldConst(p);
+
+	auto res = nodes[0]->ToBoolConstant(p);
+
+	if (res < 0)
+		return false;
+
+	LETHE_ASSERT(parent);
+
+	auto nidx = 2-res;
+	auto *n = nodes[nidx];
+	UnbindNode(nidx);
+
+	parent->ReplaceChild(this, n);
+	delete this;
+
+	return true;
+}
+
 const AstNode *AstTernaryOp::GetTypeNode() const
 {
 	auto *t0 = nodes[1]->GetTypeNode();

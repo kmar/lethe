@@ -14,6 +14,7 @@ public:
 
 	AstTernaryOp(const TokenLocation &nloc) : Super(AST_OP_TERNARY, nloc) {}
 
+	bool FoldConst(const CompiledProgram &p) override;
 	const AstNode *GetTypeNode() const override;
 	bool CodeGenRef(CompiledProgram &p, bool allowConst = false, bool derefPtr = false) override;
 	bool CodeGen(CompiledProgram &p) override;
