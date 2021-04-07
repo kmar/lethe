@@ -287,18 +287,18 @@ nodiscard native byte[] to_bytes_mutable(...);
 typedef uint pointer;
 typedef const pointer const_pointer;
 typedef int intptr;
-typedef const intptr cont_intptr;
+typedef const intptr const_intptr;
 typedef uint uintptr;
-typedef const uintptr cont_uintptr;
+typedef const uintptr const_uintptr;
 )#";
 #else
 		R"#(
 typedef ulong pointer;
 typedef const pointer const_pointer;
 typedef long intptr;
-typedef const intptr cont_intptr;
+typedef const intptr const_intptr;
 typedef ulong uintptr;
-typedef const uintptr cont_uintptr;
+typedef const uintptr const_uintptr;
 )#";
 #endif
 
