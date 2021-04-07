@@ -598,25 +598,19 @@ bool TokenStream::StringizeMacroArg(const MacroStack &ms, Token &ntok, const cha
 		StringBuilder sb;
 
 		bool lastOperator = false;
-		TokenType lastType = TOK_INVALID;
 
 		for (Int i=start; i<end; i++)
 		{
 			const auto *mt = macroArgTokens[i].Get();
 
-			bool isOperator = mt->type >= TOK_OPERATOR && mt->type < TOK_KEYWORD;
-			bool isOpeningBr = mt->type == TOK_LBLOCK || mt->type == TOK_LBR;
+			bool isOperator = mt->type == TOK_LAND || mt->type == TOK_LOR;
 
-			if (isOperator != lastOperator || (isOperator && lastOperator))
-			{
-				if (lastType != TOK_LBR && lastType != TOK_LBLOCK && !isOpeningBr)
-					sb += ' ';
-			}
+			if (i > start && isOperator != lastOperator || (isOperator && lastOperator))
+				sb += ' ';
 
 			lex->StringizeToken(*mt, sb);
 
 			lastOperator = isOperator;
-			lastType = mt->type;
 		}
 
 		ntok.SetString(sb.Get().Ansi());
