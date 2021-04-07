@@ -10,6 +10,24 @@ namespace lethe
 
 class Lexer;
 
+struct TokenMacro
+{
+	String name;
+	Int macroScopeIndex = 0;
+	Int locked = 0;
+	Array<Token> args;
+	Array<Token *> argPtrs;
+	Array<Token> tokens;
+	Array<Token *> tokenPtrs;
+
+	void SwapWith(TokenMacro &o)
+	{
+		MemSwap(this, &o, sizeof(TokenMacro));
+	}
+};
+
+using TokenMacroMap = HashMap<String, UniquePtr<TokenMacro>>;
+
 class LETHE_API TokenStream
 {
 	LETHE_BUCKET_ALLOC(TokenStream)
@@ -52,6 +70,9 @@ public:
 
 	// simple token-based macro support:
 
+	// set token macro map reference so that it can be shared among token streams
+	void SetMacroMap(TokenMacroMap *nmap);
+
 	void SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName);
 	void SetVarArgMacros(const String &varArgName, const String &varArgCountName);
 	void SetStringizeMacros(const String &stringizeName, const String &concatName);
@@ -68,6 +89,8 @@ public:
 	bool AddSwapSimpleMacro(const String &name, Array<Token> &args, Array<Token> &tokens);
 
 private:
+	using Macro = TokenMacro;
+
 	struct BufferedToken : public Token
 	{
 		TokenLocation prevLocation;
@@ -85,23 +108,8 @@ private:
 	Array<Token> eofTokens;
 	Int eofIndex;
 
-	struct Macro
-	{
-		String name;
-		Int macroScopeIndex = 0;
-		Int locked = 0;
-		Array<Token> args;
-		Array<Token *> argPtrs;
-		Array<Token> tokens;
-		Array<Token *> tokenPtrs;
+	TokenMacroMap *macros = nullptr;
 
-		void SwapWith(Macro &o)
-		{
-			MemSwap(this, &o, sizeof(Macro));
-		}
-	};
-
-	HashMap<String, UniquePtr<Macro>> macros;
 	Array<Token *> macroTokens;
 	Array<UniquePtr<Token>> macroArgTokens;
 

@@ -228,7 +228,7 @@ const Token &TokenStream::GetToken()
 		fullSize = Max(fullSize, writePtr+1);
 		AdvanceIndex(writePtr);
 
-		if (!macroLock)
+		if (!macroLock && macros)
 		{
 			const auto ttype = buffer[rp].type;
 
@@ -238,11 +238,11 @@ const Token &TokenStream::GetToken()
 				EndMacroScope();
 			else if (ttype == TOK_IDENT)
 			{
-				auto idx = macros.FindIndex(StringRef(buffer[rp].text));
+				auto idx = macros->FindIndex(StringRef(buffer[rp].text));
 
 				if (idx >= 0)
 				{
-					auto &m = *macros.GetValue(idx);
+					auto &m = *macros->GetValue(idx);
 
 					if (!m.locked)
 					{
@@ -336,7 +336,6 @@ bool TokenStream::Rewind()
 	eofTokens.Clear();
 	macroScopeIndex = 0;
 	lastMacroScopeIndex = 0;
-	macros.Clear();
 	macroTokens.Clear();
 	macroTokenStack.Clear();
 	macroArgTokens.Clear();
@@ -383,10 +382,11 @@ void TokenStream::SetTokenLocation(TokenLocation tl)
 
 bool TokenStream::AddSwapSimpleMacro(const String &name, Array<Token> &args, Array<Token> &tokens)
 {
-	LETHE_RET_FALSE(macros.FindIndex(name) < 0);
+	LETHE_RET_FALSE(macros);
+	LETHE_RET_FALSE(macros->FindIndex(name) < 0);
 
-	macros.Insert(name, new Macro());
-	auto &m = *macros[name];
+	macros->Insert(name, new Macro());
+	auto &m = *(*macros)[name];
 	m.name = name;
 	m.macroScopeIndex = macroScopeIndex;
 	Swap(args, m.args);
@@ -415,12 +415,12 @@ void TokenStream::BeginMacroScope()
 void TokenStream::EndMacroScope()
 {
 	// note: == should do
-	if (lastMacroScopeIndex >= macroScopeIndex)
+	if (macros && lastMacroScopeIndex >= macroScopeIndex)
 	{
-		for (auto it = macros.Begin(); it != macros.End();)
+		for (auto it = macros->Begin(); it != macros->End();)
 		{
 			if (it->value->macroScopeIndex >= macroScopeIndex)
-				it = macros.Erase(it);
+				it = macros->Erase(it);
 			else
 				++it;
 		}
@@ -555,8 +555,8 @@ void TokenStream::PopMacro()
 {
 	auto &s = macroTokenStack.Back();
 
-	if (!s.name.IsEmpty())
-		--macros[s.name]->locked;
+	if (macros && !s.name.IsEmpty())
+		--(*macros)[s.name]->locked;
 
 	macroTokens.Resize(s.argIndex);
 	macroArgTokens.Resize(s.argTokenIndex);
@@ -597,8 +597,27 @@ bool TokenStream::StringizeMacroArg(const MacroStack &ms, Token &ntok, const cha
 
 		StringBuilder sb;
 
+		bool lastOperator = false;
+		TokenType lastType = TOK_INVALID;
+
 		for (Int i=start; i<end; i++)
-			lex->StringizeToken(*macroArgTokens[i], sb);
+		{
+			const auto *mt = macroArgTokens[i].Get();
+
+			bool isOperator = mt->type >= TOK_OPERATOR && mt->type < TOK_KEYWORD;
+			bool isOpeningBr = mt->type == TOK_LBLOCK || mt->type == TOK_LBR;
+
+			if (isOperator != lastOperator || (isOperator && lastOperator))
+			{
+				if (lastType != TOK_LBR && lastType != TOK_LBLOCK && !isOpeningBr)
+					sb += ' ';
+			}
+
+			lex->StringizeToken(*mt, sb);
+
+			lastOperator = isOperator;
+			lastType = mt->type;
+		}
 
 		ntok.SetString(sb.Get().Ansi());
 		return true;
@@ -636,6 +655,11 @@ void TokenStream::SetStringizeMacros(const String &stringizeName, const String &
 void TokenStream::SetFuncName(const String &fname)
 {
 	macroExpandFunction = fname;
+}
+
+void TokenStream::SetMacroMap(TokenMacroMap *nmap)
+{
+	macros = nmap;
 }
 
 }

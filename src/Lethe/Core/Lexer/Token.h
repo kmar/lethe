@@ -32,6 +32,8 @@ enum TokenTypeBase
 	TOK_LBR,			// (
 	TOK_RBR,			// )
 
+	TOK_OPERATOR,		// this just marks operator base indices
+
 	TOK_COMMA,			// ,
 	TOK_PLUS,			// +
 	TOK_PLUS_EQ,		// +=

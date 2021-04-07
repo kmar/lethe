@@ -1118,6 +1118,7 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	if (ts->PeekToken().type == TOK_SEMICOLON)
 	{
 		ts->ConsumeToken();
+		ts->BeginMacroScope();
 		ts->AppendEof(Token(TOK_RBLOCK));
 
 		if (isClass)
@@ -1218,6 +1219,7 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			ts->PopEofToken();
 			ts->ConsumeToken();
 			ts->ConsumeTokenIf(TOK_SEMICOLON);
+			ts->EndMacroScope();
 			break;
 		}
 

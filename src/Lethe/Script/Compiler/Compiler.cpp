@@ -80,6 +80,7 @@ void Compiler::InitTokenStream()
 	ts->SetLineFileMacros("__LINE", "__FILE", "__COUNTER", "__func");
 	ts->SetVarArgMacros("__VA_ARGS", "__VA_COUNT");
 	ts->SetStringizeMacros("__stringize", "__concat");
+	ts->SetMacroMap(&macroMap);
 }
 
 void Compiler::SetFloatLiteralIsDouble(bool nfloatLitIsDouble)
@@ -762,6 +763,7 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 			{
 				ts->ConsumeToken();
 				ts->AppendEof(Token(TOK_RBLOCK));
+				ts->BeginMacroScope();
 			}
 			else
 				LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_LBLOCK, "expected `{`"));

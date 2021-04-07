@@ -74,21 +74,55 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 
 	const char * const boolStr[2] = {"false", "true"};
 
-	internalProg.Format(
-		"constexpr bool DEBUG = %s;\nconstexpr bool OS_WINDOWS = %s;constexpr bool BIG_ENDIAN = %s;\n",
+	const char * const boolTable[] = {
 		boolStr[!program->GetUnsafe()],
 #if LETHE_OS_WINDOWS
 		"true",
 #else
 		"false",
 #endif
-		boolStr[Endian::IsBig()]
+		boolStr[Endian::IsBig()],
+		boolStr[mode == ENGINE_JIT]
+	};
+
+	internalProg.Format(
+		"constexpr bool DEBUG = %s;\nconstexpr bool OS_WINDOWS = %s;constexpr bool BIG_ENDIAN = %s;constexpr bool JIT = %s;\n"
+		"macro __DEBUG=%s; macro __OS_WINDOWS = %s; macro __BIG_ENDIAN = %s; macro __JIT = %s; macro __LITTLE_ENDIAN=(!__BIG_ENDIAN);\n",
+		boolTable[0], boolTable[1], boolTable[2], boolTable[3],
+		boolTable[0], boolTable[1], boolTable[2], boolTable[3]
 	);
 
 	// define some useful type aliases
 
+	// note: in order to be able to use __ASSERT, you have to export the printf function
+
 	internalProg +=
 		R"#(
+__assert void __abort() {0/0;}
+
+macro if (__DEBUG)
+
+macro __ASSERT(expr, ...)
+	do
+	{
+		if (DEBUG && !(expr))
+		{
+			"assertion failed: `%s'" __VA_ARGS " at line %d in file %s\n",
+				__stringize expr,
+				__LINE,
+				__FILE;
+			__abort();
+		}
+	}
+	while(false)
+endmacro
+
+macro else
+
+macro __ASSERT(expr, ...)=;
+
+macro endif
+
 constexpr bool LITTLE_ENDIAN = !BIG_ENDIAN;
 typedef const bool const_bool;
 typedef const byte const_byte;

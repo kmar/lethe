@@ -104,7 +104,7 @@ public:
 		return res;
 	}
 
-#if CORE_COMPILER_GCC || CORE_COMPILER_CLANG
+#if LETHE_COMPILER_GCC || LETHE_COMPILER_CLANG
 	// necessary because we abuse vtable to store custom deleter
 	__attribute__((no_sanitize("undefined")))
 #endif

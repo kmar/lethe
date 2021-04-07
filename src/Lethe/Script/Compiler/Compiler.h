@@ -134,6 +134,8 @@ private:
 		NamedScope *oldScope;
 	};
 
+	TokenMacroMap macroMap;
+
 	HashSet< String > stringTable;
 	UniquePtr<TokenStream> ts;
 	UniquePtr<Lexer> lex;
