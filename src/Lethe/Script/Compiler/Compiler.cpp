@@ -431,9 +431,11 @@ bool Compiler::EndIfMacro()
 
 bool Compiler::ParseMacro(Int depth, bool conditionalOnly)
 {
+	ts->EnableMacros(false);
 	ts->ConsumeToken();
 
 	const auto &nt = ts->PeekToken();
+	ts->EnableMacros(true);
 
 	bool processIfs = !conditionalOnly;
 
