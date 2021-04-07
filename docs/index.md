@@ -346,6 +346,27 @@ integrated support for a simple, scoped, token-based macro preprocessor
 	* __DEBUG is defined to be 1 or 0 if debug mode is enabled
 	* __ASSERT(x)
 
+* unlike C preprocessor, macros are not parsed until EOL and can be put on the same line
+
+* nested conditionals can be put inside macros
+```cpp
+	macro nested(...)
+
+		macro if (__VA_COUNT == 1)
+			"va_count == 1, arg=%t\n", __VA_ARGS
+		macro else
+			"va_count != 1\n";
+		macro endif
+
+	endmacro
+
+	void main()
+	{
+		nested();
+		nested(1);
+	}
+```
+
 note that there's no support for macro includes
 
 example:
