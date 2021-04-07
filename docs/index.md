@@ -22,7 +22,7 @@
 	* [arrays / array references](#array_type)
 	* [function pointers / delegates](#func_type)
 
-* [macro preprocessor](#preprocessor)
+* [macros - a replacement for C preprocessor](#macros)
 
 * [operators](#operators)
 
@@ -307,10 +307,10 @@ but this would break translation to/from C and C++
 
 note that pre/post increment doesn't work with floating point types and += style operators cannot be chained like in C/C++
 
-<a id="preprocessor"></a>
-#### macro preprocessor
+<a id="macros"></a>
+#### macros
 
-integrated support for a simple, scoped, token-based macro preprocessor
+integrated support for a simple, scoped, single pass token-based macros
 
 * defining macros
 	* macro macro_name=token_list;
