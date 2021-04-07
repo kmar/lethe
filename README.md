@@ -28,7 +28,6 @@ note: experimental, work in progress, there will most likely be bugs => use at y
 	* [debugger - win64/linux - binary only](https://github.com/kmar/lethe_debugger/releases)
 
 * todo:
-	* fix bugs
 	* clean up/simplify/modernize
 	* better documentation, more samples/libs
 
