@@ -22,6 +22,8 @@
 	* [arrays / array references](#array_type)
 	* [function pointers / delegates](#func_type)
 
+* [macro preprocessor](#preprocessor)
+
 * [operators](#operators)
 
 * [statements](#statements)
@@ -305,6 +307,74 @@ but this would break translation to/from C and C++
 
 note that pre/post increment doesn't work with floating point types and += style operators cannot be chained like in C/C++
 
+<a id="preprocessor"></a>
+#### macro preprocessor
+
+integrated support for a simple, scoped, token-based macro preprocessor
+
+* defining macros
+	* macro macro_name=token_list;
+	* macro macro name token_list endmacro
+		(this one can span multiple lines)
+	note that macros are scoped and cannot be redefined/undefined, they are automatically undefined as they
+	leave the scope (i.e. inside a block {})
+	global macros stay, but depend on compilation order => put global macros in a file that's compiled first
+
+	* macros with parameters:
+		macro_name(arg1, arg2)
+		macro_name(arg1, arg2, ...)
+
+		special keywords: __VA_ARGS couple ellipsis, __VA_COUNT holds ellipsis argument count
+
+* stringizing, concatenating
+	* simply __stringize x, where x is a macro argument name (equivalent to #x in C preprocessor)
+	* concatenation: a __concat b __concat c (equivalent to a ## b ## c)
+
+* conditional compilation
+	* macro if (macro_expression)
+	* macro else
+	* macro else if (macro_expression)
+	* macro endif
+
+	note that there's no equivalent to #ifdef / #if defined() => everything is treated as #if
+
+* predefined macros
+	* __JIT is defined to be 1 or 0, if JIT is enabled and supported on target platform
+	* __DEBUG is defined to be 1 or 0 if debug mode is enabled
+	* __ASSERT(x)
+
+note that there's no support for macro includes
+
+example:
+```cpp
+		macro if (__DEBUG)
+
+		void test()
+		{
+			"debug\n";
+		}
+
+		macro else
+		
+		void test()
+		{
+			"release\n";
+		}
+
+		macro endif
+
+
+		void my_func(int count, some_struct c)
+		{
+			macro var1 = c.var1[i];
+			macro var2 = c.var2[i];
+
+			for (int i : count)
+				var1.value += var2.value;
+
+			// note that here var1 and var2 leave the scope and will be removed
+		}
+```
 <a id="statements"></a>
 #### statements
 
@@ -338,7 +408,7 @@ can't skip over variable declarations
 * no anonymous functions (lambdas)
 * no unions
 * no bitfields
-* no preprocessor (though it would be really handy for assert)
+* only a limited scoped macro preprocessor
 * no coroutines, just simple states that require manual support
 
 there's no plan to implement any of those, certainly not exceptions or garbage collection
@@ -347,7 +417,7 @@ in fact the primary reason for a new scripting language was state support (simil
 <a id="limitations"></a>
 #### limitations
 
-* no support for big endian machines
+* no support for big endian machines (actually I attempted to fix this some time ago)
 	* this is something that's bothering me; it should be possible but I couldn't find a fast enough PPC emulator. the closest I got was qemu with some ancient debian distro (but without C++11 support, a no-go unfortunately).
 * bool type larger than a single byte (this is also a dumb limitation, but necessary for consistent binding)
 * C++ char type must be 1 byte long
