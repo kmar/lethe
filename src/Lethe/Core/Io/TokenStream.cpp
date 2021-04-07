@@ -487,6 +487,8 @@ bool TokenStream::PushMacro(Macro &m)
 		{
 			auto tt = FetchToken_Expand(tok);
 
+			LETHE_RET_FALSE(tt != TOK_EOF && tt != TOK_INVALID);
+
 			if (tt == TOK_RBR && --nesting < 0)
 			{
 				if (hasEllipsis && ellipsisArgs)
