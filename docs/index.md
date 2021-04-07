@@ -332,7 +332,8 @@ integrated support for a simple, scoped, single pass token-based macros
 * stringizing, concatenating
 	* simply __stringize x, where x is a macro argument name (equivalent to #x in C preprocessor)
 	* concatenation: a __concat b __concat c (equivalent to a ## b ## c)
-		concatenation is limited to concatenating identifiers and integers
+
+	concatenation is limited to concatenating identifiers and integers
 
 * conditional compilation
 	* macro if (macro_expression)
