@@ -173,7 +173,10 @@ enum TokenTypeBase
 	TOK_KEY_ENDCLASS,
 	TOK_KEY_STATEBREAK,
 	TOK_KEY_NONTRIVIAL,
-	TOK_KEY_NODISCARD
+	TOK_KEY_NODISCARD,
+	TOK_KEY_MACRO,
+	TOK_KEY_ENDMACRO,
+	TOK_KEY_ENDIF
 };
 
 typedef TokenTypeBase TokenType;
@@ -216,6 +219,8 @@ public:
 	TokenNumber number;
 	// optional suffixes (bit flags)
 	UInt numberFlags;
+	// used by script macro __VA_COUNT
+	UInt userIndex;
 
 	Token();
 	explicit Token(TokenType ntype);
@@ -225,10 +230,16 @@ public:
 
 	// add text character
 	Token &AddTextChar(char ch);
+	// add text string
+	Token &AddTextString(const char *str);
 	// clear token
 	Token &Clear();
 	// sets up text
 	Token &FinishText();
+
+	// full token initializers:
+	Token &SetString(const char *str);
+	Token &SetULong(ULong value);
 
 	// is keyword?
 	bool IsKeyword() const;

@@ -74,6 +74,14 @@ Compiler::~Compiler()
 {
 }
 
+void Compiler::InitTokenStream()
+{
+	// we only use __LINE instead of __LINE__ to avoid clashes with external preprocessor
+	ts->SetLineFileMacros("__LINE", "__FILE", "__COUNTER", "__func");
+	ts->SetVarArgMacros("__VA_ARGS", "__VA_COUNT");
+	ts->SetStringizeMacros("__stringize", "__concat");
+}
+
 void Compiler::SetFloatLiteralIsDouble(bool nfloatLitIsDouble)
 {
 	floatLitIsDouble = nfloatLitIsDouble;
@@ -90,6 +98,7 @@ bool Compiler::Open(Stream &s, const String &nfilename)
 		return Error(String::Printf("Lex open failed: %s", nfilename.Ansi()));
 
 	ts = new TokenStream(*lex);
+	InitTokenStream();
 	return true;
 }
 
@@ -121,6 +130,7 @@ bool Compiler::OpenBuffered(Stream &s, const String &nfilename, Double *ioTime)
 		return Error(String::Printf("Lex open failed: %s", nfilename.Ansi()));
 
 	ts = new TokenStream(*lex);
+	InitTokenStream();
 	return true;
 }
 
@@ -366,6 +376,275 @@ bool Compiler::ParseDirective(Int lineNumber)
 	return true;
 }
 
+bool Compiler::ConditionalEnabled() const
+{
+	return conditionalStack.IsEmpty() || (conditionalStack.Back() & CSF_ACTIVE) != 0;
+}
+
+bool Compiler::EnterIfMacro(bool cond, Int depth, bool nopush)
+{
+	auto csize = conditionalStack.GetSize();
+
+	if (!nopush)
+		conditionalStack.Add(cond ? CSF_ACTIVE | CSF_IF_TAKEN : 0);
+
+	if (cond)
+		return true;
+
+	// consume now
+	ts->EnableMacros(false);
+
+	for (;;)
+	{
+		const auto &t = ts->GetToken();
+
+		if (t.type == TOK_EOF || t.type == TOK_INVALID)
+			break;
+
+		if (t.type != TOK_KEY_MACRO)
+			continue;
+
+		ts->UngetToken(1);
+
+		ts->EnableMacros(true);
+		LETHE_RET_FALSE(ParseMacro(depth+1, true));
+
+		ts->EnableMacros(false);
+
+		if (conditionalStack.GetSize() < csize || ConditionalEnabled())
+			break;
+	}
+
+	ts->EnableMacros(true);
+	return true;
+}
+
+bool Compiler::EndIfMacro()
+{
+	if (conditionalStack.IsEmpty())
+		return ExpectPrev(false, "unexpected conditional endif");
+
+	conditionalStack.Pop();
+
+	return true;
+}
+
+bool Compiler::ParseMacro(Int depth, bool conditionalOnly)
+{
+	ts->ConsumeToken();
+
+	const auto &nt = ts->PeekToken();
+
+	bool processIfs = !conditionalOnly;
+
+	enum
+	{
+		IFT_ENDIF,
+		IFT_IF,
+		IFT_ELSE,
+		IFT_ELSEIF
+	};
+
+	Int ifType = -1;
+
+	if (nt.type == TOK_KEY_ENDIF)
+	{
+		processIfs = processIfs || !conditionalSkipCounter;
+		ts->ConsumeToken();
+		conditionalSkipCounter -= !processIfs;
+		return processIfs ? EndIfMacro() : true;
+	}
+	else if (nt.type == TOK_KEY_IF)
+	{
+		ts->ConsumeToken();
+		ifType = IFT_IF;
+	}
+	else if (nt.type == TOK_KEY_ELSE)
+	{
+		ts->ConsumeToken();
+		ifType = IFT_ELSE;
+
+		if (conditionalStack.IsEmpty())
+			return ExpectPrev(false, "unexpected conditional else");
+
+		if (ts->PeekToken().type == TOK_KEY_IF)
+		{
+			ts->ConsumeToken();
+			ifType = IFT_ELSEIF;
+		}
+	}
+
+	if (!conditionalSkipCounter)
+		processIfs = true;
+
+	if (conditionalOnly && ifType == IFT_IF)
+	{
+			++conditionalSkipCounter;
+			processIfs = false;
+	}
+
+	if (ifType == IFT_ELSE)
+	{
+		if (processIfs)
+		{
+			auto &csb = conditionalStack.Back();
+
+			if (csb & CSF_GOT_ELSE)
+				return ExpectPrev(false, "else after else");
+
+			csb |= CSF_ACTIVE | CSF_GOT_ELSE;
+
+			if (csb & CSF_IF_TAKEN)
+				csb &= ~CSF_ACTIVE;
+			else
+				csb |= CSF_IF_TAKEN;
+
+			return EnterIfMacro((csb & CSF_ACTIVE) != 0, depth+1, true);
+		}
+
+		return true;
+	}
+
+	if (ifType == IFT_IF || ifType == IFT_ELSEIF)
+	{
+		if (!processIfs)
+			return true;
+
+		// macro if...
+		LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_LBR, "expected `('"));
+
+		auto *expr = ParseExpression(depth);
+		LETHE_RET_FALSE(expr);
+
+		LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)'"));
+
+		auto eloc = expr->location;
+
+		AstNode tmpn(AST_NONE, TokenLocation());
+		tmpn.Add(expr);
+
+		if (!tempProgram)
+			tempProgram = new CompiledProgram;
+
+		while (tmpn.FoldConst(*tempProgram));
+
+		auto ifres = tmpn.nodes[0]->ToBoolConstant(*tempProgram);
+
+		// note: we treat macro if something as false, just like the C preprocessor
+		if (ifres < 0)
+			ifres = 0;
+
+		if (ifType == IFT_ELSEIF)
+		{
+			auto &csb = conditionalStack.Back();
+
+			if (csb & CSF_GOT_ELSE)
+				return ExpectPrev(false, "else after else");
+
+			csb |= CSF_ACTIVE * ifres;
+
+			if (csb & CSF_IF_TAKEN)
+				csb &= ~CSF_ACTIVE;
+			else
+				csb |= CSF_IF_TAKEN * ifres;
+
+			ifres = (csb & CSF_ACTIVE) != 0;
+		}
+
+		return EnterIfMacro(ifres > 0, depth+1, ifType == IFT_ELSEIF);
+	}
+
+	ts->EnableMacros(false);
+	auto res = ParseMacroInternal(conditionalOnly);
+	ts->EnableMacros(true);
+	return res;
+}
+
+bool Compiler::ParseMacroArgs(Array<Token> &nargs)
+{
+	nargs.Clear();
+
+	bool lastComma = false;
+
+	for (;;)
+	{
+		const auto &t = ts->GetToken();
+
+		if (t.type == TOK_RBR)
+		{
+			LETHE_RET_FALSE(ExpectPrev(!lastComma, "expected argument"));
+			break;
+		}
+
+		lastComma = false;
+
+		if (t.type == TOK_IDENT)
+			nargs.Add(t);
+		else if (t.type == TOK_ELLIPSIS)
+		{
+			nargs.Add(t);
+			return ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)'");
+		}
+
+		if (ts->PeekToken().type == TOK_COMMA)
+		{
+			ts->ConsumeToken();
+			lastComma = true;
+		}
+	}
+
+	// this will simplify macro expansion handling later
+	LETHE_RET_FALSE(ExpectPrev(!nargs.IsEmpty(), "empty func-style macros not allowed"));
+
+	return true;
+}
+
+bool Compiler::ParseMacroInternal(bool conditionalOnly)
+{
+	const auto &ntok = ts->GetToken();
+	auto ntokLoc = ntok.location;
+	LETHE_RET_FALSE(ExpectPrev(ntok.type == TOK_IDENT, "expected identifier"));
+
+	const auto &tname = AddString(ntok.text);
+
+	Array<Token> args;
+
+	if (ts->PeekToken().type == TOK_LBR)
+	{
+		ts->ConsumeToken();
+		LETHE_RET_FALSE(ParseMacroArgs(args));
+	}
+
+	bool simple = ts->PeekToken().type == TOK_EQ;
+
+	if (simple)
+		ts->ConsumeToken();
+
+	Array<Token> tokens;
+
+	for (;;)
+	{
+		const auto &tok = ts->GetToken();
+
+		if (tok.type == (simple ? TOK_SEMICOLON : TOK_KEY_ENDMACRO) || tok.type == TOK_EOF || tok.type == TOK_INVALID)
+			break;
+
+		if (!conditionalOnly)
+			tokens.Add(tok);
+	}
+
+	if (conditionalOnly)
+		return true;
+
+	Array<Token> swargs = args;
+	Array<Token> swtokens = tokens;
+
+	if (!ts->AddSwapSimpleMacro(tname, swargs, swtokens))
+		ErrorLoc(String::Printf("illegal macro redefinition: `%s'", tname.Ansi()), ntokLoc);
+
+	return true;
+}
+
 AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 {
 	classOpen = 0;
@@ -495,6 +774,10 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 			cur->Add(tdef.Detach());
 		}
 		break;
+
+		case TOK_KEY_MACRO:
+			LETHE_RET_FALSE(ParseMacro(depth+1));
+			break;
 
 		case TOK_KEY_ASSERT:
 		case TOK_KEY_FORMAT:

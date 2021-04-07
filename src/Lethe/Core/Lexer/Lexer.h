@@ -8,6 +8,8 @@
 namespace lethe
 {
 
+class StringBuilder;
+
 enum LexerMode
 {
 	LEXM_LETHE,          // lethe default
@@ -46,6 +48,9 @@ public:
 
 	// use this after peek
 	bool ConsumeToken();
+
+	// stringize and append to StringBuilder
+	bool StringizeToken(const Token &tok, StringBuilder &sb);
 
 	// diagnostics
 	const char *GetError() const;

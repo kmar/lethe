@@ -1,5 +1,6 @@
 #include "Lexer.h"
 #include "ParseNum.h"
+#include "../String/StringBuilder.h"
 
 namespace lethe
 {
@@ -88,6 +89,9 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"statebreak", TOK_KEY_STATEBREAK},
 	{"nontrivial", TOK_KEY_NONTRIVIAL},
 	{"nodiscard", TOK_KEY_NODISCARD},
+	{"macro", TOK_KEY_MACRO},
+	{"endmacro", TOK_KEY_ENDMACRO},
+	{"endif", TOK_KEY_ENDIF},
 
 	{nullptr, TOK_INVALID}
 };
@@ -1197,6 +1201,101 @@ void Lexer::SetTokenLocation(const TokenLocation &tl)
 
 	// note: line always set
 	loc.line = tl.line + lineDelta;
+}
+
+bool Lexer::StringizeToken(const Token &tok, StringBuilder &sb)
+{
+	if (tok.type >= TOK_KEYWORD)
+	{
+		sb += tok.text;
+		return true;
+	}
+
+	// TODO: strings, chars, names? => probably not...
+	const char *op = nullptr;
+
+	switch(tok.type)
+	{
+	case TOK_IDENT:
+		sb += tok.text;
+		break;
+	case TOK_ULONG:
+		sb.AppendFormat(LETHE_FORMAT_ULONG, tok.number.l);
+		break;
+	case TOK_DOUBLE:
+		sb.AppendFormat("%lg", tok.number.d);
+		break;
+
+	// operators:
+	case TOK_DOT:               op = "."; break;
+	case TOK_RANGE:             op = " .. "; break;
+	case TOK_CPP_DOT_MEMB:      op = ".*"; break;
+	case TOK_ELLIPSIS:          op = " ... "; break;
+	case TOK_COLON:             op = ":"; break;
+	case TOK_DOUBLE_COLON:      op = "::"; break;
+	case TOK_SEMICOLON:         op = ";"; break;
+	case TOK_LBLOCK:            op = "{"; break;
+	case TOK_RBLOCK:            op = "}"; break;
+	case TOK_LARR:              op = "["; break;
+	case TOK_RARR:              op = "]"; break;
+	case TOK_LBR:               op = "("; break;
+	case TOK_RBR:               op = ")"; break;
+	case TOK_COMMA:             op = ","; break;
+	case TOK_PLUS:              op = "+"; break;
+	case TOK_PLUS_EQ:           op = "+-"; break;
+	case TOK_INC:               op = "++"; break;
+	case TOK_MINUS:             op = "-"; break;
+	case TOK_MINUS_EQ:          op = "-="; break;
+	case TOK_DEC:               op = "--"; break;
+	case TOK_C_DEREF:           op = "->"; break;
+	case TOK_CPP_DEREF_MEMB:    op = "->*"; break;
+	case TOK_MUL:               op = "*"; break;
+	case TOK_MUL_EQ:            op = "*="; break;
+	case TOK_DIV:               op = "/"; break;
+	case TOK_DIV_EQ:            op = "/="; break;
+	case TOK_MOD:               op = "%"; break;
+	case TOK_MOD_EQ:            op = "%="; break;
+	case TOK_SHL:               op = "<<"; break;
+	case TOK_SHL_EQ:            op = "<<="; break;
+	case TOK_SHR:               op = ">>"; break;
+	case TOK_SHR_EQ:            op = ">>="; break;
+	case TOK_SHRU:              op = ">>>"; break;
+	case TOK_SHRU_EQ:           op = ">>>="; break;
+	case TOK_AND:               op = "&"; break;
+	case TOK_AND_EQ:            op = "&="; break;
+	case TOK_LAND:              op = "&&"; break;
+	case TOK_OR:                op = "|"; break;
+	case TOK_OR_EQ:             op = "|="; break;
+	case TOK_LOR:               op = "||"; break;
+	case TOK_XOR:               op = "^"; break;
+	case TOK_XOR_EQ:            op = "^="; break;
+	case TOK_LNOT:              op = "!"; break;
+	case TOK_NOT:               op = "~"; break;
+	case TOK_QUESTION:          op = "?"; break;
+
+	case TOK_EQ:                op = "="; break;
+	case TOK_EQ_EQ:             op = "=="; break;
+	case TOK_NOT_EQ:            op = "!="; break;
+	case TOK_EQUIV:             op = "==="; break;
+	case TOK_NOT_EQUIV:         op = "!=="; break;
+	case TOK_LT:                op = "<"; break;
+	case TOK_LEQ:               op = "<="; break;
+	case TOK_GT:                op = ">"; break;
+	case TOK_GEQ:               op = ">="; break;
+
+	case TOK_3WAYCMP:           op = "<=>"; break;
+	case TOK_SWAP:              op = "<->"; break;
+
+	case TOK_SHARP:             op = "#"; break;
+
+	default:
+		return false;
+	}
+
+	if (op)
+		sb += op;
+
+	return true;
 }
 
 }

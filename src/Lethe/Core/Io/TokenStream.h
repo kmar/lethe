@@ -2,6 +2,8 @@
 
 #include "../Lexer/Token.h"
 #include "../Memory/BucketAlloc.h"
+#include "../Collect/HashMap.h"
+#include "../Ptr/UniquePtr.h"
 
 namespace lethe
 {
@@ -48,6 +50,23 @@ public:
 	// pop EOF token
 	void PopEofToken();
 
+	// simple token-based macro support:
+
+	void SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName);
+	void SetVarArgMacros(const String &varArgName, const String &varArgCountName);
+	void SetStringizeMacros(const String &stringizeName, const String &concatName);
+
+	void SetFuncName(const String &fname);
+
+	void EnableMacros(bool enable);
+
+	void BeginMacroScope();
+	void EndMacroScope();
+
+	// add simple macro, swapping-in tokens
+	// macro redefinitions are illegal, so this returns false if so
+	bool AddSwapSimpleMacro(const String &name, Array<Token> &args, Array<Token> &tokens);
+
 private:
 	struct BufferedToken : public Token
 	{
@@ -65,6 +84,81 @@ private:
 
 	Array<Token> eofTokens;
 	Int eofIndex;
+
+	struct Macro
+	{
+		String name;
+		Int macroScopeIndex = 0;
+		Int locked = 0;
+		Array<Token> args;
+		Array<Token *> argPtrs;
+		Array<Token> tokens;
+		Array<Token *> tokenPtrs;
+
+		void SwapWith(Macro &o)
+		{
+			MemSwap(this, &o, sizeof(Macro));
+		}
+	};
+
+	HashMap<String, UniquePtr<Macro>> macros;
+	Array<Token *> macroTokens;
+	Array<UniquePtr<Token>> macroArgTokens;
+
+	struct MacroStack
+	{
+		// index into macroTokens
+		Int index;
+		// end in macroTokens for currently expanding macro
+		Int end;
+		// index/end in macroTokens (arguments)
+		Int argIndex;
+		Int argEnd;
+		// starting index into macroArgTokens
+		Int argTokenIndex;
+		// macro name
+		String name;
+	};
+
+	StackArray<MacroStack, 32> macroTokenStack;
+	Int macroScopeIndex;
+	// last macro scope index where macros were added
+	Int lastMacroScopeIndex;
+	// global macro lock
+	Int macroLock;
+
+	TokenLocation macroExpandLocation;
+
+	// equivalent for __LINE__
+	String lineMacroName;
+	// equivalent for __FILE__
+	String fileMacroName;
+	// equivalent for __COUNTER__
+	String counterMacroName;
+	// equivalent for __func__
+	String funcMacroName;
+	// equivalent for __VA_ARGS
+	String varArgMacroName;
+	// non-std extension __VA_COUNT
+	String varArgCountMacroName;
+	// non-std __stringize
+	String stringizeMacroName;
+	// non-std __concat
+	String concatMacroName;
+
+	ULong macroExpandCounter;
+	// current function name
+	String macroExpandFunction;
+
+	bool PushMacro(Macro &m);
+	void PushMacroArg(Int start, Int end);
+	void PopMacro();
+
+	bool StringizeMacroArg(const MacroStack &ms, Token &ntok, const char *argName);
+
+	TokenType FetchToken(Token &ntok);
+	TokenType FetchTokenInternal(Token &ntok);
+	TokenType FetchToken_Expand(Token &ntok);
 
 	inline Int CyclicDelta(Int x, Int y) const;
 	inline void AdvanceIndex(Int &idx);

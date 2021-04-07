@@ -32,6 +32,7 @@ Token &Token::operator =(const Token &o)
 	err = o.err;
 	number = o.number;
 	numberFlags = o.numberFlags;
+	userIndex = o.userIndex;
 	allocText = o.allocText;
 	text = allocText.IsEmpty() ? nullptr : allocText.GetData();
 	return *this;
@@ -42,6 +43,32 @@ Token &Token::AddTextChar(char ch)
 {
 	allocText.Add(ch);
 	length++;
+	return *this;
+}
+
+Token &Token::SetString(const char *str)
+{
+	Clear();
+	AddTextString(str);
+	FinishText();
+	type = TOK_STRING;
+	return *this;
+}
+
+Token &Token::SetULong(ULong value)
+{
+	Clear();
+	number.l = value;
+	type = TOK_ULONG;
+	return *this;
+}
+
+Token &Token::AddTextString(const char *str)
+{
+	if (str)
+		while (*str)
+			AddTextChar(*str++);
+
 	return *this;
 }
 
@@ -56,6 +83,7 @@ Token &Token::Clear()
 	allocText.Clear();
 	number.l = 0;
 	numberFlags = 0;
+	userIndex = 0;
 	return *this;
 }
 

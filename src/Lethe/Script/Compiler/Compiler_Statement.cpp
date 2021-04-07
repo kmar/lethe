@@ -584,6 +584,10 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			continue;
 		}
 
+		case TOK_KEY_MACRO:
+			LETHE_RET_FALSE(ParseMacro(depth+1));
+			continue;
+
 		case TOK_IDENT:
 			// this stupid and potentially slow check is necessary to detect labels
 			// FIXME: better!

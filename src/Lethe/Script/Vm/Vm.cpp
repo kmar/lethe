@@ -1483,7 +1483,8 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_NCALL:
 				// necessary because of callstack()
-				if (flags & EXEC_DEBUG)
+				// note: since this is a single intruction, we allow this even in non-JIT release mode
+				//if (flags & EXEC_DEBUG)
 					stk.SetInsPtr(iptr);
 
 			// fall through

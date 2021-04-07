@@ -174,6 +174,9 @@ private:
 	// current attributes (should be consumed by next type/var decl)
 	SharedPtr<Attributes> attributes;
 
+	// temporary instance, used by macro expression evaluation (for constant folding)
+	UniquePtr<CompiledProgram> tempProgram;
+
 	bool floatLitIsDouble;
 	Int classOpen = 0;
 
@@ -227,6 +230,10 @@ private:
 
 	AstNode *ParseTypeDef(Int depth);
 	AstNode *ParseUsing(Int depth);
+
+	bool ParseMacro(Int depth, bool conditionalOnly = false);
+	bool ParseMacroInternal(bool conditionalOnly);
+	bool ParseMacroArgs(Array<Token> &nargs);
 
 	AstNode *ParseSwitchBody(Int depth);
 	AstNode *ParseStatement(Int depth);
@@ -294,6 +301,26 @@ private:
 
 	// inject array/string scopes
 	void InjectScopes(ErrorHandler &eh);
+
+	// conditional compilation:
+
+	bool ConditionalEnabled() const;
+
+	bool EnterIfMacro(bool cond, Int depth, bool nopush);
+	bool EndIfMacro();
+
+	// conditional stack flags
+	enum
+	{
+		CSF_ACTIVE = 1,
+		CSF_IF_TAKEN = 2,
+		CSF_GOT_ELSE = 4
+	};
+
+	StackArray<Int, 32> conditionalStack;
+	Int conditionalSkipCounter = 0;
+
+	void InitTokenStream();
 };
 
 template< typename T >

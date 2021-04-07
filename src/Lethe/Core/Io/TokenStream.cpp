@@ -1,5 +1,7 @@
 #include "TokenStream.h"
 #include "../Lexer/Lexer.h"
+#include "../String/StringRef.h"
+#include "../String/StringBuilder.h"
 
 namespace lethe
 {
@@ -24,9 +26,184 @@ TokenStream::TokenStream(Lexer &l, Int nbufSize)
 	, fullSize(0)
 	, position(0)
 	, eofIndex(0)
+	, macroScopeIndex(0)
+	, lastMacroScopeIndex(0)
+	, macroLock(0)
+	, macroExpandCounter(0)
 {
 	buffer.Resize(nbufSize);
 	lex->DisablePeek();
+}
+
+TokenType TokenStream::FetchToken_Expand(Token &ntok)
+{
+	ntok = GetToken();
+	return ntok.type;
+}
+
+TokenType TokenStream::FetchToken(Token &ntok)
+{
+	bool inmacro = !macroTokenStack.IsEmpty();
+	auto res = FetchTokenInternal(ntok);
+
+	if (!inmacro)
+		return res;
+
+	if (macroTokenStack.IsEmpty())
+		return res;
+
+	Int idx = macroTokenStack.GetSize()-1;
+
+	while (idx >= 0 && macroTokenStack[idx].index >= macroTokenStack[idx].end)
+		--idx;
+
+	if (idx < 0 || idx >= macroTokenStack.GetSize())
+		return res;
+
+	const auto &ms = macroTokenStack[idx];
+	const auto *mt = macroTokens[ms.index];
+
+	if (mt->type != TOK_IDENT || StringRef(mt->text) != concatMacroName)
+		return res;
+
+	// can only merge identifiers/numbers
+	if (ntok.type == TOK_ULONG)
+	{
+		// convert to ident => this is necessary for multiple concats
+		// however here's a catch - you can create identifiers that start with numbers this way
+		// I won't fix it - not worth the extra effort, because this is not a typical use case
+		auto loc = ntok.location;
+		ntok.SetString(String::Printf(LETHE_FORMAT_ULONG, ntok.number.l).Ansi());
+		ntok.location = loc;
+		res = ntok.type = TOK_IDENT;
+	}
+
+	if (ntok.type != TOK_IDENT)
+	{
+		ntok.type = TOK_INVALID;
+		return TOK_INVALID;
+	}
+
+	// try to concat!
+	Token nextTok;
+
+	// skip __concat
+	FetchTokenInternal(nextTok);
+
+	auto nextType = FetchToken(nextTok);
+
+	if (nextType != TOK_ULONG && nextType != TOK_IDENT)
+	{
+		ntok.type = TOK_INVALID;
+		return TOK_INVALID;
+	}
+
+	// concatenate!
+	StringBuilder sb = ntok.text;
+
+	if (nextType == TOK_ULONG)
+		sb.AppendFormat(LETHE_FORMAT_ULONG, nextTok.number.l);
+	else
+		sb += nextTok.text;
+
+	auto loc = ntok.location;
+	ntok.SetString(sb.Get().Ansi());
+	ntok.type = res;
+	ntok.location = loc;
+
+	return res;
+}
+
+TokenType TokenStream::FetchTokenInternal(Token &ntok)
+{
+	for (;;)
+	{
+	loop:
+		if (macroTokenStack.IsEmpty())
+			return lex->GetToken(ntok);
+
+		auto &ms = macroTokenStack.Back();
+
+		if (ms.index >= ms.end)
+		{
+			PopMacro();
+			continue;
+		}
+
+		ntok = *macroTokens[ms.index++];
+
+		if (ntok.type != TOK_IDENT)
+			break;
+
+		StringRef sr(ntok.text);
+
+		if (sr == lineMacroName)
+		{
+			ntok.SetULong(macroExpandLocation.line);
+		}
+		else if (sr == counterMacroName)
+		{
+			ntok.SetULong(macroExpandCounter-1);
+		}
+		else if (sr == fileMacroName)
+		{
+			ntok.SetString(macroExpandLocation.file.Ansi());
+		}
+		else if (sr == funcMacroName)
+		{
+			ntok.SetString(macroExpandFunction.Ansi());
+		}
+		else
+		{
+			if (sr == varArgCountMacroName && ms.argIndex < ms.argEnd &&
+				macroTokens[ms.argEnd-1]->type == TOK_ELLIPSIS)
+			{
+				const auto *mt = macroTokens[ms.argEnd-1];
+				ntok.SetULong(mt->userIndex);
+				break;
+			}
+
+			if (sr == stringizeMacroName && ms.index < ms.end)
+			{
+				auto *tok = macroTokens[ms.index++];
+
+				if (!StringizeMacroArg(ms, ntok, tok->text))
+					return TOK_INVALID;
+
+				break;
+			}
+
+			// try args
+			for (Int i=ms.argIndex; i<ms.argEnd; i++)
+			{
+				const auto *mt = macroTokens[i];
+
+				StringRef cmp;
+
+				if (mt->type == TOK_IDENT)
+					cmp = StringRef(mt->text);
+				else
+				{
+					LETHE_ASSERT(mt->type == TOK_ELLIPSIS);
+					cmp = varArgMacroName;
+				}
+
+				if (sr == cmp)
+				{
+					// unpack
+					Int start = (Int)(UInt)mt->number.l;
+					Int end = (Int)(UInt)(mt->number.l >> 32);
+
+					PushMacroArg(start, end);
+					goto loop;
+				}
+			}
+		}
+
+		break;
+	}
+
+	return ntok.type;
 }
 
 const Token &TokenStream::GetToken()
@@ -35,10 +212,13 @@ const Token &TokenStream::GetToken()
 
 	if (readPtr == writePtr)
 	{
+		auto owritePtr = writePtr;
+		auto ofullSize = fullSize;
+
 		buffer[writePtr].prevLocation = lex->GetTokenLocation();
 
 		// okay, we need to fetch next token
-		if (lex->GetToken(buffer[writePtr]) == TOK_EOF && eofIndex < eofTokens.GetSize())
+		if (FetchToken(buffer[writePtr]) == TOK_EOF && eofIndex < eofTokens.GetSize())
 		{
 			auto loc = buffer[writePtr].location;
 			*static_cast<Token *>(&buffer[writePtr]) = eofTokens[eofIndex++];
@@ -47,10 +227,54 @@ const Token &TokenStream::GetToken()
 
 		fullSize = Max(fullSize, writePtr+1);
 		AdvanceIndex(writePtr);
+
+		if (!macroLock)
+		{
+			const auto ttype = buffer[rp].type;
+
+			if (ttype == TOK_LBLOCK)
+				BeginMacroScope();
+			else if (ttype == TOK_RBLOCK)
+				EndMacroScope();
+			else if (ttype == TOK_IDENT)
+			{
+				auto idx = macros.FindIndex(StringRef(buffer[rp].text));
+
+				if (idx >= 0)
+				{
+					auto &m = *macros.GetValue(idx);
+
+					if (!m.locked)
+					{
+						if (macroTokenStack.IsEmpty())
+						{
+							macroExpandLocation = buffer[rp].location;
+							++macroExpandCounter;
+						}
+
+						writePtr = owritePtr;
+						fullSize = ofullSize;
+
+						if (!PushMacro(m))
+						{
+							buffer[rp].type = TOK_INVALID;
+							return buffer[rp];
+						}
+
+						writePtr = owritePtr;
+						fullSize = ofullSize;
+						readPtr = rp;
+
+						return GetToken();
+					}
+				}
+			}
+		}
 	}
 
 	AdvanceIndex(readPtr);
 	position++;
+
 	return buffer[rp];
 }
 
@@ -100,7 +324,7 @@ TokenLocation TokenStream::GetTokenLocation()
 {
 	Int rp = readPtr;
 	LETHE_ASSERT(rp >= 0);
-	return (rp < fullSize) ? buffer[rp].location : PeekToken().location;
+	return (rp < fullSize && rp != writePtr) ? buffer[rp].location : PeekToken().location;
 }
 
 bool TokenStream::Rewind()
@@ -110,7 +334,17 @@ bool TokenStream::Rewind()
 	position = 0;
 	eofIndex = 0;
 	eofTokens.Clear();
-	return 1;
+	macroScopeIndex = 0;
+	lastMacroScopeIndex = 0;
+	macros.Clear();
+	macroTokens.Clear();
+	macroTokenStack.Clear();
+	macroArgTokens.Clear();
+	macroLock = 0;
+	macroExpandCounter = 0;
+	macroExpandFunction.Clear();
+
+	return true;
 }
 
 void TokenStream::AppendEof(const Token &ntok)
@@ -145,6 +379,261 @@ void TokenStream::SetTokenLocation(TokenLocation tl)
 
 	tl.line += lineDelta;
 	lex->SetTokenLocation(tl);
+}
+
+bool TokenStream::AddSwapSimpleMacro(const String &name, Array<Token> &args, Array<Token> &tokens)
+{
+	LETHE_RET_FALSE(macros.FindIndex(name) < 0);
+
+	macros.Insert(name, new Macro());
+	auto &m = *macros[name];
+	m.name = name;
+	m.macroScopeIndex = macroScopeIndex;
+	Swap(args, m.args);
+	Swap(tokens, m.tokens);
+
+	m.argPtrs.Resize(m.args.GetSize());
+
+	for (Int i=0; i<m.argPtrs.GetSize(); i++)
+		m.argPtrs[i] = &m.args[i];
+
+	m.tokenPtrs.Resize(m.tokens.GetSize());
+
+	for (Int i=0; i<m.tokenPtrs.GetSize(); i++)
+		m.tokenPtrs[i] = &m.tokens[i];
+
+	lastMacroScopeIndex = macroScopeIndex;
+
+	return true;
+}
+
+void TokenStream::BeginMacroScope()
+{
+	++macroScopeIndex;
+}
+
+void TokenStream::EndMacroScope()
+{
+	// note: == should do
+	if (lastMacroScopeIndex >= macroScopeIndex)
+	{
+		for (auto it = macros.Begin(); it != macros.End();)
+		{
+			if (it->value->macroScopeIndex >= macroScopeIndex)
+				it = macros.Erase(it);
+			else
+				++it;
+		}
+
+		--lastMacroScopeIndex;
+	}
+
+	--macroScopeIndex;
+}
+
+void TokenStream::PushMacroArg(Int start, Int end)
+{
+	Int astart = macroTokens.GetSize();
+
+	for (Int i=start; i<end; i++)
+		macroTokens.Add(macroArgTokens[i]);
+
+	macroTokenStack.Add(MacroStack{astart, macroTokens.GetSize(), astart, astart, macroArgTokens.GetSize(), String()});
+}
+
+bool TokenStream::PushMacro(Macro &m)
+{
+	LETHE_ASSERT(!m.locked);
+	++m.locked;
+
+	Array<UniquePtr<Token>> margTokens;
+
+	if (!m.argPtrs.IsEmpty())
+	{
+		// need to parse macro args now!
+		// ulong: lo 32 bits = index into macroTokens (start), hi 32 bits = end in macroargtokens => yes!
+
+		Token tok;
+
+		LETHE_RET_FALSE(FetchToken_Expand(tok) == TOK_LBR);
+
+		bool hasEllipsis = m.argPtrs.Back()->type == TOK_ELLIPSIS;
+
+		if (hasEllipsis)
+			m.argPtrs.Back()->userIndex = 0;
+
+		// make sure we get as many as needed...
+		Int curArg = 0;
+		Int numArgs = m.argPtrs.GetSize();
+		Int minArgs = numArgs - hasEllipsis;
+		Int maxArgs = hasEllipsis ? 128 : minArgs;
+
+		// we'll need to count brace nesting level to properly parse arg separators...
+		// token-based problem: can't do empty args! (really?)
+
+		Int nesting = 0;
+		Int argTokenStart = 0;
+
+		auto flushArg = [&]()
+		{
+			auto *mt = m.argPtrs[curArg++];
+			mt->number.l = ULong(argTokenStart) + ((ULong)margTokens.GetSize() << 32);
+			argTokenStart = margTokens.GetSize();
+		};
+
+		bool ellipsisArgs = false;
+
+		for (;;)
+		{
+			auto tt = FetchToken_Expand(tok);
+
+			if (tt == TOK_RBR && --nesting < 0)
+			{
+				if (hasEllipsis && ellipsisArgs)
+					++m.argPtrs.Back()->userIndex;
+				break;
+			}
+
+			if (tt == TOK_LBR)
+				++nesting;
+
+			if (tt == TOK_COMMA && !nesting)
+			{
+				if (curArg < minArgs)
+				{
+					flushArg();
+					continue;
+				}
+				else if (hasEllipsis)
+				{
+					++m.argPtrs.Back()->userIndex;
+				}
+			}
+
+			ellipsisArgs = hasEllipsis && curArg >= minArgs;
+
+			// otherwise we continue parsing args...
+			margTokens.Add(new Token(tok));
+		}
+
+		flushArg();
+		LETHE_RET_FALSE(curArg >= minArgs && curArg <= maxArgs);
+	}
+
+	// never push empty macros => simplifies FetchToken
+	if (m.tokens.IsEmpty())
+	{
+		--m.locked;
+		return true;
+	}
+
+	auto argTokenIndex = macroArgTokens.GetSize();
+	auto argIndex = macroTokens.GetSize();
+
+	for (auto *it : m.argPtrs)
+		it->number.l += (ULong)argTokenIndex | ((ULong)argTokenIndex << 32);
+
+	macroTokens.Append(m.argPtrs);
+	macroArgTokens.Append(margTokens);
+
+	auto argEnd = macroTokens.GetSize();
+
+	auto start = macroTokens.GetSize();
+
+	macroTokens.Append(m.tokenPtrs);
+
+	auto end = macroTokens.GetSize();
+
+	macroTokenStack.Add(MacroStack{start, end, argIndex, argEnd, argTokenIndex, m.name});
+
+	return true;
+}
+
+void TokenStream::PopMacro()
+{
+	auto &s = macroTokenStack.Back();
+
+	if (!s.name.IsEmpty())
+		--macros[s.name]->locked;
+
+	macroTokens.Resize(s.argIndex);
+	macroArgTokens.Resize(s.argTokenIndex);
+	macroTokenStack.Pop();
+}
+
+bool TokenStream::StringizeMacroArg(const MacroStack &ms, Token &ntok, const char *argName)
+{
+	StringRef sw(argName);
+	const Token *found = nullptr;
+
+	for (Int i=ms.argIndex; i<ms.argEnd; i++)
+	{
+		const auto *mt = macroTokens[i];
+
+		StringRef cmp;
+
+		if (mt->type == TOK_IDENT)
+			cmp = StringRef(mt->text);
+		else
+		{
+			LETHE_ASSERT(mt->type == TOK_ELLIPSIS);
+			cmp = varArgMacroName;
+		}
+
+		if (cmp == sw)
+		{
+			found = mt;
+			break;
+		}
+	}
+
+	if (found)
+	{
+		// unpack
+		Int start = (Int)(UInt)found->number.l;
+		Int end = (Int)(UInt)(found->number.l >> 32);
+
+		StringBuilder sb;
+
+		for (Int i=start; i<end; i++)
+			lex->StringizeToken(*macroArgTokens[i], sb);
+
+		ntok.SetString(sb.Get().Ansi());
+		return true;
+	}
+
+	ntok.type = TOK_INVALID;
+	return false;
+}
+
+void TokenStream::EnableMacros(bool enable)
+{
+	macroLock += enable ? 1 : -1;
+}
+
+void TokenStream::SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName)
+{
+	lineMacroName = lineName;
+	fileMacroName = fileName;
+	counterMacroName = counterName;
+	funcMacroName = funcName;
+}
+
+void TokenStream::SetVarArgMacros(const String &varArgName, const String &varArgCountName)
+{
+	varArgMacroName = varArgName;
+	varArgCountMacroName = varArgCountName;
+}
+
+void TokenStream::SetStringizeMacros(const String &stringizeName, const String &concatName)
+{
+	stringizeMacroName = stringizeName;
+	concatMacroName = concatName;
+}
+
+void TokenStream::SetFuncName(const String &fname)
+{
+	macroExpandFunction = fname;
 }
 
 }

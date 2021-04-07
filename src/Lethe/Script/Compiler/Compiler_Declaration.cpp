@@ -177,7 +177,12 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 
 		if (!skipBody)
 		{
+			if (nname->type == AST_IDENT)
+				ts->SetFuncName(AstStaticCast<AstText *>(nname)->text);
+
 			fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0);
+			ts->SetFuncName(String());
+
 			LETHE_RET_FALSE(fbody);
 		}
 	}
@@ -1267,6 +1272,12 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			UniquePtr<AstNode> tdef = ParseUsing(depth+1);
 			LETHE_RET_FALSE(tdef);
 			ntype->Add(tdef.Detach());
+			continue;
+		}
+
+		if (nt.type == TOK_KEY_MACRO)
+		{
+			LETHE_RET_FALSE(ParseMacro(depth+1));
 			continue;
 		}
 
