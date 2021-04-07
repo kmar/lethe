@@ -326,6 +326,9 @@ integrated support for a simple, scoped, token-based macro preprocessor
 
 		special keywords: __VA_ARGS couple ellipsis, __VA_COUNT holds ellipsis argument count
 
+* special keywords inside macros:
+	* __LINE, __FILE, __func and __COUNTER (just like the C preprocessor counterpart)
+
 * stringizing, concatenating
 	* simply __stringize x, where x is a macro argument name (equivalent to #x in C preprocessor)
 	* concatenation: a __concat b __concat c (equivalent to a ## b ## c)
