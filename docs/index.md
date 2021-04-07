@@ -420,6 +420,20 @@ can't skip over variable declarations
 * function return: **return** _expr_
 * **defer** _statement_, defer execution of statement to the end of the block; inspired by Go
 	* this would be a killer feature for C, eliminating bailouts
+* range-based for
+	unlike C++, it operates on indices
+	* primarily used to iterate arrays
+	* it_index is an internal variable, holds index even when iterating by value/reference
+	* works with integers too! (forward only)
+```cpp
+	// iterates from 0 to count-1, inclusive
+	for (int i : count);
+	// iterates from 10 to 19, inclusive
+	for (int i=10 : 20);
+	// iterate by reference, modifying an array, fills elems with 0, 1, 2, ...
+	for (auto &it : arr)
+		it = it_index;
+```
 
 <a id="missing_features"></a>
 #### missing features
