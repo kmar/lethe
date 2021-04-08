@@ -78,6 +78,9 @@ public:
 	ScriptEngine(EngineMode emode);
 	virtual ~ScriptEngine();
 
+	// get actual script engine mode, if JIT is not available
+	EngineMode GetMode() const {return mode;}
+
 	// by default JIT or RELEASE don't do runtime checks
 	// they can be enabled here (must be called before linking)
 	// note: RT checks cannot be disabled in debug mode
