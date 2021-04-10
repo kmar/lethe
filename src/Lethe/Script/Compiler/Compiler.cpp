@@ -639,10 +639,7 @@ bool Compiler::ParseMacroInternal(bool conditionalOnly)
 	if (conditionalOnly)
 		return true;
 
-	Array<Token> swargs = args;
-	Array<Token> swtokens = tokens;
-
-	if (!ts->AddSwapSimpleMacro(tname, swargs, swtokens))
+	if (!ts->AddSwapSimpleMacro(tname, args, tokens))
 		ErrorLoc(String::Printf("illegal macro redefinition: `%s'", tname.Ansi()), ntokLoc);
 
 	return true;
