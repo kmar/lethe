@@ -605,7 +605,7 @@ bool TokenStream::StringizeMacroArg(const MacroStack &ms, Token &ntok, const cha
 
 			bool isOperator = mt->type == TOK_LAND || mt->type == TOK_LOR;
 
-			if (i > start && isOperator != lastOperator || (isOperator && lastOperator))
+			if (i > start && (isOperator != lastOperator || (isOperator && lastOperator)))
 				sb += ' ';
 
 			lex->StringizeToken(*mt, sb);
