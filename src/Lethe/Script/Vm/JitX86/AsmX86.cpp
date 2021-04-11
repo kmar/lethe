@@ -1,5 +1,7 @@
 #include "AsmX86.h"
 
+#if LETHE_CPU_X86 && (LETHE_OS_WINDOWS || LETHE_64BIT)
+
 namespace lethe
 {
 
@@ -1491,3 +1493,5 @@ AsmX86::Cond AsmX86::FlipCond(Cond cond)
 
 
 }
+
+#endif
