@@ -518,6 +518,7 @@ bool TokenStream::PushMacro(Macro &m)
 			margTokens.Add(new Token(tok));
 		}
 
+		LETHE_RET_FALSE(curArg < m.argPtrs.GetSize());
 		flushArg();
 		LETHE_RET_FALSE(curArg >= minArgs && curArg <= maxArgs);
 	}
