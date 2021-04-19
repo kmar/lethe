@@ -3,7 +3,7 @@
 #include <Lethe/Script/Program/ConstPool.h>
 #include "../Builtin.h"
 
-#if LETHE_CPU_X86 && (LETHE_OS_WINDOWS || LETHE_64BIT)
+#if LETHE_JIT_X86
 
 namespace lethe
 {

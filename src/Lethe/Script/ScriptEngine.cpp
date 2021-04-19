@@ -45,8 +45,7 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 	: mode(emode)
 {
 	// check if JIT available
-	// FIXME: better!
-#if LETHE_CPU_X86 && (LETHE_OS_WINDOWS || LETHE_64BIT)
+#if LETHE_JIT_X86
 	if (emode == ENGINE_JIT)
 		vmJit = new VmJitX86;
 #else

@@ -13,9 +13,7 @@
 namespace lethe
 {
 
-// we don't support JITting for 32-bit non-Windows platforms (due to 16-byte stack alignment requirements)
-// might fix this later
-#if LETHE_CPU_X86 && (LETHE_OS_WINDOWS || LETHE_64BIT)
+#if LETHE_JIT_X86
 
 // VmJitX86
 
