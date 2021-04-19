@@ -10,6 +10,9 @@ namespace lethe
 
 bool AstBreak::CodeGen(CompiledProgram &p)
 {
+	if (flags & AST_F_SKIP_CGEN)
+		return true;
+
 	LETHE_ASSERT(scopeRef);
 	// note: must be separate because of eval order!
 	NamedScope *bscope = p.BreakScope();

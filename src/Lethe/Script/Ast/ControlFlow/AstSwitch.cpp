@@ -58,10 +58,7 @@ bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx, bool removeBreak)
 	if (last->type == AST_BREAK)
 	{
 		if (removeBreak)
-		{
-			delete last;
-			node->nodes.Pop();
-		}
+			last->flags |= AST_F_SKIP_CGEN;
 
 		return false;
 	}
@@ -71,10 +68,8 @@ bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx, bool removeBreak)
 		last->nodes.Back()->type == AST_BREAK)
 	{
 		if (removeBreak)
-		{
-			delete last->nodes.Back();
-			last->nodes.Pop();
-		}
+			last->nodes.Back()->flags |= AST_F_SKIP_CGEN;
+
 		return false;
 	}
 
