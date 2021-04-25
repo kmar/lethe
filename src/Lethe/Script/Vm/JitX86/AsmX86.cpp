@@ -1470,27 +1470,6 @@ void AsmX86::EmitImm(UInt i, MemSize sz)
 		Emit(i);
 }
 
-AsmX86::Cond AsmX86::FlipCond(Cond cond)
-{
-	static const Cond flipCond[] =
-	{
-		COND_ALWAYS,
-		COND_NZ,
-		COND_Z,
-		COND_GE,
-		COND_GT,
-		COND_LE,
-		COND_LT,
-		COND_UGE,
-		COND_UGT,
-		COND_ULE,
-		COND_ULT,
-		COND_NP,
-		COND_P
-	};
-	return flipCond[cond];
-}
-
 
 }
 

@@ -272,8 +272,6 @@ public:
 	void Emit16(UInt i);
 	void EmitImm(UInt i, MemSize sz);
 
-	static Cond FlipCond(Cond cond);
-
 	Int GenSIB(const RegExpr &re, bool fulldisp);
 	void EmitModRm(const RegExpr &dst, const RegExpr &src, Int modshift = 0);
 	void EmitModRmDirect(Int val, const RegExpr &src, Int modshift = 0);
