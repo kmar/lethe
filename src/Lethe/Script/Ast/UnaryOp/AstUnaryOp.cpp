@@ -116,7 +116,12 @@ QDataType AstUnaryOp::GetTypeDesc(const CompiledProgram &p) const
 	if (type == AST_UOP_LNOT)
 		res.ref = &p.elemTypes[DT_BOOL];
 	else
+	{
 		res = qdt;
+		// for smaller int types, the type is int!
+		if (qdt.IsSmallNumber())
+			res.ref = &p.elemTypes[DT_INT];
+	}
 
 	return res;
 }
