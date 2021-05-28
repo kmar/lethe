@@ -171,6 +171,14 @@ static const int BITS = 32;
 #endif
 
 #if LETHE_COMPILER_GCC
+#	define LETHE_FORMAT_ATTR_FUNC_SUFFIX __attribute__ ((format (printf, 1, 2)))
+#	define LETHE_FORMAT_ATTR_METHOD_SUFFIX __attribute__ ((format (printf, 2, 3)))
+#else
+#	define LETHE_FORMAT_ATTR_FUNC_SUFFIX
+#	define LETHE_FORMAT_ATTR_METHOD_SUFFIX
+#endif
+
+#if LETHE_COMPILER_GCC
 // this fixes annoying clang warnings
 #	define LETHE_VISIBLE __attribute__((visibility("default")))
 #else

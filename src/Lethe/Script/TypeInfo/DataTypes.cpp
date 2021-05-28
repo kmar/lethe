@@ -328,7 +328,7 @@ String DataType::GetName() const
 		;
 	}
 
-	return String::Printf("%p", this);
+	return String::Printf("%p", (const void *)this);
 }
 
 String DataType::GetSimpleTypeName(DataTypeEnum dte)
@@ -2024,7 +2024,7 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 				sb += String::Printf((vidx & 2) ? "struct: %p " : "obj: %p ", ptrval);
 
 				if (vidx & 1)
-					sb += String::Printf("vtblidx: %d", vidx >> 2);
+					sb += String::Printf("vtblidx: %d", int(vidx >> 2));
 				else
 				{
 					vidx &= ~(UIntPtr)3;

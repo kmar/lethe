@@ -239,11 +239,11 @@ public:
 	int DecodeCharAt(int byteIndex) const;
 
 	// in-place format (C string)
-	String &Format(const char *fmt, ...);
+	String &Format(const char *fmt, ...) LETHE_FORMAT_ATTR_METHOD_SUFFIX;
 
 	// static versions of Format
 	// FIXME: better name?!
-	static String Printf(const char *fmt, ...);
+	static String Printf(const char *fmt, ...) LETHE_FORMAT_ATTR_FUNC_SUFFIX;
 
 	// compare to ansi/multibyte string
 	// character by character, no collation

@@ -40,8 +40,8 @@ public:
 		return data[idx];
 	}
 
-	StringBuilder &AppendFormat(const char *fmt, ...);
-	StringBuilder &Format(const char *fmt, ...);
+	StringBuilder &AppendFormat(const char *fmt, ...) LETHE_FORMAT_ATTR_METHOD_SUFFIX;
+	StringBuilder &Format(const char *fmt, ...) LETHE_FORMAT_ATTR_METHOD_SUFFIX;
 
 	operator StringRef() const;
 
