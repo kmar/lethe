@@ -210,8 +210,11 @@ Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve)
 
 		if (this->data)
 		{
-			if (MemCopyTraits<T>::VALUE && newSize > 0)
-				MemCpy(newData, this->data, (size_t)newSize*sizeof(T));
+			if (MemCopyTraits<T>::VALUE)
+			{
+				if (newSize > 0)
+					MemCpy(newData, this->data, (size_t)newSize*sizeof(T));
+			}
 			else
 			{
 				for (S i=0; i<newSize; i++)
