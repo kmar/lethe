@@ -156,6 +156,8 @@ __intrinsic class object
 {
 	// is derived from n?
 	nodiscard native __intrinsic final bool is(name n) const;
+	// is derived from any of n?
+	nodiscard native final bool is_anyof(const name[] n) const;
 	// get class name
 	nodiscard native final name class_name() const;
 	// get non-state class name

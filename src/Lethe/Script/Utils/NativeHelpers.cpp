@@ -995,11 +995,33 @@ void objSetVtable(Stack &stk)
 	stk.SetInt(2, res);
 }
 
+void objIsAnyOf(Stack &stk)
+{
+	// stack: [0] = pushed this, [1] = aref<name> [2] = result (bool)
+	// param: none
+	ArgParserMethod ap(stk);
+	auto &names = ap.Get<ArrayRef<Name>>();
+	bool &res = ap.Get<bool>();
+	auto *obj = (BaseObject *)stk.GetThis();
+	auto *objCls = obj->GetScriptClassType();
+
+	res = false;
+
+	for (auto it : names)
+	{
+		if (objCls->IsA(it))
+		{
+			res = true;
+			break;
+		}
+	}
+}
+
 void objGetClassName(Stack &stk)
 {
 	// stack: [0] = pushed this, [1] = result (name)
 	// param: none
-	auto obj = (BaseObject *)stk.GetThis();
+	auto *obj = (BaseObject *)stk.GetThis();
 	auto *objCls = obj->GetScriptClassType();
 
 	stk.SetInt(1, objCls->className.GetIndex());
@@ -1583,6 +1605,7 @@ void NativeHelpers::Init(CompiledProgram &p)
 
 	// object extensions:
 	p.cpool.BindNativeFunc("object::vtable", objSetVtable);
+	p.cpool.BindNativeFunc("object::is_anyof", objIsAnyOf);
 	p.cpool.BindNativeFunc("object::class_name", objGetClassName);
 	p.cpool.BindNativeFunc("object::nonstate_class_name", objGetNonStateClassName);
 	p.cpool.BindNativeFunc("object::fix_state_name", objFixStateName);
