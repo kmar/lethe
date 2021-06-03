@@ -437,7 +437,7 @@ bool AstFunc::AnalyzeFlow(CompiledProgram &p, Int startPC) const
 
 bool AstFunc::CodeGen(CompiledProgram &p)
 {
-	if ((flags & AST_F_SKIP_CGEN) && !(qualifiers & AST_Q_FUNC_REFERENCED))
+	if ((flags & AST_F_SKIP_CGEN) && !(qualifiers & (AST_Q_FUNC_REFERENCED | AST_Q_CTOR | AST_Q_DTOR)))
 		return true;
 
 	if (!(qualifiers & AST_Q_NATIVE) && IDX_BODY >= nodes.GetSize())
