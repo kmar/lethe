@@ -802,7 +802,7 @@ SharedPtr<ScriptContext> ScriptEngine::CreateContext(Int stkSize)
 	res->mode = mode;
 	res->vm->SetProgram(program);
 
-	auto execFlags = mode == ENGINE_DEBUG ? Vm::EXEC_DEBUG : 0;
+	auto execFlags = (mode == ENGINE_DEBUG || mode == ENGINE_DEBUG_NOBREAK) ? Vm::EXEC_DEBUG : 0;
 
 	if (mode == ENGINE_DEBUG_NOBREAK)
 		execFlags |= Vm::EXEC_NO_BREAK;

@@ -182,6 +182,9 @@ ExecResult Vm::ExecutePtr(const void *adr)
 					return res;
 				}
 
+				if (noBreakMode && res == EXEC_EXCEPTION)
+					return res;
+
 				hitBreakpoint = res == EXEC_BREAKPOINT || res == EXEC_EXCEPTION;
 
 				if (hitBreakpoint)
