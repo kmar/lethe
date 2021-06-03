@@ -311,6 +311,15 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 	{
 		auto *n = nodes[i];
 
+		// templates...
+		if (n->type == AST_TYPEDEF)
+		{
+			auto *ntn = n->GetTypeNode();
+
+			if (ntn)
+				n = const_cast<AstNode *>(ntn);
+		}
+
 		if (n->type != AST_CLASS)
 			LETHE_RET_FALSE(n->TypeGen(p));
 		else
