@@ -712,7 +712,12 @@ Array<String> Vm::GetThis(Int pc, Int startpc) const
 				tmp.Format("%s = ", m.name.Ansi());
 
 				StringBuilder sb;
-				m.type.ref->GetVariableText(sb, thisptr + m.offset);
+				auto *mptr = thisptr + m.offset;
+
+				if (m.type.IsReference())
+					mptr = reinterpret_cast<const Byte *>(*(const void **)mptr);
+
+				m.type.ref->GetVariableText(sb, mptr);
 				tmp += sb.Get();
 
 				res.Add(tmp);

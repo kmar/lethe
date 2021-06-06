@@ -1985,7 +1985,13 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 			const auto &m = members[i];
 			sb += m.name;
 			sb += '=';
-			m.type.GetType().GetVariableTextInternal(hset, sb, bptr + m.offset, maxLen);
+
+			auto *mptr = bptr + m.offset;
+
+			if (m.type.IsReference())
+				mptr = reinterpret_cast<const Byte *>(*(const void **)mptr);
+
+			m.type.GetType().GetVariableTextInternal(hset, sb, mptr, maxLen);
 
 			if (i+1 < members.GetSize())
 				sb += ", ";
