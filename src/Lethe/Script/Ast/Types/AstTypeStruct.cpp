@@ -497,8 +497,8 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 		//if (mtype.HasArrayRef())
 		//	return p.Error(mn, "members cannot be array references");
 
-		if (mtype.IsReference())
-			return p.Error(mn, "members cannot be references");
+		if (mtype.IsReference() && !(mtype.qualifiers & AST_Q_NATIVE))
+			return p.Error(mn, "non-native members cannot be references");
 
 		qualifiers |= mtype.qualifiers & AST_Q_NOCOPY;
 
