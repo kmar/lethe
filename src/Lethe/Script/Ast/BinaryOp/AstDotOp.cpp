@@ -331,6 +331,9 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 		if (m->offset)
 			p.EmitI24(OPC_AADD_ICONST, m->offset);
 
+		if (m->type.IsReference())
+			p.Emit(OPC_PLOADPTR_IMM);
+
 		if (derefPtr && m->node->GetTypeDesc(p).IsPointer())
 			p.Emit(OPC_PLOADPTR_IMM);
 
