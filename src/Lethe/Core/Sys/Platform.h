@@ -147,7 +147,8 @@ static const int BITS = 32;
 #	define LETHE_FORMAT_INTPTR_SUFFIX "Id"
 #	define LETHE_FORMAT_UINTPTR_SUFFIX "Iu"
 #else
-#	if LETHE_64BIT && !LETHE_OS_OSX
+	// FIXME: where was this condition supposed to work?!
+#	if 0 && LETHE_64BIT && !LETHE_OS_OSX
 #		define LETHE_FORMAT_LONG "%ld"
 #		define LETHE_FORMAT_ULONG "%lu"
 #		define LETHE_FORMAT_ULONG_HEX "%lx"
