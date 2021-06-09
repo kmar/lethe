@@ -130,6 +130,8 @@ class LETHE_API VmJitBase
 public:
 	virtual ~VmJitBase() {}
 
+	virtual Int GetPCFromCodePtr(const void * /*codePtr*/) const {return -1;}
+
 	virtual const void *GetCodePtr(Int pc) const = 0;
 
 	virtual bool GetJitCode(const Byte *&ptr, Int &size) = 0;

@@ -880,14 +880,9 @@ const void *ScriptEngine::MethodIndexToPointer(Int idx) const
 	return res;
 }
 
-String ScriptEngine::FindFunctionNameNear(const void *ptr) const
+String ScriptEngine::FindFunctionNameNearPC(Int pc) const
 {
 	String res;
-
-	if (!ptr || !program || vmJit)
-		return res;
-
-	auto pc = (Int)(IntPtr)(static_cast<const Int *>(ptr) - program->instructions.GetData());
 
 	while (pc >= 0)
 	{
@@ -903,6 +898,57 @@ String ScriptEngine::FindFunctionNameNear(const void *ptr) const
 	}
 
 	return res;
+}
+
+String ScriptEngine::FindFunctionNameNear(const void *ptr) const
+{
+	String res;
+
+	if (!ptr || !program || vmJit)
+		return res;
+
+	auto pc = (Int)(IntPtr)(static_cast<const Int *>(ptr) - program->instructions.GetData());
+
+	res = FindFunctionNameNearPC(pc);
+	return res;
+}
+
+Int ScriptEngine::JitCodeToPC(const void *adr) const
+{
+	return vmJit ? vmJit->GetPCFromCodePtr(adr) : -1;
+}
+
+String ScriptEngine::GetLocationDescriptionAtPC(Int pc) const
+{
+	if (pc < 0 || !program)
+		return String();
+
+	auto fname = FindFunctionNameNearPC(pc);
+
+	auto opc = pc;
+
+	CompiledProgram::CodeToLine cl;
+	cl.pc = opc;
+	cl.line = 0;
+
+	auto ci = LowerBound(program->codeToLine.Begin(), program->codeToLine.End(), cl);
+	String extra;
+
+	if (ci == program->codeToLine.End() && !program->codeToLine.IsEmpty())
+	{
+		--ci;
+		opc = ci->pc;
+	}
+
+	if (ci != program->codeToLine.End())
+	{
+		if (ci->pc != opc && ci > program->codeToLine.Begin())
+			--ci;
+
+		extra.Format(" [%d: %s]", ci->line, ci->file.Ansi());
+	}
+
+	return fname + extra;
 }
 
 String ScriptEngine::FindFunctionName(const void *ptr) const

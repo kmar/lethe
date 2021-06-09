@@ -180,6 +180,15 @@ public:
 	// same as above but looks up for function start
 	// note: only works in intepreter mode
 	String FindFunctionNameNear(const void *ptr) const;
+	// find function name near program counter
+	String FindFunctionNameNearPC(Int pc) const;
+
+	// convert from JIT code address to bytecode program counter
+	// return -1 if not found (or if in interpreter mode)
+	Int JitCodeToPC(const void *adr) const;
+
+	// get location description at program counter
+	String GetLocationDescriptionAtPC(Int pc) const;
 
 	// find method index for class
 	// 0 = not found, <0 = -vtbl_index, >0 = PC offset

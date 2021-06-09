@@ -23,6 +23,8 @@ class LETHE_API VmJitX86 : public VmJitBase, public AsmX86
 public:
 	VmJitX86();
 
+	Int GetPCFromCodePtr(const void *codePtr) const override;
+
 	const void *GetCodePtr(Int pc) const override;
 
 	bool GetJitCode(const Byte *&ptr, Int &size) override;

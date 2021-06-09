@@ -599,9 +599,7 @@ String Vm::GetFullCallStack(Int pc, Int opc) const
 		if (ci->pc != opc && ci > prog->codeToLine.Begin())
 			--ci;
 
-		extra = " ";
-		extra += String::Printf("[%d: %s]",
-								ci->line, ci->file.Ansi());
+		extra.Format(" [%d: %s]", ci->line, ci->file.Ansi());
 	}
 
 	return GetFuncName(pc) + extra;

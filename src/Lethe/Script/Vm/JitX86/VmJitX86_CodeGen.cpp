@@ -2264,6 +2264,37 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 #undef VMJITX86_OPT_CMP_JMP_FLOAT_CUSTOM
 }
 
+Int VmJitX86::GetPCFromCodePtr(const void *codePtr) const
+{
+	const auto *cbase = code.GetData();
+	const Byte *cptr = static_cast<const Byte *>(codePtr);
+
+	if (cptr < cbase || cptr > cbase + code.GetSize())
+		return -1;
+
+	Int res = -1;
+	IntPtr bestDist = IntPtr(~(UIntPtr)0 >> 1);
+
+	// find closest pcToCode less than this
+	for (Int i=0; i<pcToCode.GetSize(); i++)
+	{
+		const auto *adr = cbase + pcToCode[i];
+
+		if (adr > cptr)
+			continue;
+
+		auto diff = IntPtr(cptr - adr);
+
+		if (diff < bestDist)
+		{
+			bestDist = diff;
+			res = i;
+		}
+	}
+
+	return res;
+}
+
 const void *VmJitX86::GetCodePtr(Int pc) const
 {
 	if (pc < 0 || pc >= pcToCode.GetSize())
