@@ -975,7 +975,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 			p.EmitIntConst(typeIndex);
 			p.EmitI24(OPC_BCALL, BUILTIN_NATIVE_DTOR);
 
-			if (type == DT_CLASS)
+			if (type == DT_CLASS && base)
 			{
 				// call base dtor now
 				auto tbase = base;
@@ -2124,7 +2124,7 @@ String DataType::FindMethodName(const ScriptDelegate &dg, const CompiledProgram 
 
 	// otherwise it's instruction ptr
 	fptr &= ~(UIntPtr)3;
-	auto pc = Int(static_cast<const Instruction *>(dg.funcPtr) - prog.instructions.GetData());
+	auto pc = Int(reinterpret_cast<const Instruction *>(fptr) - prog.instructions.GetData());
 	return FindMethodName(pc);
 }
 

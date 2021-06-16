@@ -251,6 +251,7 @@ AstNode::AstNode(AstNodeType ntype, const TokenLocation &nloc)
 	, symScopeRef(nullptr)
 	, qualifiers(0)
 	, location(nloc)
+	, cachedIndex(-1)
 {
 	num.d = 0;
 }
@@ -510,7 +511,10 @@ bool AstNode::ReplaceChild(AstNode *oldc, AstNode *newc)
 			}
 
 			newc->parent = this;
-			newc->location = oldc->location;
+
+			if (oldc)
+				newc->location = oldc->location;
+
 			newc->cachedIndex = i;
 			nodes[i] = newc;
 

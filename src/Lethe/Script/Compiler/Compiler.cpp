@@ -320,7 +320,7 @@ Attributes *Compiler::ParseAttributes()
 	const auto &tok = ts->GetToken();
 	LETHE_RET_FALSE(ExpectPrev(tok.type == TOK_LARR, "not an attribute list"));
 
-	Attributes *res = new Attributes;
+	UniquePtr<Attributes> res = new Attributes;
 
 	Int count = 1;
 
@@ -339,7 +339,7 @@ Attributes *Compiler::ParseAttributes()
 		res->tokens.Add(t);
 	}
 
-	return res;
+	return res.Detach();
 }
 
 bool Compiler::ParseDirective(Int lineNumber)

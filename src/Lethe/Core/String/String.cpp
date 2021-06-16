@@ -324,12 +324,14 @@ String &String::ContChange()
 
 String &String::Clear()
 {
+#ifndef __clang_analyzer__
 	if (data)
 	{
 		StringData *dt = data;
 		data = nullptr;
 		dt->Release();
 	}
+#endif
 
 	return *this;
 }
@@ -390,7 +392,9 @@ String &String::operator =(const String &str)
 
 	if (str.data)
 	{
+#ifndef __clang_analyzer__
 		str.data->AddRef();
+#endif
 		data = str.data;
 	}
 
@@ -951,7 +955,11 @@ String &String::Shrink()
 // string length in bytes
 int String::GetLength() const
 {
+#if defined(__clang_analyzer__)
+	return 0;
+#else
 	return !data ? 0 : data->length;
+#endif
 }
 
 bool String::IsEmpty() const

@@ -290,8 +290,9 @@ void DynamicArray::DestroyObjectRange(ScriptContext &ctx, const DataType &dt, By
 		// strings require special handling!
 		auto *pstr = reinterpret_cast<String *>(ptr);
 
-		while (elemCount-- > 0)
-			pstr++->~String();
+		if (pstr)
+			while (elemCount-- > 0)
+				pstr++->~String();
 
 		return;
 	}
