@@ -1886,7 +1886,7 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 		{
 			auto obj = static_cast<const BaseObject *>(ptrval);
 
-			sb.AppendFormat("%p#%d/%d", ptrval, obj->strongRefCount, obj->weakRefCount);
+			sb.AppendFormat("0x%p#%d/%d", ptrval, obj->strongRefCount, obj->weakRefCount);
 
 			if (depth0)
 			{
@@ -2027,7 +2027,7 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 			if (type == DT_DELEGATE)
 			{
 				auto vidx = (UIntPtr)funptr;
-				sb += String::Printf((vidx & 2) ? "struct: %p " : "obj: %p ", ptrval);
+				sb += String::Printf((vidx & 2) ? "struct: 0x%p " : "obj: 0x%p ", ptrval);
 
 				if (vidx & 1)
 					sb += String::Printf("vtblidx: %d", int(vidx >> 2));
@@ -2035,11 +2035,11 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 				{
 					vidx &= ~(UIntPtr)3;
 					funptr = (const void *)vidx;
-					sb += String::Printf("funptr: %p", funptr);
+					sb += String::Printf("funptr: 0x%p", funptr);
 				}
 			}
 			else
-				sb += String::Printf("funptr: %p", funptr);
+				sb += String::Printf("funptr: 0x%p", funptr);
 		}
 	}
 	break;
