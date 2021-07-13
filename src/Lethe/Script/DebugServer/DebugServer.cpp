@@ -337,7 +337,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 				if (!it->InBreakMode())
 					break;
 
-				auto cstk = it->GetCallStack();
+				auto cstk = it->GetCallStack(65536);
 
 				for (auto &&it2 : cstk)
 					sb.AppendFormat("%s\n", it2.Ansi());
