@@ -105,10 +105,10 @@ Int ScriptContext::GetCallStackDepth() const
 	return vm->GetCallStackDepth(iptr);
 }
 
-Array<String> ScriptContext::GetCallStack() const
+Array<String> ScriptContext::GetCallStack(Int maxVarTextLen) const
 {
 	auto iptr = vmStack->insPtr;
-	return vm->GetCallStack(iptr);
+	return vm->GetCallStack(iptr, maxVarTextLen);
 }
 
 ExecResult ScriptContext::RunConstructors()

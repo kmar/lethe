@@ -170,12 +170,12 @@ public:
 	template<Int flags>
 	ExecResult ExecuteTemplate(const Instruction *iptr);
 
-	Array<String> GetCallStack(const Instruction *iptr) const;
+	Array<String> GetCallStack(const Instruction *iptr, Int maxVarTextLen = 1024) const;
 	Int GetCallStackDepth(const Instruction *iptr) const;
 	// get locals for stack frame
-	Array<String> GetLocals(const Instruction *iptr, const Stack::StackWord *sptr, bool withType = false) const;
+	Array<String> GetLocals(const Instruction *iptr, const Stack::StackWord *sptr, bool withType = false, Int maxVarTextLen = 1024) const;
 	// get this for stack frame (program counter), startpc = function start pc
-	Array<String> GetThis(Int pc,Int startpc) const;
+	Array<String> GetThis(Int pc,Int startpc, Int maxVarTextLen = 1024) const;
 
 	// find script func, returns pc index (or -1 if not found)
 	Int FindFunc(const StringRef &fname) const;

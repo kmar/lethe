@@ -78,7 +78,7 @@ public:
 		return *vm;
 	}
 
-	Array<String> GetCallStack() const;
+	Array<String> GetCallStack(Int maxVarTextLen = 1024) const;
 	// get callstack depth, useful for step over/step out
 	Int GetCallStackDepth() const;
 

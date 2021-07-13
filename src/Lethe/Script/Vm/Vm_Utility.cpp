@@ -633,7 +633,7 @@ Int Vm::GetFullCallStackDepth(Int pc, Int opc) const
 	return res;
 }
 
-Array<String> Vm::GetThis(Int pc, Int startpc) const
+Array<String> Vm::GetThis(Int pc, Int startpc, Int maxVarTextLen) const
 {
 	Array<String> res;
 
@@ -715,7 +715,7 @@ Array<String> Vm::GetThis(Int pc, Int startpc) const
 				if (m.type.IsReference())
 					mptr = reinterpret_cast<const Byte *>(*(const void **)mptr);
 
-				m.type.ref->GetVariableText(sb, mptr);
+				m.type.ref->GetVariableText(sb, mptr, maxVarTextLen);
 				tmp += sb.Get();
 
 				res.Add(tmp);
@@ -785,7 +785,7 @@ Int Vm::GetCallStackDepth(const Instruction *iptr) const
 	return res;
 }
 
-Array<String> Vm::GetCallStack(const Instruction *iptr) const
+Array<String> Vm::GetCallStack(const Instruction *iptr, Int maxVarTextLen) const
 {
 	Array<String> res;
 
@@ -798,7 +798,7 @@ Array<String> Vm::GetCallStack(const Instruction *iptr) const
 
 	const Stack::StackWord *stkptr = stk.GetTop();
 
-	auto locals = GetLocals(iptr, stkptr);
+	auto locals = GetLocals(iptr, stkptr, false, maxVarTextLen);
 	res.Add("=== locals: ===");
 	res.Append(locals);
 	res.Add("");
@@ -821,7 +821,7 @@ Array<String> Vm::GetCallStack(const Instruction *iptr) const
 		if (idx == 0)
 		{
 			// try to extract "this"
-			auto tmp = GetThis(opc, pc);
+			auto tmp = GetThis(opc, pc, maxVarTextLen);
 
 			if (!tmp.IsEmpty())
 			{
@@ -852,7 +852,7 @@ Array<String> Vm::GetCallStack(const Instruction *iptr) const
 	return res;
 }
 
-Array<String> Vm::GetLocals(const Instruction *iptr, const Stack::StackWord *sptr, bool withType) const
+Array<String> Vm::GetLocals(const Instruction *iptr, const Stack::StackWord *sptr, bool withType, Int maxVarTextLen) const
 {
 	Array<String> res;
 
@@ -886,7 +886,7 @@ Array<String> Vm::GetLocals(const Instruction *iptr, const Stack::StackWord *spt
 		{
 			str += " = ";
 			StringBuilder sb;
-			lv.type.GetType().GetVariableText(sb, frame + lv.offset/Stack::WORD_SIZE);
+			lv.type.GetType().GetVariableText(sb, frame + lv.offset/Stack::WORD_SIZE, maxVarTextLen);
 			str += sb.Get();
 			res.Add(str);
 		}
@@ -900,7 +900,7 @@ Array<String> Vm::GetLocals(const Instruction *iptr, const Stack::StackWord *spt
 			else
 			{
 				StringBuilder sb;
-				lv.type.GetType().GetVariableText(sb, tmp);
+				lv.type.GetType().GetVariableText(sb, tmp, maxVarTextLen);
 				str += sb.Get();
 			}
 
