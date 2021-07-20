@@ -46,7 +46,7 @@ void AstTypeDynamicArray::CopyTo(AstNode *n) const
 	auto *tmp = AstStaticCast<AstTypeDynamicArray *>(n);
 
 	if (aref)
-		tmp->aref = AstStaticCast<AstTypeArrayRef *>(aref->Clone());
+		tmp->GetArrayRefNode();
 }
 
 

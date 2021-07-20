@@ -102,7 +102,7 @@ void AstUnaryRef::CopyTo(AstNode *n) const
 	auto *tmp = AstStaticCast<AstUnaryRef *>(n);
 
 	if (aref)
-		tmp->aref = AstStaticCast<AstTypeArrayRef *>(aref->Clone());
+		tmp->GetArrayRefNode();
 }
 
 
