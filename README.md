@@ -25,7 +25,7 @@ note: experimental, work in progress, there will most likely be bugs => use at y
 	* no multi-threaded compilation of scripts
 	* no bytecode serialization
 	* optional dumb JIT for x86/x64
-	* [debugger - win64/linux - binary only](https://github.com/kmar/lethe_debugger/releases)
+	* [debugger - win64/linux/OSX - binary only](https://github.com/kmar/lethe_debugger/releases)
 
 * todo:
 	* clean up/simplify/modernize
