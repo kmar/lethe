@@ -1525,7 +1525,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		else
 			LETHE_RET_FALSE(EmitPtrLoad(resType, p));
 
-		if (!resType.IsReference() && parent->type == AST_EXPR)
+		if (!resType.IsReference() && parent && parent->type == AST_EXPR)
 		{
 			// technically we should just delete the array, but it'd be complicated and dumb so we rather abort
 			// with an error
