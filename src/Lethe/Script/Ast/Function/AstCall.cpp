@@ -731,6 +731,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	String fname;
 	auto *fdef = forceFunc ? forceFunc : FindFunction(fname);
 
+	if (!fdef)
+		return p.Error(this, "function to call not found!");
+
 	if ((fdef->qualifiers & AST_Q_NATIVE) && forceFunc && fname.IsEmpty())
 	{
 		// get better operator name for native binding
