@@ -365,6 +365,7 @@ Int Opcode_New_Internal(Stack &stk)
 		auto ptr = ObjectHeap::Get().Alloc(dt->size, dt->align);
 		MemSet(ptr, 0, dt->size);
 		::new(ptr) BaseObject;
+		stk.GetContext().GetEngine().onNewObject(static_cast<BaseObject *>(ptr), *dt);
 		stk.PushPtr(ptr);
 		stk.PushPtr(ptr);
 		auto obj = static_cast<BaseObject *>(ptr);
@@ -387,6 +388,7 @@ Int Opcode_New_Internal(Stack &stk, Name n, void *ptr)
 	{
 		MemSet(ptr, 0, dt->size);
 		::new(ptr) BaseObject;
+		stk.GetContext().GetEngine().onNewObject(static_cast<BaseObject *>(ptr), *dt);
 		stk.PushPtr(ptr);
 		stk.PushPtr(ptr);
 		auto obj = static_cast<BaseObject *>(ptr);

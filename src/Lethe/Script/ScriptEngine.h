@@ -216,6 +216,10 @@ public:
 	// this may be necessary to sync native object with vtable change
 	Delegate<void(BaseObject *obj, Name n)> onVtableChange;
 
+	// this may be necessary to sync native object
+	// this is called each time an object is created via script
+	Delegate<void(BaseObject *obj, const DataType &dt)> onNewObject;
+
 	// debugging:
 
 	// get program counter for breakpoint at file/line
