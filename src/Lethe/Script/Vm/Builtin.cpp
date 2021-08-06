@@ -365,7 +365,6 @@ Int Opcode_New_Internal(Stack &stk)
 		auto ptr = ObjectHeap::Get().Alloc(dt->size, dt->align);
 		MemSet(ptr, 0, dt->size);
 		::new(ptr) BaseObject;
-		stk.GetContext().GetEngine().onNewObject(static_cast<BaseObject *>(ptr), *dt);
 		stk.PushPtr(ptr);
 		stk.PushPtr(ptr);
 		auto obj = static_cast<BaseObject *>(ptr);
@@ -388,7 +387,6 @@ Int Opcode_New_Internal(Stack &stk, Name n, void *ptr)
 	{
 		MemSet(ptr, 0, dt->size);
 		::new(ptr) BaseObject;
-		stk.GetContext().GetEngine().onNewObject(static_cast<BaseObject *>(ptr), *dt);
 		stk.PushPtr(ptr);
 		stk.PushPtr(ptr);
 		auto obj = static_cast<BaseObject *>(ptr);
@@ -496,6 +494,20 @@ void Builtin::Opcode_AddStrong(Stack &stk)
 
 	if (obj)
 		Atomic::Increment(obj->strongRefCount);
+}
+
+void Builtin::Opcode_AddStrongAfterNew(Stack &stk)
+{
+	auto obj = static_cast<BaseObject *>(stk.GetPtr(0));
+
+	if (obj)
+	{
+		Atomic::Increment(obj->strongRefCount);
+		auto *ctype = obj->GetScriptClassType();
+
+		if (ctype)
+			stk.GetContext().GetEngine().onNewObject(static_cast<BaseObject *>(obj), *ctype);
+	}
 }
 
 void Opcode_AddWeak(Stack &stk)
@@ -1299,6 +1311,7 @@ static const BuiltinTable BUILTIN_TABLE[] =
 	{ BUILTIN_ADD_WEAK,			"*ADD_WEAK",			Opcode_AddWeak			},
 	{ BUILTIN_ADD_WEAK_NULL,	"*ADD_WEAK_NULL",		Opcode_AddWeakNull		},
 	{ BUILTIN_ADD_STRONG,		"*ADD_STRONG",			Builtin::Opcode_AddStrong},
+	{ BUILTIN_ADD_STRONG_AFTER_NEW, "*ADD_STRONG_AFTER_NEW", Builtin::Opcode_AddStrongAfterNew},
 	{ BUILTIN_ISA,				"*CONV_ISA",			Opcode_IsA				},
 	{ BUILTIN_ISA_NOPOP,		"*ISA_NOPOP",			Opcode_IsANoPop			},
 	{ BUILTIN_FIX_WEAK,			"*FIX_WEAK",			Opcode_FixWeak			},

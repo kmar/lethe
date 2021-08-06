@@ -61,6 +61,7 @@ enum
 	BUILTIN_ADD_WEAK,
 	BUILTIN_ADD_WEAK_NULL,
 	BUILTIN_ADD_STRONG,
+	BUILTIN_ADD_STRONG_AFTER_NEW,
 	BUILTIN_ISA,
 	BUILTIN_ISA_NOPOP,
 	BUILTIN_FIX_WEAK,
@@ -170,6 +171,7 @@ public:
 	static void Opcode_New_Dynamic(Stack &stk);
 	static void Opcode_New_Dynamic(Stack &stk, Name n, void *inst);
 	static void Opcode_AddStrong(Stack &stk);
+	static void Opcode_AddStrongAfterNew(Stack &stk);
 };
 
 bool LETHE_API RegisterBuiltins(ConstPool &cpool);

@@ -94,7 +94,7 @@ bool AstUnaryNew::CodeGen(CompiledProgram &p)
 		p.EmitI24(OPC_IBZ_P, 1);
 		p.Emit(OPC_FCALL);
 		p.EmitI24(OPC_POP, 1);
-		p.EmitI24(OPC_BCALL, BUILTIN_ADD_STRONG);
+		p.EmitI24(OPC_BCALL, BUILTIN_ADD_STRONG_AFTER_NEW);
 	}
 	else
 	{
@@ -104,7 +104,7 @@ bool AstUnaryNew::CodeGen(CompiledProgram &p)
 
 		p.EmitBackwardJump(OPC_CALL, ldt.GetType().elemType.GetType().funCtor);
 		p.EmitI24(OPC_POP, 1);
-		p.EmitI24(OPC_BCALL, BUILTIN_ADD_STRONG);
+		p.EmitI24(OPC_BCALL, BUILTIN_ADD_STRONG_AFTER_NEW);
 	}
 
 	p.PushStackType(ldt);
