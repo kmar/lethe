@@ -57,7 +57,7 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 			if (lvScope && !(lvdt.qualifiers & AST_Q_STATIC))
 			{
 				// if we're dereferencing a pointer, then it's okay even if it's in local scope...
-				bool ok = lvdt.IsPointer() && oldLv->type == AST_OP_DOT;
+				bool ok = lvdt.IsPointer() && (oldLv->type == AST_OP_DOT || (lvNode && lvNode->parent && lvNode->parent->type == AST_OP_DOT));
 
 				if (!ok && lvScope->IsLocal() && !lvdt.IsReference())
 					return p.Error(lv, "returning address of a local variable");
