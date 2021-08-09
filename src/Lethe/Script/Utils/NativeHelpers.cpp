@@ -1561,6 +1561,13 @@ static void natMemCmp(Stack &stk)
 		res = (dsize > ssize) - (dsize < ssize);
 }
 
+static void natIsNullStruct(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto tname = ap.Get<Name>();
+	ap.Get<bool>() = stk.GetProgram().nullStructTypeHash.FindIndex(tname) >= 0;
+}
+
 void NativeHelpers::Init(CompiledProgram &p)
 {
 	p.cpool.BindNativeFunc("decode_utf8", native_decodeUtf8);
@@ -1640,6 +1647,9 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("memset", natMemSet);
 	p.cpool.BindNativeFunc("memcmp", natMemCmp);
 	p.cpool.BindNativeFunc("memcpy", natMemCpy);
+
+	// null struct type test:
+	p.cpool.BindNativeFunc("is_null_struct_type", natIsNullStruct);
 }
 
 

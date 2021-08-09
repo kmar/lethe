@@ -627,6 +627,13 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 			));
 	}
 
+	if (dt->type == DT_STRUCT && dt->size <= 1 && !(nativeMembers + scriptMembers) && !(qualifiers & AST_Q_NONTRIVIAL)
+		&& dt->baseType.GetTypeEnum() == DT_NONE)
+	{
+		// add null struct
+		p.nullStructTypeHash.Add(Name(dt->name));
+	}
+
 	return true;
 }
 

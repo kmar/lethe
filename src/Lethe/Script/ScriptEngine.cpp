@@ -315,6 +315,9 @@ nodiscard native int memcmp(const byte[] src0, const byte[] src1, int limit = 0x
 native void memcpy(byte[] dst, const byte[] src, int limit = 0x7fffffff);
 // unsafe!
 nodiscard native byte[] to_bytes_mutable(...);
+
+// is null (empty) struct? - no base, no members
+nodiscard native bool is_null_struct_type(name type);
 )#"
 
 #if LETHE_32BIT
@@ -1024,6 +1027,7 @@ size_t ScriptEngine::GetMemUsageTypes() const
 
 	res += program->typeHash.GetMemUsage();
 	res += program->classTypeHash.GetMemUsage();
+	res += program->nullStructTypeHash.GetMemUsage();
 
 	return res;
 }

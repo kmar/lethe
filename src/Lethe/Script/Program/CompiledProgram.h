@@ -130,6 +130,8 @@ public:
 	HashMap<String, DataType *> typeHash;
 	// class types by name
 	HashMap<Name, const DataType *> classTypeHash;
+	// null (empty) structs by name
+	HashSet<Name> nullStructTypeHash;
 
 	// add composite type
 	const DataType *AddType(DataType *newType);
