@@ -21,6 +21,10 @@ bool AstSizeOf::TryTypeGen(AstNode *tn, const CompiledProgram &p)
 
 bool AstSizeOf::FoldConst(const CompiledProgram &p)
 {
+	// we need to delay this due to problems
+	if (!p.foldSizeof)
+		return false;
+
 	UniquePtr<AstConstInt> n;
 	UniquePtr<AstConstName> nn;
 
@@ -57,10 +61,10 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 		if (!sr->IsComposite() || !sr->node)
 			break;
 
-		auto ctype = sr->node->GetTypeDesc(p);
-
 		if (!TryTypeGen(sr->node, p))
 			break;
+
+		auto ctype = sr->node->GetTypeDesc(p);
 
 		auto &txt = AstStaticCast<AstText *>(nodes[0])->text;
 

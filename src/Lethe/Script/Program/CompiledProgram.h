@@ -64,6 +64,9 @@ public:
 	// ADL pass flag
 	bool tryADL = false;
 
+	// fold sizeof flag
+	bool foldSizeof = false;
+
 private:
 	mutable SpinMutex lateDeleteMutex;
 	mutable HashSet<AstNode *> lateDeleteNodes;

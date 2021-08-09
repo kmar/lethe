@@ -1125,6 +1125,9 @@ bool Compiler::CodeGen(CompiledProgram &p)
 
 	LETHE_RET_FALSE(progList->BeginCodegen(p));
 
+	p.foldSizeof = false;
+	while (progList->FoldConst(p));
+	p.foldSizeof = true;
 	while (progList->FoldConst(p));
 
 	LETHE_RET_FALSE(progList->TypeGenDef(p));
