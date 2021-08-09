@@ -12,6 +12,7 @@ struct free_id_list
 
 	// allocate a contiguous sequence of ids
 	// ids are guaranteed to follow each other
+	// note that this is O(n) over all free ranges
 	int alloc_sequence(int count);
 
 	// free contiguous sequence of ids
