@@ -1,0 +1,200 @@
+///////////////////////////////////////////////////////////////////////////////
+// range-based free list of ints, priority queue would be worst-case faster,
+// but this version is more compact wrt ranges and allows sequence allocation
+// note: first index allocated is 0
+struct free_id_list
+{
+	// alloc id
+	int alloc();
+
+	// free id
+	void free(int idx);
+
+	// allocate a contiguous sequence of ids
+	// ids are guaranteed to follow each other
+	int alloc_sequence(int count);
+
+	// free contiguous sequence of ids
+	void free_sequence(int start, int count);
+
+	// clear but keep preallocated mem
+	// base_index determines where we start from
+	void clear(int base_index = 0);
+
+	// shrink
+	void shrink();
+
+	// clear and free memory
+	void reset(int base_index = 0);
+
+	// anything >= this is free
+	inline int get_counter() const {return counter;}
+
+private:
+	struct range
+	{
+		int from, to;
+	};
+
+	array<range> freeList;
+
+	// anything above (and including) counter is free
+	int counter;
+
+	int lower_bound(int key) const;
+};
+
+//-----------------------------------------------------------------------------
+int free_id_list::alloc()
+{
+	if (!freeList.size)
+		return counter++;
+
+	auto &head = freeList[0];
+
+	auto res = head.from++;
+
+	if (head.from >= head.to)
+		freeList.erase(0);
+
+	return res;
+
+}
+
+//-----------------------------------------------------------------------------
+// reference: http://www.cplusplus.com/reference/algorithm/lower_bound/
+int free_id_list::lower_bound(int key) const
+{
+	int from = 0;
+	int count = freeList.size;
+
+	while (count > 0)
+	{
+		int step = count >> 1;
+		int ci = from + step;
+
+		if (freeList[ci].from < key)
+		{
+			from = ci + 1;
+			count -= step + 1;
+		}
+		else
+			count = step;
+	}
+
+	return from;
+}
+
+//-----------------------------------------------------------------------------
+void free_id_list::free(int idx)
+{
+	assert(idx >=0 && idx < counter);
+
+	if (idx+1 == counter)
+	{
+		// just decrease counter BUT still may need to compact last range
+		--counter;
+	}
+	else
+	{
+		range r = {idx, idx+1};
+
+		auto it = lower_bound(idx);
+
+		auto prev = it;
+
+		if (prev)
+			--prev;
+
+		if (prev != freeList.size && freeList[prev].to == r.from)
+		{
+			// expand prev
+			freeList[prev].to = r.to;
+
+			// still may want to merge with next
+			if (it != freeList.size && r.to == freeList[it].from)
+			{
+				freeList[prev].to = freeList[it].to;
+				freeList.erase(it);
+			}
+		}
+		else if (it != freeList.size && r.to == freeList[it].from)
+		{
+			// expand from
+			freeList[it].from = r.from;
+		}
+		else
+		{
+			// finally simply insert if cannot merge
+			freeList.insert(it, r);
+		}
+	}
+
+	// remove last range if possible
+	while (freeList.size)
+	{
+		auto &fl = freeList[freeList.size-1];
+
+		if (fl.to != counter)
+			break;
+
+		--counter;
+
+		if (--fl.to <= fl.from)
+			freeList.pop();
+	}
+}
+
+//-----------------------------------------------------------------------------
+void free_id_list::clear(int base_index)
+{
+	freeList.clear();
+	counter = base_index;
+}
+
+//-----------------------------------------------------------------------------
+void free_id_list::shrink()
+{
+	freeList.reset();
+}
+
+//-----------------------------------------------------------------------------
+void free_id_list::reset(int base_index)
+{
+	clear(base_index);
+	shrink();
+}
+
+//-----------------------------------------------------------------------------
+int free_id_list::alloc_sequence(int count)
+{
+	assert(count > 0);
+
+	for (int i : freeList.size)
+	{
+		auto &it = freeList[i];
+
+		if (it.to - it.from >= count)
+		{
+			auto res = it.from;
+			it.from += count;
+
+			if (it.from >= it.to)
+				freeList.erase(i);
+
+			return res;
+		}
+	}
+
+	auto res = counter;
+	counter += count;
+	return res;
+}
+
+//-----------------------------------------------------------------------------
+void free_id_list::free_sequence(int start, int count)
+{
+	// simply free iteratively
+	for (int i=start : count)
+		free(i);
+}
