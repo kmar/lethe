@@ -216,8 +216,9 @@ AstSymbol *AstTernaryOp::FindVarSymbolNode(bool preferLocal)
 		auto *n0 = nodes[1]->GetResolveTarget();
 		auto *n1 = nodes[2]->GetResolveTarget();
 
-		if (n0 && (n0->qualifiers & AST_Q_STATIC) && !(n1->qualifiers & AST_Q_STATIC))
-			return nodes[2]->FindVarSymbolNode(preferLocal);
+		// FIXME: of course, this doesn't catch all the cases, but...
+		if (n1->type == AST_ARG && n0->type != AST_ARG)
+			return nodes[2]->FindVarSymbolNode(true);
 	}
 
 	return nodes[1]->FindVarSymbolNode(preferLocal);
