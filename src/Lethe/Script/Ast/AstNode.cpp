@@ -1187,6 +1187,7 @@ void AstNode::CopyTo(AstNode *n) const
 	n->qualifiers = qualifiers;
 	n->num = num;
 	n->location = location;
+	n->cachedIndex = -1;
 	// clone nodes
 
 	n->nodes.Clear();
