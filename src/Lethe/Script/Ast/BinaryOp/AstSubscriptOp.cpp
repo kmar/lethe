@@ -27,9 +27,9 @@ AstNode *AstSubscriptOp::FindSymbolNode(String &sname, const NamedScope *&nscope
 	return res;
 }
 
-AstSymbol *AstSubscriptOp::FindVarSymbolNode()
+AstSymbol *AstSubscriptOp::FindVarSymbolNode(bool preferLocal)
 {
-	return nodes[0]->FindVarSymbolNode();
+	return nodes[0]->FindVarSymbolNode(preferLocal);
 }
 
 QDataType AstSubscriptOp::GetTypeDesc(const CompiledProgram &p) const

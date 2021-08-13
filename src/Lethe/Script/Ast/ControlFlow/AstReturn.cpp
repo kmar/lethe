@@ -59,8 +59,24 @@ bool AstReturn::CodeGen(CompiledProgram &p)
 				// if we're dereferencing a pointer, then it's okay even if it's in local scope...
 				bool ok = lvdt.IsPointer() && (oldLv->type == AST_OP_DOT || (lvNode && lvNode->parent && lvNode->parent->type == AST_OP_DOT));
 
-				if (!ok && lvScope->IsLocal() && !lvdt.IsReference())
-					return p.Error(lv, "returning address of a local variable");
+				if (!ok && lvScope->IsLocal())
+				{
+					if (!lvdt.IsReference())
+						return p.Error(lvNode ? lvNode : lv, "returning address of a local variable");
+
+					// for const references a temporary may be generated - at least warn here or simply just refuse to compile
+					// example: type &mirror(const type &) {return type}
+					// ...
+					// auto &ref = mirror(type{});
+					// "%t\n", ref;  => prints garbage, stack gets modified
+					if (lvdt.IsConst())
+					{
+						auto *tn = lvNode ? lvNode : lv;
+
+						if (tn->target && tn->target->type == AST_ARG)
+							return p.Error(tn, "potential return of a temporary argument");
+					}
+				}
 
 				// make sure we don't return non-const member ref from a const method
 				if (resType.IsReference() && !resType.IsConst() && lvScope->IsComposite() && scopeRef->IsConstMethod())

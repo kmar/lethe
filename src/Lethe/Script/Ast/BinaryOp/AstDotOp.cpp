@@ -56,9 +56,9 @@ AstNode *AstDotOp::GetResolveTarget() const
 	return nodes[1]->GetResolveTarget();
 }
 
-AstSymbol *AstDotOp::FindVarSymbolNode()
+AstSymbol *AstDotOp::FindVarSymbolNode(bool preferLocal)
 {
-	return nodes[IDX_LEFT]->FindVarSymbolNode();
+	return nodes[IDX_LEFT]->FindVarSymbolNode(preferLocal);
 }
 
 AstNode *AstDotOp::FindSymbolNode(String &sname, const NamedScope *&nscope) const

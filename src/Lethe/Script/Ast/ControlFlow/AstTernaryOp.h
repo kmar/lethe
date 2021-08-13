@@ -19,6 +19,7 @@ public:
 	bool CodeGenRef(CompiledProgram &p, bool allowConst = false, bool derefPtr = false) override;
 	bool CodeGen(CompiledProgram &p) override;
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
+	AstSymbol *FindVarSymbolNode(bool preferLocal = false) override;
 };
 
 

@@ -437,7 +437,8 @@ public:
 	// find symbol node + defining scope
 	virtual AstNode *FindSymbolNode(String &sname, const NamedScope *&nscope) const;
 	// find (leftmost) variable symbol
-	virtual AstSymbol *FindVarSymbolNode();
+	// preferLocal is required for simple static analysis, namely for the ternary operator
+	virtual AstSymbol *FindVarSymbolNode(bool preferLocal = false);
 
 	inline bool IsUnaryOp() const
 	{

@@ -41,7 +41,7 @@ AstNode *AstSymbol::FindSymbolNode(String &sname, const NamedScope *&nscope) con
 	return res;
 }
 
-AstSymbol *AstSymbol::FindVarSymbolNode()
+AstSymbol *AstSymbol::FindVarSymbolNode(bool)
 {
 	return this;
 }
