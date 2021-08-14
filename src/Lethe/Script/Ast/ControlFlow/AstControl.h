@@ -12,7 +12,7 @@ public:
 
 	typedef AstNode Super;
 
-	bool CodeGenBoolExpr(AstNode *n, CompiledProgram &p, bool varScope = 0);
+	static bool CodeGenBoolExpr(AstNode *n, CompiledProgram &p, bool varScope = 0);
 
 	AstControl(AstNodeType ntype, const TokenLocation &nloc) : Super(ntype, nloc) {}
 };

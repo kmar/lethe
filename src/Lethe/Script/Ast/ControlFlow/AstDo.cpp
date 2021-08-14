@@ -48,7 +48,7 @@ bool AstDo::CodeGen(CompiledProgram &p)
 		{
 			if (bconst != 1)
 			{
-				LETHE_RET_FALSE(CodeGenBoolExpr(nodes[1], p, 1));
+				LETHE_RET_FALSE(CodeGenBoolExpr(nodes[1], p));
 				// flip condition
 				DataTypeEnum dt = p.exprStack.Back().GetTypeEnum();
 				fwdExit[1+i] = p.EmitForwardJump(p.ConvJump(dt, OPC_IBZ_P));

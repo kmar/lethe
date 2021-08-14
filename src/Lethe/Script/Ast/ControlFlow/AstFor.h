@@ -18,6 +18,8 @@ public:
 
 	bool ResolveNode(const ErrorHandler &e) override;
 
+	static bool CodeGenCommon(NamedScope *nscopeRef, CompiledProgram &p, ArrayRef<AstNode *> nnodes);
+
 private:
 	bool ConvertRangeBasedFor(const ErrorHandler &p);
 };

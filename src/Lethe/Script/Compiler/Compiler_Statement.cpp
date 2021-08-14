@@ -200,14 +200,36 @@ AstNode *Compiler::ParseStatement(Int depth)
 		UniquePtr<AstNode> tmp = ParseVarDeclOrExpr(depth+1, 1);
 		LETHE_RET_FALSE(tmp);
 
+		if (tmp->type == AST_VAR_DECL_LIST && tmp->nodes.GetSize() != 2)
+			LETHE_RET_FALSE(ExpectPrev(false, "only one initialized variable allowed"));
+
 		if (extra)
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)`"));
 
 		UniquePtr<AstNode> body = ParseStatement(depth+1);
 		LETHE_RET_FALSE(body);
 		// note: not consuming potential semicolon here!, already consumed by ParseStatement
-		res->Add(tmp.Detach());
-		res->Add(body.Detach());
+
+		if (tmp->type == AST_VAR_DECL_LIST)
+		{
+			// simply convert into a for loop
+			res = NewAstNode<AstFor>(res->location);
+
+			// synthesize cond!
+			auto *src = AstStaticCast<AstText *>(tmp->nodes[1]->nodes[0]);
+			UniquePtr<AstNode> cond = NewAstTextRef<AstSymbol>(StringRef(src->text.Ansi()), src->location);
+
+			res->Add(tmp.Detach());
+			res->Add(cond.Detach());
+			// empty inc
+			res->Add(NewAstNode<AstConstant>(AST_EMPTY, ts->PeekToken().location));
+			res->Add(body.Detach());
+		}
+		else
+		{
+			res->Add(tmp.Detach());
+			res->Add(body.Detach());
+		}
 
 		if (ts->PeekToken().type == TOK_KEY_NOBREAK)
 		{

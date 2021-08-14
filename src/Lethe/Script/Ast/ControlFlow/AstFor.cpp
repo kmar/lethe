@@ -259,6 +259,11 @@ bool AstFor::ResolveNode(const ErrorHandler &e)
 
 bool AstFor::CodeGen(CompiledProgram &p)
 {
+	return CodeGenCommon(scopeRef, p, ArrayRef<AstNode *>(nodes.GetData(), nodes.GetSize()));
+}
+
+bool AstFor::CodeGenCommon(NamedScope *nscopeRef, CompiledProgram &p, ArrayRef<AstNode *> nnodes)
+{
 	// [0] = init, [1] = cond, [2] = inc, [3] = body, [4] = (opt) nobreak
 	/* similar to while, transform into
 		into:
@@ -280,12 +285,12 @@ bool AstFor::CodeGen(CompiledProgram &p)
 	this help a bit in most cases but does horrible things to bubbletest3 loop!
 	*/
 	Int mark = p.ExprStackMark();
-	LETHE_RET_FALSE(nodes[0]->CodeGen(p));
+	LETHE_RET_FALSE(nnodes[0]->CodeGen(p));
 
-	if (nodes[0]->type != AST_EMPTY)
+	if (nnodes[0]->type != AST_EMPTY)
 		p.ExprStackCleanupTo(mark);
 
-	Int bconst = nodes[1]->ToBoolConstant(p);
+	Int bconst = nnodes[1]->type == AST_EMPTY ? 1 : nnodes[1]->ToBoolConstant(p);
 
 	if (bconst == 0)
 		return true;
@@ -300,8 +305,9 @@ bool AstFor::CodeGen(CompiledProgram &p)
 		for (Int i=0; i<UNROLL_MAX_COUNT; i++)
 			fwdExit[i] = -1;
 
-		if (nodes[1]->type != AST_EMPTY) {
-			LETHE_RET_FALSE(CodeGenBoolExpr(nodes[1], p));
+		if (bconst != 1)
+		{
+			LETHE_RET_FALSE(CodeGenBoolExpr(nnodes[1], p));
 			// flip condition
 			DataTypeEnum dt = p.exprStack.Back().GetTypeEnum();
 			fwdExit[0] = p.EmitForwardJump(p.ConvJump(dt, OPC_IBZ_P));
@@ -314,7 +320,7 @@ bool AstFor::CodeGen(CompiledProgram &p)
 
 		// body
 		auto olc = p.GetLatentCounter();
-		LETHE_RET_FALSE(nodes[3]->CodeGen(p));
+		LETHE_RET_FALSE(nnodes[3]->CodeGen(p));
 
 		Int bodyWeight = Max<Int>(p.instructions.GetSize() - body, 1);
 
@@ -328,12 +334,12 @@ bool AstFor::CodeGen(CompiledProgram &p)
 		for (Int i=0; i<unrollCount; i++)
 		{
 			// incr
-			LETHE_RET_FALSE(nodes[2]->CodeGen(p));
+			LETHE_RET_FALSE(nnodes[2]->CodeGen(p));
 
 			// expr
-			if (nodes[1]->type != AST_EMPTY)
+			if (bconst != 1)
 			{
-				LETHE_RET_FALSE(CodeGenBoolExpr(nodes[1], p));
+				LETHE_RET_FALSE(CodeGenBoolExpr(nnodes[1], p));
 				// flip condition
 				DataTypeEnum dt = p.exprStack.Back().GetTypeEnum();
 				fwdExit[1+i] = p.EmitForwardJump(p.ConvJump(dt, OPC_IBZ_P));
@@ -341,19 +347,19 @@ bool AstFor::CodeGen(CompiledProgram &p)
 			}
 
 			// body
-			LETHE_RET_FALSE(nodes[3]->CodeGen(p));
+			LETHE_RET_FALSE(nnodes[3]->CodeGen(p));
 		}
 
-		LETHE_ASSERT(scopeRef->type == NSCOPE_LOOP);
-		scopeRef->FixupContinueHandles(p);
+		LETHE_ASSERT(nscopeRef->type == NSCOPE_LOOP);
+		nscopeRef->FixupContinueHandles(p);
 		// inc expr
-		LETHE_RET_FALSE(nodes[2]->CodeGen(p));
+		LETHE_RET_FALSE(nnodes[2]->CodeGen(p));
 
 		// expr
-		if (nodes[1]->type == AST_EMPTY) {
+		if (bconst == 1) {
 			LETHE_RET_FALSE(p.EmitBackwardJump(OPC_BR, body));
 		} else {
-			LETHE_RET_FALSE(CodeGenBoolExpr(nodes[1], p));
+			LETHE_RET_FALSE(CodeGenBoolExpr(nnodes[1], p));
 			DataTypeEnum dt = p.exprStack.Back().GetTypeEnum();
 			LETHE_RET_FALSE(p.EmitBackwardJump(p.ConvJump(dt, OPC_IBNZ_P), body));
 			p.PopStackType();
@@ -364,40 +370,40 @@ bool AstFor::CodeGen(CompiledProgram &p)
 				p.FixupForwardTarget(fwdExit[i]);
 
 		// handle nobreak if necessary
-		if (nodes[1]->type != AST_EMPTY && nodes.GetSize() > 4)
-			LETHE_RET_FALSE(nodes[4]->CodeGenNoBreak(p));
+		if (bconst != 1 && nnodes.GetSize() > 4)
+			LETHE_RET_FALSE(nnodes[4]->CodeGenNoBreak(p));
 
-		scopeRef->FixupBreakHandles(p);
+		nscopeRef->FixupBreakHandles(p);
 	}
 	else
 	{
-		Int fwd = p.EmitForwardJump(OPC_BR);
+		Int fwd = bconst==1 ? -1 : p.EmitForwardJump(OPC_BR);
 		p.FlushOpt();
 		Int body = p.instructions.GetSize();
 		// body
-		LETHE_RET_FALSE(nodes[3]->CodeGen(p));
-		LETHE_ASSERT(scopeRef->type == NSCOPE_LOOP);
-		scopeRef->FixupContinueHandles(p);
+		LETHE_RET_FALSE(nnodes[3]->CodeGen(p));
+		LETHE_ASSERT(nscopeRef->type == NSCOPE_LOOP);
+		nscopeRef->FixupContinueHandles(p);
 		// inc expr
-		LETHE_RET_FALSE(nodes[2]->CodeGen(p));
-		LETHE_RET_FALSE(p.FixupForwardTarget(fwd));
+		LETHE_RET_FALSE(nnodes[2]->CodeGen(p));
+		LETHE_RET_FALSE(fwd < 0 || p.FixupForwardTarget(fwd));
 
 		// expr
-		if (nodes[1]->type == AST_EMPTY)
+		if (bconst == 1)
 			LETHE_RET_FALSE(p.EmitBackwardJump(OPC_BR, body));
 		else
 		{
-			LETHE_RET_FALSE(CodeGenBoolExpr(nodes[1], p));
+			LETHE_RET_FALSE(CodeGenBoolExpr(nnodes[1], p));
 			DataTypeEnum dt = p.exprStack.Back().GetTypeEnum();
 			LETHE_RET_FALSE(p.EmitBackwardJump(p.ConvJump(dt, OPC_IBNZ_P), body));
 			p.PopStackType();
 
 			// handle nobreak
-			if (nodes.GetSize() > 4)
-				LETHE_RET_FALSE(nodes[4]->CodeGenNoBreak(p));
+			if (nnodes.GetSize() > 4)
+				LETHE_RET_FALSE(nnodes[4]->CodeGenNoBreak(p));
 		}
 
-		scopeRef->FixupBreakHandles(p);
+		nscopeRef->FixupBreakHandles(p);
 	}
 
 	return true;

@@ -20,6 +20,7 @@ void AstVarDeclList::LoadIfVarDecl(CompiledProgram &p)
 	AstSymbol sym(sname->text, sname->location);
 	sym.target = nodes[1];
 	sym.target->flags |= AST_F_REFERENCED;
+	sym.scopeRef = scopeRef;
 	sym.CodeGen(p);
 }
 
