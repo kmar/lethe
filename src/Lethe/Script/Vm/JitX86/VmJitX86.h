@@ -18,7 +18,7 @@ enum RegAlloc
 	RA_DOUBLE = 8
 };
 
-class LETHE_API VmJitX86 : public VmJitBase, public AsmX86
+class LETHE_API VmJitX86 : public AsmX86, public VmJitBase
 {
 public:
 	VmJitX86();
