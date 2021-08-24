@@ -124,7 +124,7 @@ public:
 	bool HasDestructors() const;
 
 	// generate dtors for local vars if necessary
-	void GenDestructors(CompiledProgram &p);
+	void GenDestructors(CompiledProgram &p, Int baseLocalVar = 0);
 
 	bool SetBase(NamedScope *nbase);
 

@@ -27,6 +27,7 @@ typedef ScriptBaseObject ScriptObjectBase;
 class NamedScope;
 class AstFunc;
 class AstNode;
+class AstLabel;
 
 class VmJitBase;
 
@@ -158,7 +159,7 @@ public:
 	// emit cleanup & return from state via statebreak method call
 	bool StateBreakScope();
 	// leave scope chain using goto
-	bool GotoScope(const NamedScope *target);
+	bool GotoScope(const AstLabel *nlabel);
 
 	void DynArrayVarFix(QDataType qdt);
 

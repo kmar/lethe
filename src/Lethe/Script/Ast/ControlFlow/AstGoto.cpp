@@ -31,7 +31,7 @@ bool AstGoto::CodeGen(CompiledProgram &p)
 {
 	auto *label = AstStaticCast<AstLabel *>(target);
 
-	LETHE_RET_FALSE(p.GotoScope(label->scopeRef));
+	LETHE_RET_FALSE(p.GotoScope(label));
 
 	if (label->pc >= 0)
 		p.EmitBackwardJump(OPC_BR, label->pc);

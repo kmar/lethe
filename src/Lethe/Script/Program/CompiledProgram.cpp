@@ -3,6 +3,7 @@
 #include <Lethe/Script/Ast/AstNode.h>
 #include <Lethe/Script/Ast/CodeGenTables.h>
 #include <Lethe/Script/Ast/NamedScope.h>
+#include <Lethe/Script/Ast/ControlFlow/AstLabel.h>
 #include <Lethe/Script/Vm/Stack.h>
 #include <Lethe/Script/Vm/Builtin.h>
 #include <Lethe/Script/Compiler/Warnings.h>
@@ -252,14 +253,33 @@ void CompiledProgram::EnterScope(NamedScope *scopeRef)
 }
 
 // TODO/FIXME: refactor to merge functionality of breakscope, gotoscope and possibly returnscope
-bool CompiledProgram::GotoScope(const NamedScope *target)
+bool CompiledProgram::GotoScope(const AstLabel *label)
 {
+	const auto *target = label->scopeRef;
 	NamedScope *cscope = curScope;
 
 	for (Int i=scopeStack.GetSize()-1; i>=0; i--)
 	{
 		if (cscope == target)
+		{
+			if (label->pc >= 0)
+			{
+				// jumping backwards....
+				for (Int j=cscope->deferred.GetSize()-1; j>=label->deferredSize; j--)
+				{
+					auto dn = cscope->deferred[j];
+					LETHE_RET_FALSE(!(dn->flags & AST_F_DEFER) || dn->CodeGen(*this));
+				}
+
+				if (cscope->varOfs != label->varOfsBase)
+				{
+					// emit_cleanup!
+					cscope->GenDestructors(*this, label->localVarSize);
+					Emit(OPC_POP + (UInt((cscope->varOfs - label->varOfsBase) / Stack::WORD_SIZE) << 8));
+				}
+			}
 			return true;
+		}
 
 		ScopeDesc sd = scopeStack[i];
 

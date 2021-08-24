@@ -497,9 +497,9 @@ bool NamedScope::HasDestructors() const
 	return 0;
 }
 
-void NamedScope::GenDestructors(CompiledProgram &p)
+void NamedScope::GenDestructors(CompiledProgram &p, Int baseLocalVar)
 {
-	for (Int i=localVars.GetSize()-1; i>=0; i--)
+	for (Int i=localVars.GetSize()-1; i>=baseLocalVar; i--)
 	{
 		const LocalVariable &lv = localVars[i];
 		const QDataType &dt = lv.type;

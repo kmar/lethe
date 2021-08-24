@@ -21,8 +21,11 @@ public:
 
 	void CopyTo(AstNode *n) const override;
 
-private:
 	Int pc;
+	Int varOfsBase;
+	Int localVarSize;
+	Int deferredSize;
+private:
 	StackArray<Int, 1> forwardTargets;
 };
 
