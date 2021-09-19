@@ -742,7 +742,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		opname += AstStaticCast<const AstText *>(fdef->nodes[1])->text;
 		opname += " ";
 		opname += forceFunc->GetTypeDesc(p).GetName();
-		fname = opname.Ansi();
+		fname = opname.Get();
 	}
 
 	if (fdef->type == AST_FUNC && (fdef->flags & AST_F_SKIP_CGEN) && !(fdef->qualifiers & AST_Q_FUNC_REFERENCED))
@@ -1366,11 +1366,15 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			// native call => collect prefixed names (namespaces)
 			const NamedScope *nscope = fdef->scopeRef;
 
+			StringBuilder sb;
+			sb += fname;
+
 			while (nscope)
 			{
 				if (!nscope->name.IsEmpty())
 				{
-					fname = nscope->name + "::" + fname;
+					sb.Prepend("::");
+					sb.Prepend(nscope->name);
 
 					// note: this is necessary for instantiated templates because they are fully resolved
 					if (nscope->name.Find("::") >= 0)
@@ -1379,6 +1383,8 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 				nscope = nscope->parent;
 			}
+
+			fname = sb.Get();
 
 			Int fidx = p.cpool.FindNativeFunc(fname);
 
