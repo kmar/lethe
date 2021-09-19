@@ -1046,7 +1046,6 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 
 	LETHE_ASSERT(nname->type == AST_IDENT);
 	const String &sname = static_cast< const AstText * >(nname.Get())->text;
-	const String sdname = "~" + sname;
 
 	auto *nnamePtr = nname.Get();
 	ntype->Add(nname.Detach());
@@ -1357,7 +1356,12 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			if ((decl->qualifiers & AST_Q_CTOR) && sname != AstStaticCast<AstText *>(decl->nodes[1])->text)
 				LETHE_RET_FALSE(ExpectPrev(false, "invalid constructor name"));
 
-			if ((decl->qualifiers & AST_Q_DTOR) && sdname != AstStaticCast<AstText *>(decl->nodes[1])->text)
+			auto isValidDtorName = [&sname](const String &dname)->bool
+			{
+				return dname.GetLength() == sname.GetLength()+1 && dname.StartsWith('~') && dname.EndsWith(sname);
+			};
+
+			if ((decl->qualifiers & AST_Q_DTOR) && !isValidDtorName(AstStaticCast<AstText *>(decl->nodes[1])->text))
 				LETHE_RET_FALSE(ExpectPrev(false, "invalid destructor name"));
 
 			hasCustomCtor = hasCustomCtor || (decl->qualifiers & AST_Q_CTOR) != 0;
