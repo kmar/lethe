@@ -1871,9 +1871,8 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 					{
 						DontFlush _(*this);
 						reg = GetPtrNoAdr(0);
-						SetLocalPtr(0, reg, 1);
-						reg = GetPtrNoAdr(0);
-						Movsxd(reg.ToRegPtr(), reg.ToReg32());
+						auto dreg = AllocGprWritePtr(stackOpt);
+						Movsxd(dreg.ToRegPtr(), reg.ToReg32());
 						nofs = -1;
 						break;
 					}
@@ -1883,9 +1882,8 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 					{
 						DontFlush _(*this);
 						reg = GetPtrNoAdr(0);
-						SetLocalPtr(0, reg, 1);
-						reg = GetPtrNoAdr(0);
-						Mov(reg.ToReg32(), reg.ToReg32());
+						auto dreg = AllocGprWritePtr(stackOpt);
+						Mov(dreg.ToReg32(), reg.ToReg32());
 						nofs = -1;
 						break;
 					}
