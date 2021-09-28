@@ -21,7 +21,8 @@ namespace lethe
 
 bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p)
 {
-	LETHE_ASSERT(nodes.GetSize() == 4);
+	// optional nobreak node
+	LETHE_ASSERT(nodes.GetSize() == 4 || nodes.GetSize() == 5);
 
 	// validate range based for first
 	if (nodes[2]->type != AST_EXPR)
@@ -216,6 +217,18 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p)
 	{
 		delete arrClone;
 		return p.Error(this, "failed to rewrite range based for");
+	}
+
+	if (nodes.GetSize() > 4)
+	{
+		// handle nobreak node
+		AstIterator ai(nodes[4]);
+
+		while (auto *n = ai.Next())
+		{
+			if (n->symScopeRef == loopScope)
+				return p.Error(this, "range based for cannot access control variable in nobreak statement");
+		}
 	}
 
 	// remap symScopeRefs
