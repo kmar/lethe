@@ -10,7 +10,8 @@ namespace lethe
 
 bool Compiler::GenerateTemplateName(ErrorHandler &eh, const String &qname, StringBuilder &sb, AstNode *instanceNode, bool &nestedTemplate)
 {
-	LETHE_ASSERT(!qname.IsEmpty());
+	if (qname.IsEmpty())
+		return eh.Error(instanceNode, "couldn't generate template name");
 
 	auto *insideTemplate = instanceNode;
 
@@ -38,6 +39,9 @@ bool Compiler::GenerateTemplateName(ErrorHandler &eh, const String &qname, Strin
 			UniquePtr<AstNode> resolved = itype->Clone();
 			resolved->Resolve(eh);
 			resolved->parent = itype->parent;
+
+			if (resolved->target)
+				resolved->target->Resolve(eh);
 
 			const auto *tnode = resolved->GetTypeNode();
 
