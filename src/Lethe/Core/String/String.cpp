@@ -878,18 +878,22 @@ bool String::operator ==(const char *str) const
 
 bool String::operator ==(const StringRef &sr) const
 {
-	if (GetLength() != sr.GetLength())
+	const auto len = GetLength();
+
+	if (len != sr.GetLength())
 		return false;
 
-	return IsEmpty() || MemCmp(data->data, sr.GetData(), GetLength()) == 0;
+	return len == 0 || MemCmp(data->data, sr.GetData(), len) == 0;
 }
 
 bool String::operator ==(const String &str) const
 {
-	if (GetLength() != str.GetLength())
+	const auto len = GetLength();
+
+	if (len != str.GetLength())
 		return false;
 
-	return IsEmpty() || MemCmp(data->data, str.data->data, GetLength()) == 0;
+	return len == 0 || MemCmp(data->data, str.data->data, len) == 0;
 }
 
 bool String::operator !=(const char *str) const
