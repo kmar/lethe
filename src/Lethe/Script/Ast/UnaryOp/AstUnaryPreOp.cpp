@@ -13,8 +13,12 @@ bool AstUnaryPreOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool)
 {
 	LETHE_RET_FALSE(CodeGen(p));
 
-	p.EmitI24(OPC_POP, p.exprStack.Back().GetSize() / Stack::WORD_SIZE);
-	p.PopStackType(1);
+	if (!p.exprStack.IsEmpty())
+	{
+		Int popLen = (p.exprStack.Back().GetSize() + Stack::WORD_SIZE-1) / Stack::WORD_SIZE;
+		p.PopStackType();
+		p.EmitI24(OPC_POP, popLen);
+	}
 
 	return nodes[0]->CodeGenRef(p, allowConst);
 }

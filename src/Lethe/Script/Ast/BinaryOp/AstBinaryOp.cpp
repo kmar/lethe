@@ -838,9 +838,11 @@ bool AstBinaryOp::CodeGenOperator(CompiledProgram &p)
 
 bool AstBinaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 {
-	(void)allowConst;
+	// no CodeGenRef for binary operators => was broken previously anyway!
+	return Super::CodeGenRef(p, allowConst, derefPtr);
+/*	(void)allowConst;
 	(void)derefPtr;
-	return CodeGenCommon(p, true);
+	return CodeGenCommon(p, true);*/
 }
 
 bool AstBinaryOp::CodeGen(CompiledProgram &p)
