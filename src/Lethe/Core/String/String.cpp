@@ -878,15 +878,18 @@ bool String::operator ==(const char *str) const
 
 bool String::operator ==(const StringRef &sr) const
 {
-	return Comp(sr.GetData(), sr.GetData() + sr.GetLength()) == 0;
+	if (GetLength() != sr.GetLength())
+		return false;
+
+	return IsEmpty() || MemCmp(data->data, sr.GetData(), GetLength()) == 0;
 }
 
 bool String::operator ==(const String &str) const
 {
 	if (GetLength() != str.GetLength())
-		return 0;
+		return false;
 
-	return Comp(str) == 0;
+	return IsEmpty() || MemCmp(data->data, str.data->data, GetLength()) == 0;
 }
 
 bool String::operator !=(const char *str) const
@@ -896,15 +899,12 @@ bool String::operator !=(const char *str) const
 
 bool String::operator !=(const String &str) const
 {
-	if (GetLength() != str.GetLength())
-		return 1;
-
-	return Comp(str) != 0;
+	return !(*this == str);
 }
 
 bool String::operator !=(const StringRef &sr) const
 {
-	return Comp(sr.GetData(), sr.GetData() + sr.GetLength()) != 0;
+	return !(*this == sr);
 }
 
 // conversions
