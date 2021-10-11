@@ -63,7 +63,7 @@ bool AstCast::CodeGen(CompiledProgram &p)
 	// avoid leaks in cast ... new/call
 	FixPointerQualifiers(src, nodes[1]);
 
-	LETHE_RET_FALSE(p.EmitConv(this, src, dst.GetType(), false));
+	LETHE_RET_FALSE(p.EmitConv(this, src, dst, false));
 
 	// TODO: this is suboptiomal and could be peephole optimized if last opcode is load
 	if (src.GetTypeEnum() != dst.GetTypeEnum())

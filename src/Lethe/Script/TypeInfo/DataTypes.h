@@ -151,6 +151,7 @@ struct LETHE_API QDataType
 
 	static QDataType MakeConstType(const DataType &dt);
 	static QDataType MakeType(const DataType &dt);
+	static QDataType MakeQType(const DataType &dt, ULong nqualifiers);
 
 	bool TypesMatch(const QDataType &o) const;
 	bool NonRefTypesMatch(const QDataType &o) const;

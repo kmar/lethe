@@ -241,7 +241,7 @@ bool AstUnaryOp::CodeGen(CompiledProgram &p)
 
 	case AST_UOP_LNOT:
 		if (!dt.IsNumber())
-			LETHE_RET_FALSE(p.EmitConv(nodes[0], dt, p.elemTypes[DT_BOOL]));
+			LETHE_RET_FALSE(p.EmitConv(nodes[0], dt, QDataType::MakeConstType(p.elemTypes[DT_BOOL])));
 
 		switch(dt.GetTypeEnum())
 		{

@@ -71,7 +71,9 @@ QDataType AstTernaryOp::GetTypeDesc(const CompiledProgram &p) const
 	if (dt0.IsStruct() || dt1.IsStruct())
 		return QDataType();
 
-	return QDataType::MakeType(p.Coerce(dt0.GetType(), dt1.GetType()));
+	auto dstq = (dt0.qualifiers & AST_Q_CONST) | (dt1.qualifiers & AST_Q_CONST);
+
+	return QDataType::MakeQType(p.Coerce(dt0.GetType(), dt1.GetType()), dstq);
 }
 
 // FIXME: refactor this crap! codegenref and codegen share common path!
@@ -82,6 +84,7 @@ bool AstTernaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr
 	const QDataType &dt0 = nodes[1]->GetTypeDesc(p);
 	const QDataType &dt1 = nodes[2]->GetTypeDesc(p);
 	const DataType &dst = p.Coerce(dt0.GetType(), dt1.GetType());
+	auto dstq = (dt0.qualifiers & AST_Q_CONST) | (dt1.qualifiers & AST_Q_CONST);
 
 	bool voidExpr = dt0.GetTypeEnum() == DT_NONE && dt1.GetTypeEnum() == DT_NONE;
 
@@ -116,7 +119,7 @@ bool AstTernaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "true expression must return a value");
 
-		p.EmitConv(this, dt0, dst);
+		p.EmitConv(this, dt0, QDataType::MakeQType(dst, dstq));
 		p.PopStackType(1);
 	}
 
@@ -130,7 +133,7 @@ bool AstTernaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[2], "false expression must return a value");
 
-		p.EmitConv(this, dt1, dst);
+		p.EmitConv(this, dt1, QDataType::MakeQType(dst, dstq));
 		p.PopStackType(1);
 	}
 
@@ -183,7 +186,7 @@ bool AstTernaryOp::CodeGen(CompiledProgram &p)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "true expression must return a value");
 
-		p.EmitConv(this, dt0, dst.GetType());
+		p.EmitConv(this, dt0, dst);
 		p.PopStackType(1);
 	}
 
@@ -197,7 +200,7 @@ bool AstTernaryOp::CodeGen(CompiledProgram &p)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[2], "false expression must return a value");
 
-		p.EmitConv(this, dt1, dst.GetType());
+		p.EmitConv(this, dt1, dst);
 		p.PopStackType(1);
 	}
 

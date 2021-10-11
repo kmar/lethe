@@ -19,7 +19,7 @@ bool AstControl::CodeGenBoolExpr(AstNode *n, CompiledProgram &p, bool varScope)
 
 	const auto &qdt = p.exprStack.Back();
 
-	auto res = (qdt.IsNumber() && !qdt.IsLongInt()) || p.EmitConv(n, qdt, p.elemTypes[DT_BOOL]);
+	auto res = (qdt.IsNumber() && !qdt.IsLongInt()) || p.EmitConv(n, qdt, QDataType::MakeConstType(p.elemTypes[DT_BOOL]));
 	LETHE_RET_FALSE(res);
 
 	// this should help JIT + &&/|| a bit

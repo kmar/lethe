@@ -1592,6 +1592,14 @@ QDataType QDataType::MakeConstType(const DataType &dt)
 	return res;
 }
 
+QDataType QDataType::MakeQType(const DataType &dt, ULong nqualifiers)
+{
+	QDataType res;
+	res.ref = &dt;
+	res.qualifiers = nqualifiers;
+	return res;
+}
+
 bool QDataType::CanAlias(const QDataType &o) const
 {
 	return CanAssign(o, false, true);
@@ -1643,6 +1651,11 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 			return true;
 
 		LETHE_RET_FALSE(o.IsPointer());
+
+		// don't break const-correctness
+		if (!IsConst() && o.IsConst())
+			return false;
+
 		const auto &el0 = GetType().elemType;
 		const auto &el1 = o.GetType().elemType;
 		return el0.ref->IsBaseOf(*el1.ref);

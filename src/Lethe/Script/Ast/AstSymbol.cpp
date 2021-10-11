@@ -795,7 +795,7 @@ bool AstSymbol::CallPropertyGetterViaPtr(CompiledProgram &p, AstNode *root)
 	tcall.nodes.Clear();
 
 	if (res)
-		res = p.EmitConv(this, retType, wantType.GetType());
+		res = p.EmitConv(this, retType, wantType);
 
 	return res;
 }

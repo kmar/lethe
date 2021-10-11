@@ -169,7 +169,7 @@ public:
 	void EmitGlobalCtor(QDataType qdt, Int offset);
 
 	void Emit(UInt ins);
-	bool EmitConv(AstNode *n, const QDataType &src, const DataType &dst, bool warn = true);
+	bool EmitConv(AstNode *n, const QDataType &src, const QDataType &dstq, bool warn = true);
 	bool EmitGlobalCopy(AstNode *n, const DataType &src, Int offset);
 	bool EmitGlobalDtor(AstNode *n, const DataType &src, Int offset);
 	void EmitLocalDtor(const DataType &src, Int offset);

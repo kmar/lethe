@@ -162,7 +162,7 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 	{
 		LETHE_RET_FALSE(nodes[IDX_LEFT]->CodeGenRef(p));
 		LETHE_RET_FALSE(nodes[IDX_RIGHT]->CodeGen(p));
-		LETHE_RET_FALSE(p.EmitConv(nodes[IDX_RIGHT], nodes[IDX_RIGHT]->GetTypeDesc(p), p.elemTypes[DT_UINT]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[IDX_RIGHT], nodes[IDX_RIGHT]->GetTypeDesc(p), QDataType::MakeConstType(p.elemTypes[DT_UINT])));
 		p.EmitIntConst(leftType.GetType().elemType.GetSize());
 		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD_INPLACE);
 		p.PopStackType(true);
@@ -182,7 +182,7 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 		// special case for strings because current approach (load/op/store) is very slow!
 		LETHE_RET_FALSE(nodes[IDX_LEFT]->CodeGenRef(p));
 		LETHE_RET_FALSE(nodes[IDX_RIGHT]->CodeGen(p));
-		LETHE_RET_FALSE(p.EmitConv(nodes[IDX_RIGHT], nodes[IDX_RIGHT]->GetTypeDesc(p), leftType.GetType()));
+		LETHE_RET_FALSE(p.EmitConv(nodes[IDX_RIGHT], nodes[IDX_RIGHT]->GetTypeDesc(p), leftType));
 		p.EmitI24(OPC_BCALL, pop ? BUILTIN_PSTRADD_ASSIGN : BUILTIN_PSTRADD_ASSIGN_LOAD);
 		p.PopStackType(1);
 		p.PopStackType(1);
@@ -433,7 +433,7 @@ bool AstAssignOp::CodeGenCommon(CompiledProgram &p, bool needConv, bool asRef, b
 	if (dte != ste && !(dte == DT_DYNAMIC_ARRAY && ste == DT_ARRAY_REF))
 	{
 		// need conversion...
-		LETHE_RET_FALSE(p.EmitConv(this, src, dst.GetType()));
+		LETHE_RET_FALSE(p.EmitConv(this, src, dst));
 
 		auto dstt = p.exprStack.Back();
 		p.PopStackType(1);

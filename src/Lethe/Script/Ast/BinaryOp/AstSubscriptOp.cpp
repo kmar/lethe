@@ -127,7 +127,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 		LETHE_RET_FALSE(nodes[1]->CodeGen(p));
 		// convert to int
 		LETHE_RET_FALSE(p.EmitConv(nodes[1],
-								  nodes[1]->GetTypeDesc(p), p.elemTypes[DT_INT]));
+								  nodes[1]->GetTypeDesc(p), QDataType::MakeConstType(p.elemTypes[DT_INT])));
 
 		p.Emit(OPC_BCALL + (BUILTIN_GETSTRCHAR << 8));
 
@@ -273,7 +273,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 		LETHE_RET_FALSE(nodes[1]->CodeGen(p));
 		// convert to int
 		LETHE_RET_FALSE(p.EmitConv(nodes[1],
-								  nodes[1]->GetTypeDesc(p), p.elemTypes[DT_INT]));
+								  nodes[1]->GetTypeDesc(p), QDataType::MakeConstType(p.elemTypes[DT_INT])));
 
 		if (dt.type != DT_STATIC_ARRAY && !nobounds)
 		{

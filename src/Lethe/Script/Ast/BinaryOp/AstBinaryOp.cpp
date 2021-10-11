@@ -927,7 +927,7 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	if (dt0.GetTypeEnum() != dt && dt0.GetTypeEnum() != DT_ARRAY_REF)
 	{
 		// convert
-		LETHE_RET_FALSE(p.EmitConv(nodes[0], dt0, dtdst, 0));
+		LETHE_RET_FALSE(p.EmitConv(nodes[0], dt0, QDataType::MakeConstType(dtdst), 0));
 	}
 
 	LETHE_RET_FALSE(nodes[1]->CodeGen(p));
@@ -940,7 +940,7 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	if (dt1.GetTypeEnum() != dtr)
 	{
 		// convert
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], dt1, *dtdstr, 0));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], dt1, QDataType::MakeConstType(*dtdstr), 0));
 	}
 
 	LETHE_ASSERT(p.exprStack.GetSize() >= 2);

@@ -504,7 +504,7 @@ bool AstCall::CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "argument expression must return a value");
 
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), p.elemTypes[DT_FLOAT]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), QDataType::MakeConstType(p.elemTypes[DT_FLOAT])));
 		p.Emit(OPC_FSQRT);
 		p.PopStackType(1);
 		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_FLOAT]));
@@ -524,7 +524,7 @@ bool AstCall::CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "argument expression must return a value");
 
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), p.elemTypes[DT_DOUBLE]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), QDataType::MakeConstType(p.elemTypes[DT_DOUBLE])));
 		p.Emit(OPC_DSQRT);
 		p.PopStackType(1);
 		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_DOUBLE]));
@@ -545,7 +545,7 @@ bool AstCall::CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "argument expression must return a value");
 
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), p.elemTypes[DT_UINT]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), QDataType::MakeConstType(p.elemTypes[DT_UINT])));
 
 		const bool isBswap = name == "bswap" || name == "__uint::bswap";
 
@@ -576,7 +576,7 @@ bool AstCall::CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "argument expression must return a value");
 
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), p.elemTypes[DT_ULONG]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), QDataType::MakeConstType(p.elemTypes[DT_ULONG])));
 
 		const bool isBswap = name == "bswapl" || name == "__ulong::bswap";
 
@@ -611,7 +611,7 @@ bool AstCall::CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef)
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "argument expression must return a value");
 
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), p.elemTypes[DT_NAME]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], p.exprStack.Back(), QDataType::MakeConstType(p.elemTypes[DT_NAME])));
 
 		p.EmitI24(OPC_BCALL, BUILTIN_ISA);
 		p.PopStackType(true);
@@ -1181,7 +1181,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			(!tdesc.CanAlias(top) || tdesc.GetType() != top.GetType() || tdesc.GetTypeEnum() != top.GetTypeEnum())
 		))
 		{
-			LETHE_RET_FALSE(p.EmitConv(argValue, top, tdesc.GetType()));
+			LETHE_RET_FALSE(p.EmitConv(argValue, top, tdesc));
 
 			// FIXME: ugh, it's getting uglier and uglier
 			// conversion can force skip dtor
@@ -1208,7 +1208,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			if (argtype.IsArray() && argtype.GetTypeEnum() == DT_STATIC_ARRAY)
 			{
 				// convert to array ref
-				LETHE_RET_FALSE(p.EmitConv(argValue, top, *argtype.GetType().complementaryType));
+				LETHE_RET_FALSE(p.EmitConv(argValue, top, QDataType::MakeQType(*argtype.GetType().complementaryType, argtype.qualifiers)));
 				argtype = top = p.exprStack.Back();
 			}
 

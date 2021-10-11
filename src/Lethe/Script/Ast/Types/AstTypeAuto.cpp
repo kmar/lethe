@@ -184,6 +184,16 @@ QDataType AstTypeAuto::GetTypeDesc(const CompiledProgram &p) const
 
 			res.ref = res.ref->GetPointerType(wantRaw ? DT_RAW_PTR : wantWeak ? DT_WEAK_PTR : DT_STRONG_PTR);
 			res.qualifiers |= AST_Q_SKIP_DTOR;
+
+			LETHE_ASSERT(parent && parent->type == AST_VAR_DECL_LIST);
+
+			// copy const qualifiers if it's a pointer
+			// => var decl => var type, but only the first one
+			if (auto *pnode = parent->nodes[1]->nodes[1])
+			{
+				auto ntype = pnode->GetTypeDesc(p);
+				res.qualifiers |= ntype.qualifiers & AST_Q_CONST;
+			}
 		}
 
 		res.qualifiers |= qualifiers;

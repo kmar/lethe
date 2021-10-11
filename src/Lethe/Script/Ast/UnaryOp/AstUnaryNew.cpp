@@ -82,7 +82,7 @@ bool AstUnaryNew::CodeGen(CompiledProgram &p)
 		auto dt = p.exprStack.Back();
 
 		if (dt.GetTypeEnum() == DT_STRING)
-			LETHE_RET_FALSE(p.EmitConv(nodes[IDX_CLASS], dt, p.elemTypes[DT_NAME]));
+			LETHE_RET_FALSE(p.EmitConv(nodes[IDX_CLASS], dt, QDataType::MakeConstType(p.elemTypes[DT_NAME])));
 
 		// pop because builtin_new will clean up automatically
 		p.PopStackType(true);

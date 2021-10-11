@@ -1504,9 +1504,16 @@ const Int CompiledProgram::elemConvTab[ECONV_MAX][ECONV_MAX] =
 	}
 };
 
-bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const DataType &dst, bool warn)
+bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataType &dstq, bool warn)
 {
 	const auto &src = srcq.GetType();
+	const auto &dst = dstq.GetType();
+
+	if (srcq.IsConst() && !dstq.IsConst() && srcq.IsPointer())
+	{
+		// force const correctness for pointers
+		return Error(n, String::Printf("cannot convert from const %s to (non-const) %s", src.GetName().Ansi(), dst.GetName().Ansi()));
+	}
 
 	if (&src == &dst)
 		return true;

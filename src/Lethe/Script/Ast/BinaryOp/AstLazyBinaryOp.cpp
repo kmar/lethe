@@ -62,7 +62,7 @@ bool AstLazyBinaryOp::CodeGen(CompiledProgram &p)
 	auto dt0 = p.exprStack.Back();
 
 	if (!dt0.IsNumber() || dt0.IsLongInt())
-		LETHE_RET_FALSE(p.EmitConv(nodes[0], dt0, p.elemTypes[DT_BOOL]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[0], dt0, QDataType::MakeConstType(p.elemTypes[DT_BOOL])));
 
 	// now jump based on results
 	UInt jmpIns = type == AST_OP_LAND ? OPC_ICMPNZ_BZ : OPC_ICMPNZ_BNZ;
@@ -97,7 +97,7 @@ bool AstLazyBinaryOp::CodeGen(CompiledProgram &p)
 	auto dt1 = p.exprStack.Back();
 
 	if (!dt1.IsNumber() || dt1.IsLongInt())
-		LETHE_RET_FALSE(p.EmitConv(nodes[1], dt1, p.elemTypes[DT_BOOL]));
+		LETHE_RET_FALSE(p.EmitConv(nodes[1], dt1, QDataType::MakeConstType(p.elemTypes[DT_BOOL])));
 	else
 	{
 		// convert to bool

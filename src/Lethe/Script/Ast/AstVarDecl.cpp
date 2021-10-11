@@ -260,7 +260,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 			// perform conversion if necessary
 			if (tdesc.GetType() != top.GetType())
 			{
-				LETHE_RET_FALSE(p.EmitConv(nodes[1], top, tdesc.GetType()));
+				LETHE_RET_FALSE(p.EmitConv(nodes[1], top, tdesc));
 				top = p.exprStack.Back();
 			}
 
@@ -390,7 +390,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 			// perform conversion if necessary
 			if (tdesc.GetType() != top.GetType())
 			{
-				LETHE_RET_FALSE(p.EmitConv(nodes[1], top, tdesc.GetType()));
+				LETHE_RET_FALSE(p.EmitConv(nodes[1], top, tdesc));
 				top = p.exprStack.Back();
 			}
 
