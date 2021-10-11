@@ -1366,7 +1366,7 @@ bool QDataType::IsIndexableStruct() const
 
 bool QDataType::IsTernaryCompatible() const
 {
-	return IsSwitchable() || GetTypeEnum() == DT_STRUCT;
+	return IsSwitchable() || IsPointer() || GetTypeEnum() == DT_STRUCT;
 }
 
 bool QDataType::IsSwitchable() const
