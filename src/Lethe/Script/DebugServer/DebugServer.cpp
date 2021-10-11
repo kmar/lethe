@@ -56,7 +56,8 @@ bool DebugServer::OnDebugBreak(ScriptContext &ctx, ExecResult &eres)
 	if (depth <= 0)
 	{
 		ctx.Resume();
-		debugData.stepCmd = debugData.activeStepCmd = DSTEP_NONE;
+		Atomic::Store(debugData.stepCmd, (Int)DSTEP_NONE);
+		debugData.activeStepCmd = DSTEP_NONE;
 		return false;
 	}
 
@@ -110,12 +111,14 @@ bool DebugServer::OnDebugBreak(ScriptContext &ctx, ExecResult &eres)
 
 	while (ctx.InBreakMode())
 	{
-		if (debugData.stepCmd)
+		auto scmd = Atomic::Load(debugData.stepCmd);
+
+		if (scmd)
 		{
 			ctx.GetCurrentLocation(debugData.origLoc);
 			debugData.activeStepCmd = debugData.stepCmd;
 			debugData.activeCallStackDepth = ctx.GetCallStackDepth();
-			debugData.stepCmd = DSTEP_NONE;
+			Atomic::Store(debugData.stepCmd, (Int)DSTEP_NONE);
 			debugData.origFunction = GetEngine().FindFunctionNameNear(ctx.GetStack().GetInsPtr());
 			break;
 		}
@@ -408,11 +411,11 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 					auto &debugData = it->GetDebugData();
 
 					if (cmds[0] == "step_over")
-						debugData.stepCmd = DSTEP_OVER;
+						Atomic::Store(debugData.stepCmd, (Int)DSTEP_OVER);
 					else if (cmds[0] == "step_into")
-						debugData.stepCmd = DSTEP_INTO;
+						Atomic::Store(debugData.stepCmd, (Int)DSTEP_INTO);
 					else if (cmds[0] == "step_out")
-						debugData.stepCmd = DSTEP_OUT;
+						Atomic::Store(debugData.stepCmd, (Int)DSTEP_OUT);
 					break;
 				}
 			}
