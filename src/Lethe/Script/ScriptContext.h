@@ -107,6 +107,10 @@ public:
 	// call function via PC bytecode offset
 	ExecResult CallOffset(Int pcOffset);
 
+	// for debugging: resume call, insPtr in Stack must be valid
+	// only works in interpreter; ONLY DO THIS IF YOU KNOW WHAT YOU'RE DOING!
+	ExecResult ResumeCall();
+
 	// create new object (note: strong ref is 0, weak ref 1 after this call)
 	BaseObject *NewObject(Name name);
 

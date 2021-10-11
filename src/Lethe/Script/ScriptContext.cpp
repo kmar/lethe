@@ -158,6 +158,17 @@ ExecResult ScriptContext::Call(const StringRef &fname)
 	return vm->CallFunc(fname);
 }
 
+ExecResult ScriptContext::ResumeCall()
+{
+	if (vmJit)
+		return EXEC_NO_JIT;
+
+	if (!vm->stack->GetInsPtr())
+		return EXEC_NULL_PTR;
+
+	return vm->ExecutePtr(vm->stack->GetInsPtr());
+}
+
 ExecResult ScriptContext::CallPointer(const void *funptr)
 {
 	if (!funptr)
@@ -463,6 +474,9 @@ bool ScriptContext::GetCurrentLocation(TokenLocation &nloc) const
 	lookup.pc = pc;
 
 	auto it = LowerBound(ctol.Begin(), ctol.End(), lookup);
+
+	LETHE_RET_FALSE(it != ctol.End());
+
 	nloc.file = it->file;
 	nloc.line = it->line;
 
