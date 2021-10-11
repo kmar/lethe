@@ -135,11 +135,11 @@ public:
 	Delegate<bool(ScriptContext &ctx, ExecResult &res)> onDebugBreak;
 
 	// debug break; only works in debug mode
-	void Break() {vmStack->breakExecution = 1;}
+	void Break() {Atomic::Store(vmStack->breakExecution, 1);}
 	// resume from debug break; debug mode only
-	void Resume() {vmStack->breakExecution = 0;}
+	void Resume() {Atomic::Store(vmStack->breakExecution, 0);}
 	// in break mode?
-	bool InBreakMode() const {return vmStack->breakExecution;}
+	bool InBreakMode() const {return Atomic::Load(vmStack->breakExecution) != 0;}
 	// get current location; must be in debug mode and break mode
 	bool GetCurrentLocation(TokenLocation &nloc) const;
 

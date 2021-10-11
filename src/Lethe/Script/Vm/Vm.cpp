@@ -138,7 +138,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 
 			for (;;)
 			{
-				Int oldBreakExecution = stack->breakExecution;
+				Int oldBreakExecution = Atomic::Load(stack->breakExecution);
 				bool skipBreakCall = false;
 
 				if (hitBreakpoint)
@@ -152,7 +152,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 						prog->instructions[pc] &= ~255;
 						prog->instructions[pc] |= prog->savedOpcodes[pc];
 
-						stack->breakExecution = true;
+						Atomic::Store(stack->breakExecution, 1);
 					}
 					else
 						hitBreakpoint = false;
@@ -167,7 +167,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 
 					prog->instructions[pc] &= ~255;
 					prog->instructions[pc] |= OPC_BREAK;
-					stack->breakExecution = oldBreakExecution;
+					Atomic::Store(stack->breakExecution, oldBreakExecution);
 
 					// this should take care of F5 in debugger to not break twice
 					if (!oldBreakExecution)
@@ -177,7 +177,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 				if (res < EXEC_EXCEPTION)
 				{
 					if (!noBreakMode)
-						stack->breakExecution = false;
+						Atomic::Store(stack->breakExecution, 0);
 
 					return res;
 				}
@@ -189,7 +189,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 
 				if (hitBreakpoint)
 				{
-					stack->breakExecution = true;
+					Atomic::Store(stack->breakExecution, 1);
 					noBreakMode = false;
 				}
 
@@ -1689,7 +1689,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 		if ((flags & (EXEC_DEBUG | EXEC_NO_BREAK)) == EXEC_DEBUG)
 		{
 			// check for abort
-			if (stk.breakExecution)
+			if (Atomic::Load(stk.breakExecution))
 			{
 				// set program counter
 				stk.programCounter = static_cast<Int>(iptr - prog->instructions.GetData());
