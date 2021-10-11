@@ -50,8 +50,8 @@ const AstNode *AstTernaryOp::GetTypeNode() const
 
 QDataType AstTernaryOp::GetTypeDesc(const CompiledProgram &p) const
 {
-	const QDataType &dt0 = nodes[1]->GetTypeDesc(p);
-	const QDataType &dt1 = nodes[2]->GetTypeDesc(p);
+	auto dt0 = nodes[1]->GetTypeDesc(p);
+	auto dt1 = nodes[2]->GetTypeDesc(p);
 
 	// if either is null, use other type
 	if (dt0.GetTypeEnum() == DT_NULL)
@@ -63,6 +63,10 @@ QDataType AstTernaryOp::GetTypeDesc(const CompiledProgram &p) const
 	// should check for special types here, like delegates and so on...
 	if (!dt0.IsTernaryCompatible() || !dt1.IsTernaryCompatible())
 		return QDataType();
+
+	// merge const qualifiers because of pointers
+	dt0.qualifiers |= dt1.qualifiers & AST_Q_CONST;
+	dt1.qualifiers |= dt0.qualifiers & AST_Q_CONST;
 
 	// if types are the same, return first type
 	// FIXME: what about qualifiers?!
