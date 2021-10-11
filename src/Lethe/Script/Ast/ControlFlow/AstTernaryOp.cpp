@@ -43,7 +43,9 @@ const AstNode *AstTernaryOp::GetTypeNode() const
 	if (t1->type == AST_CONST_NULL)
 		return t0;
 
-	return CoerceTypes(t0, t1);
+	auto *res = CoerceTypes(t0, t1);
+	// fall back to t0 if can't coerce => happens for pointers, where typenode is a class type; this isn't great, but...
+	return res ? res : t0;
 }
 
 QDataType AstTernaryOp::GetTypeDesc(const CompiledProgram &p) const
