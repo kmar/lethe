@@ -75,5 +75,11 @@ bool AstBlock::CodeGen(CompiledProgram &p)
 	return p.LeaveScope();
 }
 
+void AstBlock::CopyTo(AstNode *n) const
+{
+	Super::CopyTo(n);
+	auto *tmp = AstStaticCast<AstBlock *>(n);
+	tmp->endOfBlockLocation = endOfBlockLocation;
+}
 
 }

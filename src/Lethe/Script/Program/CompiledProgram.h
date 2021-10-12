@@ -493,6 +493,7 @@ private:
 	Int GetInsType(Int idx) const;
 	Int GetInsImm24(Int idx) const;
 
+	void EmitIns(UInt ins);
 	void EmitInternal(UInt ins);
 
 	static bool IsCondJump(Int ins);

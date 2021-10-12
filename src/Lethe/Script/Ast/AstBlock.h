@@ -21,6 +21,8 @@ public:
 	bool ResolveNode(const ErrorHandler &e) override;
 	bool CodeGen(CompiledProgram &p) override;
 
+	void CopyTo(AstNode *n) const override;
+
 	TokenLocation endOfBlockLocation;
 };
 

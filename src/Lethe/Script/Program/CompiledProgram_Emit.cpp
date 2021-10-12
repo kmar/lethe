@@ -418,6 +418,30 @@ void CompiledProgram::EmitI24(Int ins, Int offset)
 
 void CompiledProgram::Emit(UInt ins)
 {
+	auto oldInsSize = instructions.GetSize();
+
+	EmitIns(ins);
+
+	if (instructions.GetSize() <= oldInsSize && !codeToLine.IsEmpty())
+	{
+		// we may need to fixup codeToLine!
+		auto &cl = codeToLine.Back();
+
+		if (cl.pc >= instructions.GetSize())
+		{
+			Int fixpc = instructions.GetSize()-1;
+
+			// paranoid...
+			if (codeToLine.GetSize() > 1 && codeToLine[codeToLine.GetSize()-2].pc >= fixpc)
+				return;
+
+			cl.pc = fixpc;
+		}
+	}
+}
+
+void CompiledProgram::EmitIns(UInt ins)
+{
 	// optimization to speed up arrayref=>bool conversion
 	if (ins == OPC_POP + 256 && emitOptBase <= instructions.GetSize()-1)
 	{
