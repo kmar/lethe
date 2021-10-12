@@ -1718,40 +1718,49 @@ void QDataType::RemoveVirtualProps()
 void DataType::GetVariableText(StringBuilder &sb, const void *ptr, Int maxLen) const
 {
 	HashSet<const void *> hset;
-	GetVariableTextInternal(hset, sb, ptr, maxLen, false, true);
+	GetVariableTextInternal(false, hset, sb, ptr, maxLen, false, true);
 }
 
-bool DataType::ValidReadPtr(const void *ptr, Int size)
+bool DataType::ValidReadPtr(const void *ptr, IntPtr size)
 {
 	(void)ptr;
 	(void)size;
 #if LETHE_OS_WINDOWS
 	if (size > 0)
 	{
-		// reference: https://stackoverflow.com/questions/496034/most-efficient-replacement-for-isbadreadptr
-		MEMORY_BASIC_INFORMATION mbi = {0};
+		const Byte *src = (const Byte *)ptr;
+		const Byte *end = src + size;
 
-		if (::VirtualQuery(ptr, &mbi, sizeof(mbi)))
+		while (src < end)
 		{
-			DWORD mask = (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY);
-			bool b = !(mbi.Protect & mask);
-			// check the page is not a guard page
-			if (mbi.Protect & (PAGE_GUARD|PAGE_NOACCESS)) b = true;
+			// reference: https://stackoverflow.com/questions/496034/most-efficient-replacement-for-isbadreadptr
+			MEMORY_BASIC_INFORMATION mbi = {0};
 
-			return !b;
+			if (::VirtualQuery(src, &mbi, sizeof(mbi)))
+			{
+				DWORD mask = (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY);
+				bool b = !(mbi.Protect & mask);
+				// check the page is not a guard page
+				if (mbi.Protect & (PAGE_GUARD|PAGE_NOACCESS)) b = true;
+
+				if (b)
+					return false;
+
+				src += mbi.RegionSize;
+			}
+			else
+				return false;
 		}
-
-		return false;
 	}
 #endif
 	return true;
 }
 
-void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen, bool baseStruct, bool depth0) const
+void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen, bool baseStruct, bool depth0) const
 {
 	hset.Add(ptr);
 
-	if (!ValidReadPtr(ptr, size))
+	if (!skipReadCheck && !ValidReadPtr(ptr, size))
 	{
 		sb += '?';
 		return;
@@ -1874,14 +1883,24 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 	case DT_NAME:
 	{
 		Name val = *static_cast<const Name *>(ptr);
-		sb.AppendFormat("'%s' #%d", val.ToString().Escape().Ansi(), val.GetIndex());
+		// validate name index
+		if ((UInt)val.GetIndex() >= (UInt)NameTable::Get().GetSize())
+			sb += '?';
+		else
+			sb.AppendFormat("'%s' #%d", val.ToString().Escape().Ansi(), val.GetIndex());
 	}
 	break;
 
 	case DT_STRING:
 	{
 		String val = *static_cast<const String *>(ptr);
-		sb.AppendFormat("\"%s\"", val.Escape().Ansi());
+
+		// note: this doesn't cover all validptr cases, because there's StringData before that
+		// +1 to include zero-terminator
+		if (!val.IsEmpty() && !ValidReadPtr(val.Ansi(), (IntPtr)val.GetLength()+1))
+			sb += '?';
+		else
+			sb.AppendFormat("\"%s\"", val.Escape().Ansi());
 	}
 	break;
 
@@ -1913,7 +1932,7 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 				sb += obj->GetScriptClassType()->name;
 				sb += ' ';
 
-				obj->GetScriptClassType()->GetVariableTextInternal(hset, sb, ptrval, maxLen);
+				obj->GetScriptClassType()->GetVariableTextInternal(false, hset, sb, ptrval, maxLen);
 			}
 		}
 	}
@@ -1924,19 +1943,24 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 		sb.AppendFormat("[%d]", arrayDims);
 		sb += '{';
 
-		for (Int i=0; i<arrayDims; i++)
+		if (!ValidReadPtr(bptr, size))
+			sb += '?';
+		else
 		{
-			elemType.GetType().GetVariableTextInternal(hset, sb, bptr, maxLen);
-
-			if (i+1 < arrayDims)
-				sb += ", ";
-
-			bptr += elemType.GetSize();
-
-			if (sb.GetLength() > maxLen)
+			for (Int i=0; i<arrayDims; i++)
 			{
-				sb += "...";
-				break;
+				elemType.GetType().GetVariableTextInternal(true, hset, sb, bptr, maxLen);
+
+				if (i+1 < arrayDims)
+					sb += ", ";
+
+				bptr += elemType.GetSize();
+
+				if (sb.GetLength() > maxLen)
+				{
+					sb += "...";
+					break;
+				}
 			}
 		}
 
@@ -1955,23 +1979,28 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 
 		bptr = aref->GetData();
 
-		for (Int i = 0; i<count; i++)
+		if (!ValidReadPtr(bptr, (IntPtr)count * elemType.GetSize()))
+			sb += '?';
+		else
 		{
-			// avoid infinite recursion
-			if (hset.FindIndex(bptr) >= 0)
-				sb += "?";
-			else
-				elemType.GetType().GetVariableTextInternal(hset, sb, bptr, maxLen);
-
-			if (i + 1 < count)
-				sb += ", ";
-
-			bptr += elemType.GetSize();
-
-			if (sb.GetLength() > maxLen)
+			for (Int i = 0; i<count; i++)
 			{
-				sb += "...";
-				break;
+				// avoid infinite recursion
+				if (hset.FindIndex(bptr) >= 0)
+					sb += "?";
+				else
+					elemType.GetType().GetVariableTextInternal(true, hset, sb, bptr, maxLen);
+
+				if (i + 1 < count)
+					sb += ", ";
+
+				bptr += elemType.GetSize();
+
+				if (sb.GetLength() > maxLen)
+				{
+					sb += "...";
+					break;
+				}
 			}
 		}
 
@@ -1987,7 +2016,7 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 		if (baseType.GetTypeEnum() != DT_NONE)
 		{
 			auto olen = sb.GetLength();
-			baseType.GetType().GetVariableTextInternal(hset, sb, bptr, maxLen, true);
+			baseType.GetType().GetVariableTextInternal(false, hset, sb, bptr, maxLen, true);
 
 			if (sb.GetLength() > olen && !members.IsEmpty())
 				sb += ", ";
@@ -2004,7 +2033,7 @@ void DataType::GetVariableTextInternal(HashSet<const void *> &hset, StringBuilde
 			if (m.type.IsReference())
 				mptr = reinterpret_cast<const Byte *>(*(const void **)mptr);
 
-			m.type.GetType().GetVariableTextInternal(hset, sb, mptr, maxLen);
+			m.type.GetType().GetVariableTextInternal(!m.type.IsReference(), hset, sb, mptr, maxLen);
 
 			if (i+1 < members.GetSize())
 				sb += ", ";
