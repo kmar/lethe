@@ -243,6 +243,8 @@ int main()
 
 	lethe::ScriptEngine engine(test_debug_server ? lethe::ENGINE_DEBUG : lethe::ENGINE_JIT);
 
+	engine.EnableInlineExpansion(!test_debug_server);
+
 	const char *source = R"src(
 
 	native class direct_native_class

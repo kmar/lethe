@@ -78,7 +78,8 @@ bool DebugServer::OnDebugBreak(ScriptContext &ctx, ExecResult &eres)
 				doBreak = tloc.line != debugData.origLoc.line;
 			}
 
-			if (!doBreak && depth && depth >= debugData.activeCallStackDepth && (tloc.file != debugData.origLoc.file || tloc.line <= debugData.origLoc.line))
+			if (!doBreak && depth && depth >= debugData.activeCallStackDepth &&
+				(depth > debugData.activeCallStackDepth || tloc.file != debugData.origLoc.file || tloc.line <= debugData.origLoc.line))
 				return false;
 
 			debugData.activeStepCmd = DSTEP_NONE;
@@ -88,6 +89,20 @@ bool DebugServer::OnDebugBreak(ScriptContext &ctx, ExecResult &eres)
 		{
 			if (tloc.line == debugData.origLoc.line)
 				return false;
+
+			const auto &ctol = ctx.GetStack().GetProgram().codeToLine;
+
+			if (!ctol.IsEmpty())
+			{
+				auto *iptr = ctx.GetStack().GetInsPtr();
+				auto *ibeg = ctx.GetStack().GetProgram().instructions.GetData();
+
+				auto pc = iptr - ibeg;
+
+				// ignore internal generated ctor/dtor/copy
+				if (pc < ctol[0].pc)
+					return false;
+			}
 
 			debugData.activeStepCmd = DSTEP_NONE;
 		}
