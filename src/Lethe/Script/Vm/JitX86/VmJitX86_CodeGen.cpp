@@ -405,10 +405,21 @@ bool VmJitX86::CodeGen(CompiledProgram &prog)
 	funcCodeOfs.Reset();
 	funcOfs.Reset();
 
+	Heap::RegisterExecutableMemory(code.GetData(), code.GetSize());
+
 	// security: write protect once done; we only JIT once
 	code.WriteProtect();
 
 	return true;
+}
+
+void VmJitX86::UnregisterCode()
+{
+	if (codeJITRegistered)
+	{
+		Heap::UnregisterExecutableMemory(codeJITRegistered);
+		codeJITRegistered = nullptr;
+	}
 }
 
 bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
@@ -416,12 +427,21 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 	prevJumpSource = jumpSource;
 	jumpSource.Clear();
 
+	UnregisterCode();
+
 	lastIns = -1;
 	lastRex = -1;
 	stackOpt = 0;
 	dontFlush = 0;
 	preserveFlags = 0;
 	code.Clear();
+
+#if LETHE_OS_WINDOWS && LETHE_64BIT
+	// on 64-bit Windows, we need extra page to make SEH work with generated code
+	code.Resize((Int)Heap::GetOSPageSize());
+	code.MemSet(0);
+#endif
+
 	fixups.Clear();
 	pcToCode.Clear();
 	pcToCode.Resize(prog.instructions.GetSize(), -1);

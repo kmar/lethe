@@ -126,6 +126,11 @@ static bool WriteProtectSegment(void *ptr, size_t size, bool enable)
 
 // Heap
 
+size_t Heap::GetOSPageSize()
+{
+	return GetPageSize();
+}
+
 void *Heap::AllocateExecutableMemory(size_t &size)
 {
 	return AllocSegment(size, true);
@@ -140,5 +145,103 @@ void Heap::FreeExecutableMemory(void *ptr, size_t size)
 {
 	FreeSegment(ptr, size);
 }
+
+#if LETHE_OS_WINDOWS && LETHE_64BIT
+
+// reference: https://bugzilla.mozilla.org/show_bug.cgi?id=844196
+
+struct UnwindInfo
+{
+	Byte version : 3;
+	Byte flags : 5;
+	Byte sizeOfPrologue;
+	Byte countOfUnwindCodes;
+	Byte frameRegister : 4;
+	Byte frameOffset : 4;
+	ULONG exceptionHandler;
+};
+
+struct ExceptionHandlerRecord
+{
+	RUNTIME_FUNCTION runtimeFunction;
+	UnwindInfo unwindInfo;
+	Byte thunk[12];
+};
+
+static DWORD WINAPI JITExceptionHandler(
+	PEXCEPTION_RECORD exceptionRecord,
+	_EXCEPTION_REGISTRATION_RECORD *,
+	PCONTEXT context,
+	_EXCEPTION_REGISTRATION_RECORD **)
+{
+	EXCEPTION_POINTERS pointers =
+	{
+		(PEXCEPTION_RECORD)exceptionRecord,
+		(PCONTEXT)context
+	};
+
+	// call UnhandledExceptionFilter if any - is there a better, more general way?
+	// such as executing SEH __try {} __catch {}?
+	auto old = SetUnhandledExceptionFilter(NULL);
+	SetUnhandledExceptionFilter(old);
+
+	if (old)
+		old(&pointers);
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+bool Heap::RegisterExecutableMemory(void *ptr, size_t size)
+{
+	auto *rec = (ExceptionHandlerRecord *)ptr;
+
+	auto &rtfun = rec->runtimeFunction;
+
+	rtfun.BeginAddress = 0;
+	rtfun.EndAddress = (DWORD)size;
+	rtfun.UnwindData = offsetof(ExceptionHandlerRecord, unwindInfo);
+
+#ifndef UNW_FLAG_EHANDLER
+	constexpr Byte UNW_FLAG_EHANDLER = 1;
+#endif
+	auto &unw = rec->unwindInfo;
+	MemSet(&unw, 0, sizeof(rec->unwindInfo));
+	unw.version = 1;
+	unw.flags = UNW_FLAG_EHANDLER;
+	unw.exceptionHandler = offsetof(ExceptionHandlerRecord, thunk);
+
+	// prepare thunk
+	auto *thunk = rec->thunk;
+	// mov rax, imm64
+	thunk[0] = 0x48;
+	thunk[1] = 0xb8;
+	auto *h = (void *)&JITExceptionHandler;
+	MemCpy(thunk+2, &h, sizeof(void *));
+	// jmp rax
+	thunk[10] = 0xff;
+	thunk[11] = 0xe0;
+
+	return RtlAddFunctionTable(&rec->runtimeFunction, 1, (DWORD64)ptr) != FALSE;
+}
+
+bool Heap::UnregisterExecutableMemory(void *ptr)
+{
+	return RtlDeleteFunctionTable((PRUNTIME_FUNCTION)ptr) != FALSE;
+}
+
+#else
+bool Heap::RegisterExecutableMemory(void *ptr, size_t size)
+{
+	(void)ptr;
+	(void)size;
+	return true;
+}
+
+bool Heap::UnregisterExecutableMemory(void *ptr)
+{
+	(void)ptr;
+	return true;
+}
+#endif
 
 }

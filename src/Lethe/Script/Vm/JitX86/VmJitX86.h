@@ -22,6 +22,7 @@ class LETHE_API VmJitX86 : public AsmX86, public VmJitBase
 {
 public:
 	VmJitX86();
+	~VmJitX86();
 
 	Int GetPCFromCodePtr(const void *codePtr) const override;
 
@@ -516,6 +517,8 @@ private:
 	Int fconstBase = 0;
 	Int dconstBase = 0;
 
+	void *codeJITRegistered = nullptr;
+
 	RegExpr FindGpr(Int offset, bool write = 0);
 	RegExpr AllocGpr(Int offset, bool load = 0, bool write = 0, bool pointer = 0);
 	RegExpr AllocGprPtr(Int offset, bool load = 0, bool write = 0);
@@ -538,6 +541,8 @@ private:
 	// New JIT:
 
 	bool CodeGenPass(CompiledProgram &prog, Int pass);
+
+	void UnregisterCode();
 };
 
 }

@@ -11,6 +11,8 @@ namespace lethe
 class LETHE_API Heap
 {
 public:
+	// get OS page size
+	static size_t GetOSPageSize();
 	// JIT support, doesn't matter if enabled or not
 	// size is rounded up to nearest page
 	// returns null on error
@@ -20,6 +22,9 @@ public:
 	// enable/disable write protection for executable memory region
 	// returns true on success
 	static bool WriteProtectExecutableMemory(void *ptr, size_t size, bool enable);
+	// necessary for 64-bit JIT on windows
+	static bool RegisterExecutableMemory(void *ptr, size_t size);
+	static bool UnregisterExecutableMemory(void *ptr);
 };
 
 }

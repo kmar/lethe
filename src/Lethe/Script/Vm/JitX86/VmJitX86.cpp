@@ -22,6 +22,11 @@ VmJitX86::VmJitX86()
 {
 }
 
+VmJitX86::~VmJitX86()
+{
+	UnregisterCode();
+}
+
 RegExpr VmJitX86::FindGpr(Int offset, bool write)
 {
 	return gprCache.Find(offset, write);
