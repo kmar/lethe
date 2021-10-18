@@ -262,8 +262,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 			}
 			else
 			{
-				if (res.IsEmpty())
-					LETHE_RET_FALSE(Expect(false, "unexpected token"));
+				LETHE_RET_FALSE(Expect(false, "unexpected token"));
 			}
 
 			break;
