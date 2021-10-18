@@ -111,6 +111,40 @@ Array<String> ScriptContext::GetCallStack(Int maxVarTextLen) const
 	return vm->GetCallStack(iptr, maxVarTextLen);
 }
 
+Array<String> ScriptContext::GetGlobals(Int maxVarTextLen) const
+{
+	Array<String> res;
+	auto *prog = GetStack().prog;
+
+	if (!prog)
+		return res;
+
+	for (auto &&it : prog->cpool.globalVars)
+	{
+		StringBuilder sb;
+		sb += it.key;
+		sb += " = ";
+
+		auto *gdata = prog->cpool.data.GetData();
+
+		const auto &ginfo = it.value;
+
+		const void *ptr = gdata + ginfo.offset;
+
+		if (ginfo.qualifiers & AST_Q_REFERENCE)
+		{
+			sb += " = ref ";
+			ptr = *(const void **)ptr;
+		}
+
+		ginfo.type->GetVariableText(sb, ptr, maxVarTextLen);
+
+		res.Add(sb.Get());
+	}
+
+	return res;
+}
+
 ExecResult ScriptContext::RunConstructors()
 {
 	vm->prog->cpool.ClearGlobalBakedStrings();

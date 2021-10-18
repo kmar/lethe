@@ -149,8 +149,18 @@ public:
 
 	HashMap<HashableFloat<Float>, Int> fPoolMap;
 	HashMap<HashableFloat<Double>, Int> dPoolMap;
-	// name => offset
-	HashMap<String, Int> globalVars;
+
+	struct GlobalVarInfo
+	{
+		// type
+		ULong qualifiers = 0;
+		const DataType *type = nullptr;
+		// offset in global data
+		Int offset = -1;
+	};
+
+	// name => info
+	HashMap<String, GlobalVarInfo> globalVars;
 
 	// number of live script objects
 	mutable AtomicInt liveScriptObjects = 0;

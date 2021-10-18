@@ -365,6 +365,33 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			continue;
 		}
 
+		if (buf == "getglobals")
+		{
+			auto ctxs = GetEngine().GetContexts();
+
+			StringBuilder sb;
+			sb = "getglobals\n";
+
+			if (ctxs.IsEmpty())
+				continue;
+
+			for (auto &&ctx : ctxs)
+			{
+				if (!ctx->InBreakMode())
+					continue;
+
+				auto glob = ctx->GetGlobals(65536);
+
+				for (auto &&it2 : glob)
+					sb.AppendFormat("%s\n", it2.Ansi());
+
+				nsocket->SendData(sb.Get());
+				break;
+			}
+
+			continue;
+		}
+
 		if (buf == "break_all")
 		{
 			auto ctxs = GetEngine().GetContexts();

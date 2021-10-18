@@ -35,7 +35,11 @@ void ConstPool::Align(Int align)
 Int ConstPool::AllocGlobalVar(const QDataType &dt, const String &name)
 {
 	auto res = AllocGlobal(dt);
-	globalVars[name] = res;
+	GlobalVarInfo info;
+	info.offset = res;
+	info.qualifiers = dt.qualifiers;
+	info.type = dt.ref;
+	globalVars[name] = info;
 	return res;
 }
 

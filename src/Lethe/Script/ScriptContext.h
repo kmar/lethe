@@ -82,6 +82,9 @@ public:
 	// get callstack depth, useful for step over/step out
 	Int GetCallStackDepth() const;
 
+	// get global variables
+	Array<String> GetGlobals(Int maxVarTextLen = 1024) const;
+
 	// run global contructors/destructors
 	ExecResult RunConstructors();
 	ExecResult RunDestructors();

@@ -576,7 +576,7 @@ void *ScriptEngine::FindGlobalVariable(const String &n) const
 
 		if (it != program->cpool.globalVars.End())
 		{
-			auto offset = it->value;
+			auto offset = it->value.offset;
 
 			return program->cpool.data.GetData() + offset;
 		}
