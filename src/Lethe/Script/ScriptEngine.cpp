@@ -440,7 +440,9 @@ Int ScriptEngine::SetBreakpoint(const String &nfilename, Int npc, bool enabled)
 Int ScriptEngine::SetBreakpointInternal(const String &nfilename, Int npc, bool enabled)
 {
 	auto brkHandle = freeBreakpoints.Alloc();
-	breakpoints.Resize(brkHandle+1);
+
+	if (brkHandle >= breakpoints.GetSize())
+		breakpoints.Resize(brkHandle+1);
 
 	ScriptBreakpoint &sbrk = breakpoints[brkHandle];
 	sbrk.filename = nfilename;
