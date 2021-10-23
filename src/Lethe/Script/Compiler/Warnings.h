@@ -27,7 +27,9 @@ enum Warnings
 	// discarding result of a nodiscard function call
 	WARN_DISCARD,
 	// division by zero
-	WARN_DIV_BY_ZERO
+	WARN_DIV_BY_ZERO,
+	// signed-unsigned comparison
+	WARN_SIGNED_UNSIGNED_COMPARISON
 };
 
 }

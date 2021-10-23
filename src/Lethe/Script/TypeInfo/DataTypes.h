@@ -283,6 +283,9 @@ public:
 	// is elementary numeric type smaller than int?
 	bool IsSmallNumber() const;
 
+	// is integer type?
+	bool IsInteger() const;
+
 	// contains array ref?
 	bool HasArrayRef() const;
 

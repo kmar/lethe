@@ -1049,26 +1049,32 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 		break;
 
 	case AST_OP_EQ:
+		CmpWarn(p, leftType, rightType, dtdst);
 		opc = OpCodeEq(dt);
 		break;
 
 	case AST_OP_NEQ:
+		CmpWarn(p, leftType, rightType, dtdst);
 		opc = OpCodeNe(dt);
 		break;
 
 	case AST_OP_LT:
+		CmpWarn(p, leftType, rightType, dtdst);
 		opc = OpCodeLt(dt);
 		break;
 
 	case AST_OP_LEQ:
+		CmpWarn(p, leftType, rightType, dtdst);
 		opc = OpCodeLe(dt);
 		break;
 
 	case AST_OP_GT:
+		CmpWarn(p, leftType, rightType, dtdst);
 		opc = OpCodeGt(dt);
 		break;
 
 	case AST_OP_GEQ:
+		CmpWarn(p, leftType, rightType, dtdst);
 		opc = OpCodeGe(dt);
 		break;
 
@@ -1234,6 +1240,83 @@ const AstNode *AstBinaryOp::GetTypeNode() const
 	const auto *ctype = CoerceTypes(type0, type1);
 
 	return ctype ? ctype : type0;
+}
+
+void AstBinaryOp::CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, const DataType &dst)
+{
+	if (!dst.IsInteger())
+		return;
+
+	auto lte = left.GetTypeEnum();
+
+	if (lte < DT_INT)
+		lte = DT_INT;
+
+	auto rte = right.GetTypeEnum();
+
+	if (rte < DT_INT)
+		rte = DT_INT;
+
+	const auto olte = lte;
+	const auto orte = rte;
+
+	if (rte < lte)
+		Swap(lte, rte);
+
+	const DataTypeEnum warnTable[][2] =
+	{
+		{DT_INT, DT_UINT},
+		{DT_INT, DT_ULONG},
+		{DT_LONG, DT_ULONG}
+	};
+
+	for (Int i=0; i<(Int)ArraySize(warnTable); i++)
+	{
+		if (lte != warnTable[i][0] || rte != warnTable[i][1])
+			continue;
+
+		// one last thing to check - if either node is integer constant
+		const AstNode *constIntNode = nullptr;
+
+		if ((olte == DT_INT || olte == DT_LONG) && nodes[0]->IsConstant())
+			constIntNode = nodes[0];
+		else if ((orte == DT_INT || orte == DT_LONG) && nodes[1]->IsConstant())
+			constIntNode = nodes[1];
+
+		bool okToCompare = false;
+
+		// at this point, const node is already converted to unsigned...
+		if (constIntNode)
+		{
+			switch(constIntNode->type)
+			{
+			case AST_CONST_BOOL:
+				okToCompare = true;
+				break;
+			case AST_CONST_CHAR:
+			case AST_CONST_INT:
+				okToCompare = constIntNode->num.i >= 0;
+				break;
+			case AST_CONST_UINT:
+				// avoiding UB
+				okToCompare = (constIntNode->num.ui >> 31) == 0;
+				break;
+			case AST_CONST_LONG:
+				okToCompare = constIntNode->num.l >= 0;
+				break;
+			case AST_CONST_ULONG:
+				// avoiding UB
+				okToCompare = (constIntNode->num.ul >> 63) == 0;
+				break;
+			default:;
+			}
+		}
+
+		if (!okToCompare)
+			p.Warning(this, "signed-unsigned comparison", WARN_SIGNED_UNSIGNED_COMPARISON);
+
+		break;
+	}
 }
 
 

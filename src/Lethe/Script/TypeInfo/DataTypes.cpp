@@ -169,6 +169,11 @@ bool DataType::IsSmallNumber() const
 	return type >= DT_BOOL && type < DT_CHAR && size < 4;
 }
 
+bool DataType::IsInteger() const
+{
+	return type >= DT_BOOL && type <= DT_ULONG;
+}
+
 bool DataType::IsNumberEnum(DataTypeEnum t)
 {
 	return t >= DT_BYTE && t <= DT_DOUBLE;
