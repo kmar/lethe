@@ -42,7 +42,7 @@ class LETHE_API String
 {
 public:
 	// default constructor.
-	String();
+	inline String() : data(nullptr) {}
 	// construct from C string.
 	String(const char *str);
 	// construct from wide-char C string.

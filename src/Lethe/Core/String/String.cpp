@@ -152,10 +152,6 @@ String::CharIterator String::Begin() const
 	return res;
 }
 
-String::String(void) : data(0)
-{
-}
-
 String::String(const StringRef &sr)
 	: data(nullptr)
 {
