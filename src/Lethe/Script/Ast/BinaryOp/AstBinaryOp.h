@@ -53,6 +53,8 @@ private:
 
 	void CheckWarn(const DataType &ldt, const CompiledProgram &p, const AstNode *n);
 
+	static bool SmallIntNeverNegative(DataTypeEnum dte);
+
 	void CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, const DataType &dst);
 
 	static AstTypeBool boolType;

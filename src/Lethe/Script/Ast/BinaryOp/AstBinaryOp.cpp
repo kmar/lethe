@@ -1242,6 +1242,19 @@ const AstNode *AstBinaryOp::GetTypeNode() const
 	return ctype ? ctype : type0;
 }
 
+bool AstBinaryOp::SmallIntNeverNegative(DataTypeEnum dte)
+{
+	switch(dte)
+	{
+	case DT_BOOL:
+	case DT_BYTE:
+	case DT_USHORT:
+		return true;
+	default:
+		return false;
+	}
+}
+
 void AstBinaryOp::CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, const DataType &dst)
 {
 	if (!dst.IsInteger())
@@ -1250,12 +1263,22 @@ void AstBinaryOp::CmpWarn(const CompiledProgram &p, const QDataType &left, const
 	auto lte = left.GetTypeEnum();
 
 	if (lte < DT_INT)
+	{
+		if (SmallIntNeverNegative(lte))
+			return;
+
 		lte = DT_INT;
+	}
 
 	auto rte = right.GetTypeEnum();
 
 	if (rte < DT_INT)
+	{
+		if (SmallIntNeverNegative(rte))
+			return;
+
 		rte = DT_INT;
+	}
 
 	const auto olte = lte;
 	const auto orte = rte;
