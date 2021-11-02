@@ -286,6 +286,9 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 	// handle relational ops...
 	const bool isCmp = IsCompare();
 
+	if (isCmp)
+		CmpWarn(p, t0, t1, tdt);
+
 	UniquePtr<AstNode> res = AstCreateConstNode(isCmp ? DT_BOOL : tdt, location);
 
 	const char *warn = nullptr;
@@ -1049,32 +1052,32 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 		break;
 
 	case AST_OP_EQ:
-		CmpWarn(p, leftType, rightType, dtdst);
+		CmpWarn(p, leftType, rightType, dtdst.type);
 		opc = OpCodeEq(dt);
 		break;
 
 	case AST_OP_NEQ:
-		CmpWarn(p, leftType, rightType, dtdst);
+		CmpWarn(p, leftType, rightType, dtdst.type);
 		opc = OpCodeNe(dt);
 		break;
 
 	case AST_OP_LT:
-		CmpWarn(p, leftType, rightType, dtdst);
+		CmpWarn(p, leftType, rightType, dtdst.type);
 		opc = OpCodeLt(dt);
 		break;
 
 	case AST_OP_LEQ:
-		CmpWarn(p, leftType, rightType, dtdst);
+		CmpWarn(p, leftType, rightType, dtdst.type);
 		opc = OpCodeLe(dt);
 		break;
 
 	case AST_OP_GT:
-		CmpWarn(p, leftType, rightType, dtdst);
+		CmpWarn(p, leftType, rightType, dtdst.type);
 		opc = OpCodeGt(dt);
 		break;
 
 	case AST_OP_GEQ:
-		CmpWarn(p, leftType, rightType, dtdst);
+		CmpWarn(p, leftType, rightType, dtdst.type);
 		opc = OpCodeGe(dt);
 		break;
 
@@ -1255,9 +1258,10 @@ bool AstBinaryOp::SmallIntNeverNegative(DataTypeEnum dte)
 	}
 }
 
-void AstBinaryOp::CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, const DataType &dst)
+void AstBinaryOp::CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, DataTypeEnum dste)
 {
-	if (!dst.IsInteger())
+	// integer?
+	if (dste < DT_BOOL || dste > DT_ULONG)
 		return;
 
 	auto lte = left.GetTypeEnum();

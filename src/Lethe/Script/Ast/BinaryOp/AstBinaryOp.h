@@ -55,7 +55,7 @@ private:
 
 	static bool SmallIntNeverNegative(DataTypeEnum dte);
 
-	void CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, const DataType &dst);
+	void CmpWarn(const CompiledProgram &p, const QDataType &left, const QDataType &right, DataTypeEnum dste);
 
 	static AstTypeBool boolType;
 };
