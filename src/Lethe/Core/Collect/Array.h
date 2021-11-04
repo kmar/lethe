@@ -60,6 +60,9 @@ public:
 	LETHE_NOINLINE Array &Resize(S newSize);
 	// resize (use ini as initializer)
 	LETHE_NOINLINE Array &Resize(S newSize, const T &ini);
+	// resize to fit index
+	inline Array &ResizeToFit(S index);
+	inline Array &ResizeToFit(S index, const T &ini);
 	// this doesn't do any shrinking
 	LETHE_NOINLINE Array &Reserve(S newReserve);
 	// ensure capacity, going in 1.5x increments (made public)
@@ -251,7 +254,7 @@ public:
 
 	inline bool IsValidIndex(S idx) const
 	{
-		return idx >= 0 && idx < this->size;
+		return IsValidArrayIndex(idx, this->size);
 	}
 
 protected:

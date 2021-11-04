@@ -91,6 +91,24 @@ inline bool Array<T,S,A>::IsEmpty() const
 }
 
 template< typename T, typename S, typename A >
+inline Array<T,S,A> &Array<T,S,A>::ResizeToFit(S index)
+{
+	if (index >= this->size)
+		Resize(index+1);
+
+	return *this;
+}
+
+template< typename T, typename S, typename A >
+inline Array<T,S,A> &Array<T,S,A>::ResizeToFit(S index, const T &ini)
+{
+	if (index >= this->size)
+		Resize(index+1, ini);
+
+	return *this;
+}
+
+template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::Resize(S newSize)
 {
 	LETHE_ASSERT(newSize >= 0);

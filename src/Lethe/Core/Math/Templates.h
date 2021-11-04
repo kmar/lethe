@@ -71,6 +71,13 @@ template< typename T > static inline T Sqr(const T &x)
 	return x*x;
 }
 
+// tests for array index validity
+template<typename T, typename U>
+inline bool IsValidArrayIndex(const T &idx, const U &count)
+{
+	return (size_t)idx < (size_t)count;
+}
+
 // returns size of static array in elements
 template< size_t N, typename T > static inline constexpr size_t ArraySize(T (&)[N])
 {
