@@ -658,7 +658,10 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 
 	Int frameDist = lscopeRef->varSize;
 	Int delta = frameDist - frameOfs;
-	LETHE_ASSERT(delta >= 0);
+
+	if (delta < 0)
+		return p.Error(this, "negative stack frame offset");
+
 	delta += p.exprStackOfs;
 	delta /= Stack::WORD_SIZE;
 
