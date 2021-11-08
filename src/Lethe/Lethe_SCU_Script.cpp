@@ -6,6 +6,7 @@
 #include "Script/Ast/AstNamespace.cpp"
 #include "Script/Ast/AstNode.cpp"
 #include "Script/Ast/AstProgram.cpp"
+#include "Script/Ast/AstStaticAssert.cpp"
 #include "Script/Ast/AstStructLiteral.cpp"
 #include "Script/Ast/AstSymbol.cpp"
 #include "Script/Ast/AstText.cpp"

@@ -267,6 +267,8 @@ private:
 	Attributes *ParseAttributes();
 	AstNode *ParseProgram(Int depth, const String &nfilename);
 
+	AstNode *ParseStaticAssert(Int depth = 0);
+
 	AstNode *NewAstType(TokenType tt, const TokenLocation &nloc) const;
 
 	// echoes false

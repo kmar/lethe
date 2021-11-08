@@ -178,7 +178,8 @@ enum TokenTypeBase
 	TOK_KEY_NODISCARD,
 	TOK_KEY_MACRO,
 	TOK_KEY_ENDMACRO,
-	TOK_KEY_ENDIF
+	TOK_KEY_ENDIF,
+	TOK_KEY_STATIC_ASSERT
 };
 
 typedef TokenTypeBase TokenType;

@@ -92,6 +92,7 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"macro", TOK_KEY_MACRO},
 	{"endmacro", TOK_KEY_ENDMACRO},
 	{"endif", TOK_KEY_ENDIF},
+	{"static_assert", TOK_KEY_STATIC_ASSERT},
 
 	{nullptr, TOK_INVALID}
 };

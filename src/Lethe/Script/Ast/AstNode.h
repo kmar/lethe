@@ -217,7 +217,9 @@ enum AstNodeType : Short
 	AST_NPROP_METHOD,
 	// label and goto
 	AST_LABEL,
-	AST_GOTO
+	AST_GOTO,
+	// static assert
+	AST_STATIC_ASSERT
 };
 
 template<typename T>

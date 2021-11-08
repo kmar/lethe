@@ -1260,19 +1260,27 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			continue;
 		}
 
+		if (nt.type == TOK_KEY_STATIC_ASSERT)
+		{
+			auto *sa = ParseStaticAssert(depth+1);
+			LETHE_RET_FALSE(sa);
+			ntype->Add(sa);
+			continue;
+		}
+
 		if (nt.type == TOK_KEY_TYPEDEF)
 		{
-			UniquePtr<AstNode> tdef = ParseTypeDef(depth+1);
+			auto *tdef = ParseTypeDef(depth+1);
 			LETHE_RET_FALSE(tdef);
-			ntype->Add(tdef.Detach());
+			ntype->Add(tdef);
 			continue;
 		}
 
 		if (nt.type == TOK_KEY_USING)
 		{
-			UniquePtr<AstNode> tdef = ParseUsing(depth+1);
+			auto *tdef = ParseUsing(depth+1);
 			LETHE_RET_FALSE(tdef);
-			ntype->Add(tdef.Detach());
+			ntype->Add(tdef);
 			continue;
 		}
 

@@ -645,6 +645,34 @@ bool Compiler::ParseMacroInternal(bool conditionalOnly)
 	return true;
 }
 
+AstNode *Compiler::ParseStaticAssert(Int depth)
+{
+	LETHE_RET_FALSE(CheckDepth(depth));
+
+	const auto &tok = ts->GetToken();
+
+	UniquePtr<AstNode> res = NewAstNode<AstStaticAssert>(tok.location);
+
+	LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_LBR, "expected `('"));
+
+	UniquePtr<AstNode> expr = ParseAssignExpression(depth+1);
+	LETHE_RET_FALSE(!expr.IsEmpty());
+
+	res->Add(expr.Detach());
+
+	if (ts->PeekToken().type == TOK_COMMA)
+	{
+		ts->ConsumeToken();
+		const auto &msgtok = ts->GetToken();
+		LETHE_RET_FALSE(ExpectPrev(msgtok.type == TOK_STRING, "expected a string literal"));
+		res->Add(NewAstText<AstTextConstant>(msgtok.text, AST_CONST_STRING, msgtok.location));
+	}
+
+	LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)'"));
+
+	return res.Detach();
+}
+
 AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 {
 	classOpen = 0;
@@ -770,15 +798,23 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 		case TOK_KEY_TYPEDEF:
 		case TOK_KEY_USING:
 		{
-			UniquePtr<AstNode> tdef = t.type == TOK_KEY_TYPEDEF ? ParseTypeDef(depth+1) : ParseUsing(depth+1);
+			AstNode *tdef = t.type == TOK_KEY_TYPEDEF ? ParseTypeDef(depth+1) : ParseUsing(depth+1);
 			LETHE_RET_FALSE(tdef);
-			cur->Add(tdef.Detach());
+			cur->Add(tdef);
 		}
 		break;
 
 		case TOK_KEY_MACRO:
 			LETHE_RET_FALSE(ParseMacro(depth+1));
 			break;
+
+		case TOK_KEY_STATIC_ASSERT:
+		{
+			auto *sa = ParseStaticAssert(depth+1);
+			LETHE_RET_FALSE(sa);
+			cur->Add(sa);
+		}
+		break;
 
 		case TOK_KEY_ASSERT:
 		case TOK_KEY_FORMAT:

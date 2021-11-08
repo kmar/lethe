@@ -94,4 +94,6 @@
 #include <Lethe/Script/Ast/Types/AstTypeClass.h>
 #include <Lethe/Script/Ast/Types/AstTypeDef.h>
 
+#include <Lethe/Script/Ast/AstStaticAssert.h>
+
 #include <Lethe/Script/Ast/AstImport.h>

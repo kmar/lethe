@@ -171,6 +171,7 @@ static const char *AST_TYPE_NAMES[] =
 	"AST_NPROP_METHOD",
 	"AST_LABEL",
 	"AST_GOTO",
+	"AST_STATIC_ASSERT",
 	nullptr
 };
 

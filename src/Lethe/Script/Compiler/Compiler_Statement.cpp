@@ -597,6 +597,14 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			continue;
 		}
 
+		case TOK_KEY_STATIC_ASSERT:
+		{
+			AstNode *sa = ParseStaticAssert(depth+1);
+			LETHE_RET_FALSE(sa);
+			res->Add(sa);
+			continue;
+		}
+
 		case TOK_KEY_TYPEDEF:
 		case TOK_KEY_USING:
 		{
