@@ -63,8 +63,14 @@
 		A,
 		B
 	}
+
+	enum class MyEnum
+	{
+		A,
+		B
+	}
 ```
-enums are always of type int and enum items injected directly into enclosing scope. scoped enums have to be emulated with namespaces.
+enums are always of type int and enum items injected directly into enclosing scope. scoped enums have to be declared as enum class EnumType.
 
 <a id="string_type"></a>
 #### strings
@@ -288,7 +294,7 @@ operator | description                 | associativity
 ---------|-----------------------------|--------------
 ::       | scope resolution            | left to right
 a++ a-- func() a[] .  | post-increment/decrement, function call, subscript, member access |
-++a --a +a -a cast new| pre-inc/dec, unary, cast, new| right to left
+++a --a +a -a cast new sizeof typeid| pre-inc/dec, unary, cast, new| right to left
 a*b a/b a%b | multiplication, division, remainder | left to right
 a+b a-b | addition, subtraction |
 << >> | bitwise shifts |
@@ -403,7 +409,9 @@ example:
 ```
 <a id="statements"></a>
 #### statements
-
+* static assert
+	static_assert(const_cond) or static_assert(const_cond, "message")
+	can appear at global, struct or block scope, also as a single statement
 * control flow
 	* **if**/**else**, **while**, **do**/**while**, **for**, **break**/**continue** just like C/C++
 	* **switch**/**case**/**default:** ditto
