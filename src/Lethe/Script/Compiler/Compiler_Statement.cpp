@@ -504,6 +504,15 @@ AstNode *Compiler::ParseStatement(Int depth)
 		ts->ConsumeToken();
 		break;
 
+	case TOK_KEY_STATIC_ASSERT:
+	{
+		AstNode *sa = ParseStaticAssert(depth+1);
+		LETHE_RET_FALSE(sa);
+		res = sa;
+		ts->ConsumeTokenIf(TOK_SEMICOLON);
+		break;
+	}
+
 	case TOK_STRING:
 	{
 		// this is non-niggerlicious HolyC's shortcut printf (RIP Terry A. Davis)
