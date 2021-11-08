@@ -19,6 +19,8 @@
 #include <Lethe/Script/Ast/NamedScope.h>
 #include <Lethe/Script/TypeInfo/Attributes.h>
 
+#include <Lethe/Script/Program/CompiledProgram.h>
+
 namespace lethe
 {
 
