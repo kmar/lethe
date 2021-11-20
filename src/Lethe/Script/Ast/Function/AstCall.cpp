@@ -784,6 +784,19 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		p.EmitI24(OPC_BCALL, BUILTIN_LPUSHSTR_CONST);
 		// note: set state label cleans up stack
 		p.EmitI24(OPC_BMCALL, BUILTIN_SET_STATE_LABEL);
+
+		// poor man's unreachable code test => nothing is executed explicit state function call
+		auto cidx = cachedIndex;
+		auto *blk = parent;
+
+		if (blk->type == AST_EXPR)
+		{
+			cidx = blk->cachedIndex;
+			blk = blk->parent;
+		}
+
+		if (blk && (blk->type == AST_BLOCK || blk->type == AST_FUNC_BODY) && blk->nodes.GetSize() > cidx+1)
+			p.Warning(blk->nodes[cidx+1], "unreachable code");
 	}
 
 	if (isLatent || isStateBreak)
