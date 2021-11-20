@@ -1074,6 +1074,17 @@ void objFixStateName(Stack &stk)
 	res = it == smap.End() ? sname : it->value;
 }
 
+void objSetStateDelegateRef(Stack &stk)
+{
+	ArgParserMethod ap(stk);
+	stk.GetContext().SetStateDelegateRef(ap.Get<ScriptDelegate *>());
+}
+
+void objResetStateDelegateRef(Stack &stk)
+{
+	stk.GetContext().SetStateDelegateRef(nullptr);
+}
+
 void natCallstack(Stack &stk)
 {
 	String res;
@@ -1330,7 +1341,7 @@ static void native_decodeUtf8(Stack &stk)
 	stk.SetInt(1, ch);
 }
 
-static void objClassNameFromDelegate(Stack &stk)
+static void native_classNameFromDelegate(Stack &stk)
 {
 	ArgParser ap(stk);
 	auto sd = ap.Get<ScriptDelegate>();
@@ -1344,6 +1355,14 @@ static void objClassNameFromDelegate(Stack &stk)
 
 	if (dt)
 		res = dt->className;
+}
+
+static void native_funcNameFromDelegate(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto sd = ap.Get<ScriptDelegate>();
+	auto &res = ap.Get<String>();
+	res = stk.GetContext().GetEngine().FindMethodName(sd);
 }
 
 static void natHashFloat(Stack &stk)
@@ -1617,7 +1636,12 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("object::class_name", objGetClassName);
 	p.cpool.BindNativeFunc("object::nonstate_class_name", objGetNonStateClassName);
 	p.cpool.BindNativeFunc("object::fix_state_name", objFixStateName);
-	p.cpool.BindNativeFunc("object::class_name_from_delegate", objClassNameFromDelegate);
+	p.cpool.BindNativeFunc("object::set_state_delegate_ref", objSetStateDelegateRef);
+	p.cpool.BindNativeFunc("object::reset_state_delegate_ref", objResetStateDelegateRef);
+
+	// state helpers:
+	p.cpool.BindNativeFunc("class_name_from_delegate", native_classNameFromDelegate);
+	p.cpool.BindNativeFunc("func_name_from_delegate", native_funcNameFromDelegate);
 
 	// callstack:
 	p.cpool.BindNativeFunc("callstack", natCallstack);

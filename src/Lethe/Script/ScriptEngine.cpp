@@ -164,12 +164,19 @@ __intrinsic class object
 	nodiscard native final name nonstate_class_name() const;
 	// this handles class inheritance, so base state class gets mapped to actual state class in derived class
 	nodiscard native final name fix_state_name(name state_class_name) const;
-	// state helper
-	nodiscard native static name class_name_from_delegate(void delegate() dg);
 
 	// set vtable
 	native bool vtable(name className);
+
+	// state helpers
+	native void final set_state_delegate_ref(void delegate() &ref);
+	native void final reset_state_delegate_ref();
 }
+
+// state helpers
+nodiscard native name class_name_from_delegate(void delegate() dg);
+// note: doesn't work for struct delegates, also: the name is not fully qualified!
+nodiscard native string func_name_from_delegate(void delegate() dg);
 
 namespace __int
 {
@@ -987,7 +994,7 @@ String ScriptEngine::FindMethodName(ScriptDelegate dg) const
 {
 	auto *obj = static_cast<ScriptBaseObject *>(dg.instancePtr);
 
-	if (!obj || !program)
+	if (!obj || !program || dg.IsStruct())
 		return String();
 
 	const auto *dt = obj->GetScriptClassType();

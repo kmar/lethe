@@ -12,6 +12,7 @@ ScriptContext::ScriptContext(Int stkSize)
 	: vmJit(nullptr)
 	, mode(ENGINE_JIT)
 	, mutex(Mutex::Recursive())
+	, stateDelegateRef(nullptr)
 {
 	if (stkSize <= 0)
 		stkSize = 65536;
@@ -532,6 +533,11 @@ bool ScriptContext::GetCurrentLocation(TokenLocation &nloc) const
 String ScriptContext::GetFunctionSignature(const StringRef &funcName) const
 {
 	return GetEngine().GetFunctionSignature(funcName);
+}
+
+void ScriptContext::SetStateDelegateRef(ScriptDelegate *nref)
+{
+	stateDelegateRef = nref;
 }
 
 }

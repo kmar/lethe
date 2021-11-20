@@ -550,7 +550,7 @@ AstNode *Compiler::ParseStatement(Int depth)
 	return res.Detach();
 }
 
-AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isStateFunc)
+AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isStateFunc, const String *fname)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 
@@ -573,8 +573,10 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			auto *exprNode = NewAstNode<AstExpr>(t.location);
 			auto *callNode = NewAstNode<AstCall>(t.location);
 			auto *identNode = NewAstText<AstSymbol>("end_state", t.location);
+			auto *argNode = NewAstText<AstSymbol>(fname->Ansi(), t.location);
 
 			callNode->Add(identNode);
+			callNode->Add(argNode);
 			exprNode->Add(callNode);
 			exprNode->qualifiers |= AST_Q_NOSTATEBREAK;
 			deferNode->Add(exprNode);

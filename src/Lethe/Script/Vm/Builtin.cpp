@@ -1173,19 +1173,28 @@ const char *Opcode_SetStateLabel(Stack &stk)
 	Opcode_LDelStr0(stk);
 	stk.Pop(Stack::STRING_WORDS+1);
 
-	Int idx = stk.GetContext().GetEngine().FindFunctionOffset(labelName);
-	//Int idx = stk.GetContext().GetEngine().FindMethodIndex(labelName, clsname);
+	auto &ctx = stk.GetContext();
+
+	Int idx = ctx.GetEngine().FindFunctionOffset(labelName);
 	// now encode as script delegate
-	auto *fptr = stk.GetContext().GetEngine().MethodIndexToPointer(idx);
+	auto *fptr = ctx.GetEngine().MethodIndexToPointer(idx);
 	ScriptDelegate sd;
 	sd.instancePtr = stk.GetThis();
 	sd.funcPtr = const_cast<void *>(fptr);
-	// the DUMBEST part comes now, we need to find variable to store to
-	const auto *dt = stk.GetProgram().FindClass(clsname);
-	const auto *member = dt->FindMember("current_state_delegate");
 
-	if (member)
-		*(ScriptDelegate *)(static_cast<Byte *>(sd.instancePtr) + member->offset) = sd;
+	auto *statedg = ctx.GetStateDelegateRef();
+
+	if (statedg)
+		*statedg = sd;
+	else
+	{
+		// the DUMBEST part comes now, we need to find variable to store to
+		const auto *dt = stk.GetProgram().FindClass(clsname);
+		const auto *member = dt->FindMember("current_state_delegate");
+
+		if (member)
+			*(ScriptDelegate *)(static_cast<Byte *>(sd.instancePtr) + member->offset) = sd;
+	}
 
 /*	// TODO: check stack level (this will be tricky because there can be random garbage at the start)
 	auto *stktop = stk.GetTop();

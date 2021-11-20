@@ -242,7 +242,7 @@ private:
 	AstNode *ParseSwitchBody(Int depth);
 	AstNode *ParseStatement(Int depth);
 	AstNode *ParseNoBreakStatement(Int depth);
-	AstNode *ParseBlock(Int depth, bool isFunc = false, bool noCheck = false, bool isStateFunc = false);
+	AstNode *ParseBlock(Int depth, bool isFunc = false, bool noCheck = false, bool isStateFunc = false, const String *fname = nullptr);
 
 	AstNode *ParseVarDeclOrExpr(Int depth, bool refFirstInit = 0, bool initOnly = 1);
 

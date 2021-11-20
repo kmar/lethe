@@ -177,10 +177,15 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 
 		if (!skipBody)
 		{
-			if (nname->type == AST_IDENT)
-				ts->SetFuncName(AstStaticCast<AstText *>(nname)->text);
+			String *fname = nullptr;
 
-			fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0);
+			if (nname->type == AST_IDENT)
+			{
+				fname = &AstStaticCast<AstText *>(nname)->text;
+				ts->SetFuncName(*fname);
+			}
+
+			fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0, fname);
 			ts->SetFuncName(String());
 
 			LETHE_RET_FALSE(fbody);
