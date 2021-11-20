@@ -762,6 +762,28 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 		if (!enclosing || !(enclosing->qualifiers & AST_Q_STATE))
 			return p.Error(this, "state functions cannot be called directly");
+
+		const auto *thisScope = fdef->scopeRef->FindThis();
+
+		if (!thisScope || !thisScope->node)
+			return p.Error(this, "this not found");
+
+		auto *thisNode = AstStaticCast<AstTypeClass *>(thisScope->node);
+		auto clsname = thisNode->GetName();
+
+		if (fdef->type != AST_FUNC)
+			return p.Error(this, "invalid state function call");
+
+		auto calleeFuncName = AstStaticCast<AstText *>(fdef->nodes[AstFunc::IDX_NAME])->GetQText(p);
+
+		Int istr = p.cpool.Add(calleeFuncName);
+
+		// emit class name, label
+		p.EmitIntConst(clsname.GetIndex());
+		p.EmitIntConst(istr);
+		p.EmitI24(OPC_BCALL, BUILTIN_LPUSHSTR_CONST);
+		// note: set state label cleans up stack
+		p.EmitI24(OPC_BMCALL, BUILTIN_SET_STATE_LABEL);
 	}
 
 	if (isLatent || isStateBreak)
