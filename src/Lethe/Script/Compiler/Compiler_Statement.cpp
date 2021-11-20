@@ -557,6 +557,9 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 	NamedScopeGuard nsg(this, currentScope->Add(new NamedScope(isFunc ? NSCOPE_FUNCTION : NSCOPE_LOCAL)));
 	currentScope->needExtraScope = 0;
 
+	if (fname)
+		currentScope->name = *fname;
+
 	const Token &t = noCheck ? ts->PeekToken() : ts->GetToken();
 	LETHE_ASSERT(noCheck || t.type == TOK_LBLOCK);
 	UniquePtr<AstNode> res;

@@ -72,7 +72,9 @@ enum AstQualifier : ULong
 	AST_Q_FUNC_REFERENCED = (ULong)1 << 44,
 	// don't discard result
 	AST_Q_NODISCARD = (ULong)1 << 45,
-	// note: 18 left
+	// for typedefs: symbol alias
+	AST_Q_SYMBOL_ALIAS = (ULong)1 << 46,
+	// note: 17 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

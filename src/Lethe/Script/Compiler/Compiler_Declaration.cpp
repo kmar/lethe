@@ -228,6 +228,8 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 
+	const bool isStateVar = (ntype->qualifiers & AST_Q_STATE) != 0;
+
 	if (currentScope->IsLocal())
 		ntype->qualifiers |= AST_Q_LOCAL_INT;
 
@@ -324,7 +326,9 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 		nname->flags |= AST_F_RESOLVED;
 
 		const String &vname = AstStaticCast<const AstText *>(nname.Get())->text;
-		LETHE_RET_FALSE(AddScopeMember(vname, vn.Get()));
+
+		if (!isStateVar)
+			LETHE_RET_FALSE(AddScopeMember(vname, vn.Get()));
 
 		if (refFirstInit && idx == 0 && init)
 			vn->flags |= AST_F_REFERENCED;
@@ -449,7 +453,121 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 		}
 
 		if (ntt == TOK_SEMICOLON || ntt == TOK_RBR || ntt == TOK_RBLOCK || ntt == TOK_COLON)
-			return res.Detach();
+		{
+			if (!isStateVar)
+				return res.Detach();
+
+			// handle state vars here...
+			auto *fscope = res->scopeRef->FindFunctionScope();
+			const NamedScope *clsscope = nullptr;
+
+			// we need to include nested class names here as well
+			StackArray<const NamedScope *, 16> classChain;
+
+			if (fscope->parent && fscope->parent->type == NSCOPE_ARGS)
+			{
+				clsscope = fscope->parent->parent;
+
+				// don't allow global scope here
+				if (clsscope && (!clsscope->IsComposite() || !clsscope->node))
+					clsscope = nullptr;
+
+				while (clsscope)
+				{
+					classChain.Add(clsscope);
+
+					if (!(clsscope->node->qualifiers & AST_Q_STATE))
+						break;
+
+					clsscope = clsscope->parent;
+
+					if (clsscope && (!clsscope->IsComposite() || !clsscope->node))
+						clsscope = nullptr;
+				}
+			}
+
+			if (!clsscope)
+				return res.Detach();
+
+			// inject using scopes
+
+			StringBuilder sb;
+
+			auto *nclsscope = const_cast<NamedScope *>(clsscope);
+
+			// hack: create a virtual block to be processed properly
+			UniquePtr<AstNode> typedefRoot = NewAstNode<AstNode>(AST_BLOCK, res->location);
+			typedefRoot->flags |= AST_F_RESOLVED;
+
+			for (Int i=1; i<res->nodes.GetSize(); i++)
+			{
+				auto *vd = AstStaticCast<AstVarDecl *>(res->nodes[i]);
+				// initializer must be injected as assignment for state vars to behave a bit more like locals
+				auto *ini = vd->nodes.GetSize() > 1 ? vd->nodes[1] : nullptr;
+				vd->qualifiers &= ~AST_Q_LOCAL_INT;
+				auto *varname = AstStaticCast<AstText *>(vd->nodes[0]);
+				sb.Clear();
+				sb.Format("%s$%s", varname->text.Ansi(), fscope->name.Ansi());
+
+				for (Int j=classChain.GetSize()-1; j>=0; j--)
+				{
+					sb.AppendFormat("$%s", classChain[j]->name.Ansi());
+				}
+
+				auto newname = AddStringRef(sb.Get());
+
+				UniquePtr<AstNode> nres = NewAstNode<AstTypeDef>(res->location);
+				nres->qualifiers |= AST_Q_SYMBOL_ALIAS;
+				LETHE_RET_FALSE(AddScopeMember(varname->text, nres.Get()));
+
+				nres->Add(NewAstText<AstSymbol>(newname.Ansi(), varname->location));
+
+				auto *tdefName = NewAstText<AstText>(varname->text.Ansi(), AST_IDENT,  varname->location);
+				tdefName->flags |= AST_F_RESOLVED;
+				nres->Add(tdefName);
+
+				nres->flags |= AST_F_SKIP_CGEN;
+
+				auto *oscope = currentScope;
+				currentScope = nclsscope;
+
+				bool success = AddScopeMember(newname, vd);
+
+				currentScope = oscope;
+
+				LETHE_RET_FALSE(success);
+
+				varname->text = newname;
+
+				if (ini)
+				{
+					vd->nodes.Resize(1);
+					// build ini expr
+					auto *expr = NewAstNode<AstExpr>(ini->location);
+					auto *asgn = NewAstNode<AstBinaryAssign>(ini->location);
+
+					asgn->Add(NewAstText<AstSymbol>(newname.Ansi(), ini->location));
+					ini->parent = nullptr;
+					asgn->Add(ini);
+					expr->Add(asgn);
+					typedefRoot->Add(expr);
+				}
+
+				typedefRoot->Add(nres.Detach());
+			}
+
+			AstIterator ai(res.Get());
+
+			while (auto *n = ai.Next())
+			{
+				if (n->scopeRef == currentScope)
+					n->scopeRef = nclsscope;
+			}
+
+			nclsscope->node->Add(res.Detach());
+
+			return typedefRoot.Detach();
+		}
 
 		LETHE_RET_FALSE(Expect(ntt == TOK_COMMA, "expected `,`"));
 		ts->ConsumeToken();
@@ -1397,23 +1515,32 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 		{
 			decl->nodes[0]->qualifiers &= ~AST_Q_LOCAL_INT;
 			decl->nodes[0]->qualifiers |= inheritStructQualifiers;
-
-			// check for initialized vars...
-			AstConstIterator ci(decl);
-			const AstNode *n;
-
-			while ((n = ci.Next()) != nullptr)
-			{
-				if (n->type != AST_VAR_DECL)
-					continue;
-
-				// initialized members flag ignored if static or constexpr (so that we don't force expensive custom ctor)
-				hasInitializedMembers = hasInitializedMembers ||
-					(n->nodes.GetSize() >= 2 && !(decl->nodes[0]->qualifiers & (AST_Q_CONSTEXPR | AST_Q_STATIC)));
-			}
 		}
 
 		ntype->Add(decl.Detach());
+	}
+
+	for (auto *decl : ntype->nodes)
+	{
+		if (hasInitializedMembers)
+			break;
+
+		if (decl->type != AST_VAR_DECL_LIST)
+			continue;
+
+		// check for initialized vars...
+		AstConstIterator ci(decl);
+		const AstNode *n;
+
+		while ((n = ci.Next()) != nullptr)
+		{
+			if (n->type != AST_VAR_DECL)
+				continue;
+
+			// initialized members flag ignored if static or constexpr (so that we don't force expensive custom ctor)
+			hasInitializedMembers = hasInitializedMembers ||
+				(n->nodes.GetSize() >= 2 && !(decl->nodes[0]->qualifiers & (AST_Q_CONSTEXPR | AST_Q_STATIC)));
+		}
 	}
 
 	if (!hasInitializedMembers || hasCustomCtor)
