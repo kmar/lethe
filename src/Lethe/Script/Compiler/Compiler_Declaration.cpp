@@ -177,15 +177,52 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 
 		if (!skipBody)
 		{
-			String *fname = nullptr;
+			String fname;
 
+			// we want a fully qualified function name for __func, also for state vars
 			if (nname->type == AST_IDENT)
 			{
-				fname = &AstStaticCast<AstText *>(nname)->text;
-				ts->SetFuncName(*fname);
+				auto *txt = AstStaticCast<AstText *>(nname);
+				fname = AddStringRef(txt->GetQTextSlow());
+			}
+			else if (nname->type == AST_OP_SCOPE_RES)
+			{
+				// need to handle this for outer funcs
+				StringBuilder sb;
+
+				// must handle namespaces here...
+				auto *scp = currentScope;
+
+				while (scp)
+				{
+					if (scp->type == NSCOPE_NAMESPACE && !scp->name.IsEmpty())
+					{
+						if (sb.GetLength())
+							sb.Prepend("::");
+
+						sb.Prepend(scp->name);
+					}
+
+					scp = scp->parent;
+				}
+
+				for (auto *it : nname->nodes)
+				{
+					if (it->type == AST_IDENT)
+					{
+						if (sb.GetLength())
+							sb += "::";
+
+						sb += static_cast<const AstText *>(it)->text;
+					}
+				}
+
+				fname = sb.Get();
 			}
 
-			fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0, fname);
+			ts->SetFuncName(fname);
+
+			fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0, &fname);
 			ts->SetFuncName(String());
 
 			LETHE_RET_FALSE(fbody);
@@ -461,9 +498,6 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 			auto *fscope = res->scopeRef->FindFunctionScope();
 			const NamedScope *clsscope = nullptr;
 
-			// we need to include nested class names here as well
-			StackArray<const NamedScope *, 16> classChain;
-
 			if (fscope->parent && fscope->parent->type == NSCOPE_ARGS)
 			{
 				clsscope = fscope->parent->parent;
@@ -474,8 +508,6 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 
 				while (clsscope)
 				{
-					classChain.Add(clsscope);
-
 					if (!(clsscope->node->qualifiers & AST_Q_STATE))
 						break;
 
@@ -508,11 +540,6 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 				auto *varname = AstStaticCast<AstText *>(vd->nodes[0]);
 				sb.Clear();
 				sb.Format("%s$%s", varname->text.Ansi(), fscope->name.Ansi());
-
-				for (Int j=classChain.GetSize()-1; j>=0; j--)
-				{
-					sb.AppendFormat("$%s", classChain[j]->name.Ansi());
-				}
 
 				auto newname = AddStringRef(sb.Get());
 
@@ -1196,10 +1223,12 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 		{
 			const char *baseName = "object";
 
-			if (ntype->qualifiers & AST_Q_STATE)
+			auto *scope = currentScope;
+			const bool isState = ntype->qualifiers & AST_Q_STATE;
+
+			if (isState)
 			{
 				// if it's a nested state class, auto-inject parent base
-				auto *scope = currentScope;
 
 				while (scope)
 				{
@@ -1220,6 +1249,26 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			auto dummy = NewAstNode<AstNode>(AST_NONE, bt.location);
 			dummy->flags |= AST_F_RESOLVED;
 			defaultBase->Add(dummy);
+
+			if (isState && scope)
+			{
+				// we need to be fully qualified
+				scope = scope->parent;
+
+				StackArray<const NamedScope *, 16> scopeChain;
+
+				while (scope)
+				{
+					if (scope->type == NSCOPE_CLASS || scope->type == NSCOPE_NAMESPACE)
+						scopeChain.Add(scope);
+
+					scope = scope->parent;
+				}
+
+				for (Int idx=scopeChain.GetSize()-1; idx>=0; idx--)
+					defaultBase->Add(NewAstText<AstSymbol>(scopeChain[idx]->name.Ansi(), bt.location));
+			}
+
 			defaultBase->Add(defaultBaseSym);
 			base->Add(defaultBase);
 		}

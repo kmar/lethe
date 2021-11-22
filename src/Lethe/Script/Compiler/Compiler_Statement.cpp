@@ -576,7 +576,15 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			auto *exprNode = NewAstNode<AstExpr>(t.location);
 			auto *callNode = NewAstNode<AstCall>(t.location);
 			auto *identNode = NewAstText<AstSymbol>("end_state", t.location);
-			auto *argNode = NewAstText<AstSymbol>(fname->Ansi(), t.location);
+
+			// fname is fully qualified now, so only use the last part after "::"
+			auto rbeg = fname->ReverseFind(':');
+			auto *beg = fname->Ansi();
+
+			if (rbeg >= 0)
+				beg += rbeg+1;
+
+			auto *argNode = NewAstText<AstSymbol>(beg, t.location);
 
 			callNode->Add(identNode);
 			callNode->Add(argNode);
