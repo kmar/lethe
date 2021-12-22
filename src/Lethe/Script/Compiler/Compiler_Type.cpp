@@ -738,21 +738,6 @@ AstNode *Compiler::ParseInitializerList(Int depth)
 		// we can have either nested initializer or assign expr
 		TokenType tt = ts->PeekToken().type;
 
-		if (tt == TOK_LBLOCK)
-		{
-			AstNode *subList = ParseInitializerList(depth+1);
-			LETHE_RET_FALSE(subList);
-			res->Add(subList);
-			ts->ConsumeTokenIf(TOK_COMMA);
-			continue;
-		}
-
-		if (tt == TOK_RBLOCK)
-		{
-			ts->ConsumeToken();
-			break;
-		}
-
 		if (tt == TOK_DOT)
 		{
 			// designator
@@ -772,6 +757,22 @@ AstNode *Compiler::ParseInitializerList(Int depth)
 			ilist->designators.ResizeToFit(didx);
 			auto &dst = ilist->designators[didx];
 			dst.name = dstr;
+			tt = ts->PeekToken().type;
+		}
+
+		if (tt == TOK_LBLOCK)
+		{
+			AstNode *subList = ParseInitializerList(depth+1);
+			LETHE_RET_FALSE(subList);
+			res->Add(subList);
+			ts->ConsumeTokenIf(TOK_COMMA);
+			continue;
+		}
+
+		if (tt == TOK_RBLOCK)
+		{
+			ts->ConsumeToken();
+			break;
 		}
 
 		AstNode *iniExpr = ParseAssignExpression(depth+1);
