@@ -6,8 +6,12 @@
 #include <Lethe/Script/Vm/Opcodes.h>
 #include <Lethe/Script/Vm/Stack.h>
 
+#include <Lethe/Script/Compiler/Warnings.h>
+
 namespace lethe
 {
+
+LETHE_BUCKET_ALLOC_DEF(AstInitializerList)
 
 // AstInitializerList
 
@@ -208,10 +212,13 @@ bool AstInitializerList::GenInitializerList(CompiledProgram &p, QDataType qdt, I
 	{
 		const QDataType &elem = qdt.GetType().elemType;
 
+		if (!designators.IsEmpty())
+			return p.Error(this, "designators not allowed for arrays");
+
 		for (Int i=0; i<nodes.GetSize(); i++)
 		{
 			if (i >= qdt.GetType().arrayDims)
-				return p.Error(this, "Too many initializers");
+				return p.Error(this, "too many initializers");
 
 			AstNode *n = nodes[i];
 
@@ -223,10 +230,9 @@ bool AstInitializerList::GenInitializerList(CompiledProgram &p, QDataType qdt, I
 		return 1;
 	}
 
-	LETHE_ASSERT(dte == DT_STRUCT);
-
 	StackArray< const DataType *, 64 > bases;
-	const DataType *cur = &qdt.GetType();
+	const auto *cur = &qdt.GetType();
+	const auto *thisStruct = cur;
 	Int numMembers = 0;
 
 	while (cur)
@@ -251,21 +257,60 @@ bool AstInitializerList::GenInitializerList(CompiledProgram &p, QDataType qdt, I
 
 	Int baseOfs = ofs;
 
+	bool hasDesignators = false;
+
+	if (!designators.IsEmpty())
+	{
+		hasDesignators = true;
+
+		Int emptyCount = 0;
+
+		for (auto &&it : designators)
+			emptyCount += it.name.IsEmpty();
+
+		if (emptyCount || designators.GetSize() != nodes.GetSize())
+			return p.Error(this, "mixed designators not allowed");
+	}
+
+	Int lastDesignatorOffset = Limits<Int>::MIN;
+
 	for (Int i=0; i<nodes.GetSize(); i++)
 	{
 		if (i >= numMembers)
-			return p.Error(this, "Too many initializers");
+			return p.Error(this, "too many initializers");
 
-		const DataType &cbase = *bases[ibase];
-		const DataType::Member &m = cbase.members[imember++];
+		const DataType::Member *m;
+		const DataType *cbase = nullptr;
 
-		ofs = baseOfs + m.offset;
+		if (hasDesignators)
+		{
+			m = thisStruct->FindMember(designators[i].name);
+
+			if (!m)
+				return p.Error(nodes[i], String::Printf("member `%s' not found", designators[i].name.Ansi()));
+
+			ofs = m->offset;
+
+			if (ofs < lastDesignatorOffset)
+				p.Warning(nodes[i], String::Printf("out of order designated initialization of `%s'",
+					designators[i].name.Ansi()),
+					WARN_OUT_OF_ORDER_DESIGNATED_INITIALIZER);
+
+			lastDesignatorOffset = ofs;
+		}
+		else
+		{
+			cbase = bases[ibase];
+			m = &cbase->members[imember++];
+		}
+
+		ofs = baseOfs + m->offset;
 
 		AstNode *n = nodes[i];
 
-		LETHE_RET_FALSE(GenInitializeElem(p, n, m.type, ofs, global));
+		LETHE_RET_FALSE(GenInitializeElem(p, n, m->type, ofs, global));
 
-		if (imember >= cbase.members.GetSize())
+		if (cbase && imember >= cbase->members.GetSize())
 		{
 			imember = 0;
 			ibase--;
@@ -345,6 +390,13 @@ bool AstInitializerList::IsCompleteInitializerList(CompiledProgram &p, QDataType
 	}
 
 	return true;
+}
+
+void AstInitializerList::CopyTo(AstNode *n) const
+{
+	Super::CopyTo(n);
+	auto *tmp = AstStaticCast<AstInitializerList *>(n);
+	tmp->designators = designators;
 }
 
 

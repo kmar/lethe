@@ -430,7 +430,13 @@ String DataType::GetSimpleTypeName(DataTypeEnum dte)
 
 bool DataType::ZeroInit() const
 {
-	// FIXME: better
+	if (type == DT_STATIC_ARRAY)
+		return elemType.ZeroInit();
+
+	// a struct requiring a dtor is already handled by ZeroInit in QDataType
+	if (type == DT_STRUCT)
+		return false;
+
 	return type < DT_INT || type > DT_DOUBLE;
 }
 
@@ -1562,7 +1568,18 @@ bool QDataType::ZeroInit() const
 		return false;
 
 	bool explicitNoZero = !IsPointer() && (qualifiers & AST_Q_NOINIT) && !(qualifiers & (AST_Q_CTOR | AST_Q_DTOR));
-	return GetType().ZeroInit() && !explicitNoZero;
+
+	if (GetType().type == DT_STRUCT)
+	{
+		if (qualifiers & (AST_Q_CTOR | AST_Q_DTOR))
+			return true;
+
+		// unless noinit, we zero structs with gaps
+		if (!explicitNoZero && ((qualifiers | ref->structQualifiers) & AST_Q_HAS_GAPS))
+			return true;
+	}
+
+	return !explicitNoZero && GetType().ZeroInit();
 }
 
 bool QDataType::operator ==(const QDataType &o) const

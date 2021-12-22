@@ -728,7 +728,8 @@ AstNode *Compiler::ParseSimpleType(Int depth, ULong nqualifiers)
 AstNode *Compiler::ParseInitializerList(Int depth)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
-	UniquePtr< AstNode > res = NewAstNode<AstInitializerList>(ts->PeekToken().location);
+	auto *ilist = AstStaticCast<AstInitializerList *>(NewAstNode<AstInitializerList>(ts->PeekToken().location));
+	UniquePtr<AstNode> res = ilist;
 	LETHE_ASSERT(ts->PeekToken().type == TOK_LBLOCK);
 	ts->ConsumeToken();
 
@@ -750,6 +751,27 @@ AstNode *Compiler::ParseInitializerList(Int depth)
 		{
 			ts->ConsumeToken();
 			break;
+		}
+
+		if (tt == TOK_DOT)
+		{
+			// designator
+			ts->ConsumeToken();
+			const auto &dname = ts->GetToken();
+			LETHE_RET_FALSE(ExpectPrev(dname.type == TOK_IDENT, "expected identifier"));
+			const auto &dstr = AddString(dname.text);
+
+			// make sure it's not a dup-name
+			for (Int i=0; i<ilist->designators.GetSize(); i++)
+				if (ilist->designators[i].name == dstr)
+					LETHE_RET_FALSE(ExpectPrev(false, "designator redefinition"));
+
+			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_EQ, "expected `='"));
+
+			auto didx = res->nodes.GetSize();
+			ilist->designators.ResizeToFit(didx);
+			auto &dst = ilist->designators[didx];
+			dst.name = dstr;
 		}
 
 		AstNode *iniExpr = ParseAssignExpression(depth+1);

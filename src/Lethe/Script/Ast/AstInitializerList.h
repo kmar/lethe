@@ -7,6 +7,8 @@ namespace lethe
 
 class LETHE_API AstInitializerList : public AstNode
 {
+	LETHE_BUCKET_ALLOC(AstInitializerList)
+
 public:
 	LETHE_AST_NODE(AstInitializerList)
 
@@ -17,6 +19,18 @@ public:
 	bool GenInitializerList(CompiledProgram &p, QDataType qdt, Int ofs, bool global) override;
 	bool IsCompleteInitializerList(CompiledProgram &p, QDataType qdt) const override;
 	bool IsInitializerConst(const CompiledProgram &p, QDataType qdt) const override;
+
+	void CopyTo(AstNode *n) const override;
+
+	// designator names, none if empty
+	struct Designator
+	{
+		String name;
+		// offset has to be resolved later
+		Int offset = -1;
+	};
+
+	Array<Designator> designators;
 
 private:
 	bool GenInitializeElem(CompiledProgram &p, AstNode *n, QDataType elem, Int ofs, bool global);

@@ -33,6 +33,9 @@ bool AstStructLiteral::CodeGen(CompiledProgram &p)
 
 	bool noinit = nodes[1]->IsCompleteInitializerList(p, qdt) && !qdt.HasCtor() && !qdt.HasDtor();
 
+	if ((qdt.qualifiers & (AST_Q_NOINIT | AST_Q_HAS_GAPS)) == AST_Q_HAS_GAPS)
+		noinit = false;
+
 	Int stkSize = (qdt.GetSize() + Stack::WORD_SIZE-1)/Stack::WORD_SIZE;
 
 	bool rvo = (flags & AST_F_NRVO) != 0;

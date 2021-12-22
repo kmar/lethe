@@ -74,7 +74,10 @@ enum AstQualifier : ULong
 	AST_Q_NODISCARD = (ULong)1 << 45,
 	// for typedefs: symbol alias
 	AST_Q_SYMBOL_ALIAS = (ULong)1 << 46,
-	// note: 17 left
+	// for structs: has gaps due to alignment?
+	// if so, we force zero-init for safety reasons
+	AST_Q_HAS_GAPS = (ULong)1 << 47,
+	// note: 16 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

@@ -330,7 +330,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 	for (Int i=0; i<nodes.GetSize(); i++)
 	{
 		const auto n = nodes[i];
-		qualifiers |= n->qualifiers & (AST_Q_CTOR | AST_Q_DTOR);
+		qualifiers |= n->qualifiers & (AST_Q_CTOR | AST_Q_DTOR | AST_Q_HAS_GAPS);
 	}
 
 	// try to create virtual type
@@ -381,7 +381,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 
 		nodes[IDX_BASE]->target = baseNode;
 
-		qualifiers |= dt->baseType.qualifiers & (AST_Q_CTOR | AST_Q_DTOR);
+		qualifiers |= dt->baseType.qualifiers & (AST_Q_CTOR | AST_Q_DTOR | AST_Q_HAS_GAPS);
 	}
 	else if (type == AST_CLASS)
 	{
@@ -632,6 +632,28 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 	{
 		// add null struct
 		p.nullStructTypeHash.Add(Name(dt->name));
+	}
+
+	if (dt->type != DT_STRUCT)
+		return true;
+
+	// compute AST_Q_HAS_GAPS
+
+	const auto *dtype = dt;
+	Int memberSize = 0;
+
+	while (dtype && dtype->type == DT_STRUCT)
+	{
+		for (auto &&it : dtype->members)
+			memberSize += it.type.GetSize();
+
+		dtype = &dtype->baseType.GetType();
+	}
+
+	if (memberSize != dt->size)
+	{
+		qualifiers |= AST_Q_HAS_GAPS;
+		dt->structQualifiers |= AST_Q_HAS_GAPS;
 	}
 
 	return true;

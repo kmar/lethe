@@ -29,7 +29,9 @@ enum Warnings
 	// division by zero
 	WARN_DIV_BY_ZERO,
 	// signed-unsigned comparison
-	WARN_SIGNED_UNSIGNED_COMPARISON
+	WARN_SIGNED_UNSIGNED_COMPARISON,
+	// out-of-order designated initializer
+	WARN_OUT_OF_ORDER_DESIGNATED_INITIALIZER
 };
 
 }
