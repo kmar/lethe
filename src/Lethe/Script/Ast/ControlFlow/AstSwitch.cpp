@@ -1,4 +1,5 @@
 #include "AstSwitch.h"
+#include "AstCase.h"
 #include "../NamedScope.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Opcodes.h>
@@ -7,6 +8,15 @@
 
 namespace lethe
 {
+
+// AstCase
+
+const AstNode *AstCase::GetContextTypeNode(const AstNode *node) const
+{
+	auto *sw = parent->parent;
+	LETHE_ASSERT(sw && sw->type == AST_SWITCH);
+	return sw->nodes[0]->GetTypeNode();
+}
 
 // AstSwitch
 

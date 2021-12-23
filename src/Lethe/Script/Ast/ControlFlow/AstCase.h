@@ -13,6 +13,8 @@ public:
 	typedef AstNode Super;
 
 	AstCase(const TokenLocation &nloc) : Super(AST_CASE, nloc) {}
+
+	const AstNode *GetContextTypeNode(const AstNode *node) const override;
 };
 
 

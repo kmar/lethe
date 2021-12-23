@@ -211,7 +211,7 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 	return res;
 }
 
-const AstNode *AstCall::GetTypeNode() const
+const AstNode *AstCall::GetTypeNodeFunc() const
 {
 	const auto *targ = GetResolveTarget();
 
@@ -238,6 +238,15 @@ const AstNode *AstCall::GetTypeNode() const
 			LETHE_ASSERT(targ);
 	}
 
+	return targ;
+}
+
+const AstNode *AstCall::GetTypeNode() const
+{
+	const auto *targ = GetTypeNodeFunc();
+
+	LETHE_RET_FALSE(targ);
+
 	bool isFunc = targ->type == AST_FUNC;
 
 	if (isFunc)
@@ -250,6 +259,37 @@ const AstNode *AstCall::GetTypeNode() const
 		targ = targ->nodes[0]->GetTypeNode();
 
 	return targ;
+}
+
+const AstNode *AstCall::GetContextTypeNode(const AstNode *node) const
+{
+	// 1+ = args
+	// 0 = func to call
+	auto *fn = GetTypeNodeFunc();
+	LETHE_RET_FALSE(fn);
+
+	// FIXME: this const_cast is stupid
+	auto idx = nodes.FindIndex(const_cast<AstNode *>(node))-1;
+	LETHE_RET_FALSE(idx >= 0);
+
+	AstNode *args = nullptr;
+
+	if (fn->type == AST_FUNC)
+	{
+		args = fn->nodes[AstFunc::IDX_ARGS];
+	}
+	else
+	{
+		fn = fn->GetTypeNode();
+
+		if (fn->type == AST_TYPE_DELEGATE || fn->type == AST_TYPE_FUNC_PTR)
+			args = fn->nodes[1];
+	}
+
+	LETHE_RET_FALSE(args && idx < args->nodes.GetSize());
+	auto *arg = args->nodes[idx];
+	LETHE_RET_FALSE(!arg->nodes.IsEmpty());
+	return arg->nodes[0]->GetTypeNode();
 }
 
 QDataType AstCall::GetTypeDesc(const CompiledProgram &p) const

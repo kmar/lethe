@@ -1224,6 +1224,11 @@ void AstBinaryOp::CheckWarn(const DataType &ldt, const CompiledProgram &p, const
 	p.Warning(this, "division by zero", WARN_DIV_BY_ZERO);
 }
 
+const AstNode *AstBinaryOp::GetContextTypeNode(const AstNode *node) const
+{
+	return nodes[0] == node ? nodes[1]->GetTypeNode() : nodes[0]->GetTypeNode();
+}
+
 const AstNode *AstBinaryOp::GetTypeNode() const
 {
 	// TODO: handle reference types, DAMN! (really?!)

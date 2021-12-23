@@ -133,6 +133,25 @@ AstNode *Compiler::ParsePriority2(Int depth, bool termOnly)
 
 	switch(t.type)
 	{
+	case TOK_DOT:
+	{
+		ts->ConsumeToken();
+		const auto &symident = ts->GetToken();
+		LETHE_RET_FALSE(ExpectPrev(symident.type == TOK_IDENT, "expected identifier"));
+
+		auto *sym = NewAstText<AstSymbol>(symident.text, symident.location);
+		sym->qualifiers |= AST_Q_CONTEXT_SYMBOL;
+
+		if (!res)
+			res = sym;
+		else
+		{
+			// bind...
+			res->Add(sym);
+		}
+	}
+	break;
+
 	case TOK_IDENT:
 	case TOK_DOUBLE_COLON:
 	{
@@ -354,6 +373,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_KEY_THIS:
 		case TOK_IDENT:
 		case TOK_DOUBLE_COLON:
+		case TOK_DOT:
 		{
 			AstNode *tmp = ParsePriority2(depth+1);
 			LETHE_RET_FALSE(tmp);

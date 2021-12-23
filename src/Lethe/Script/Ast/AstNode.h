@@ -436,6 +436,9 @@ public:
 	// get type node for AstVarDecl/AstArg/...
 	virtual const AstNode *GetTypeNode() const;
 
+	// for resolving .ENUM_ITEM
+	virtual const AstNode *GetContextTypeNode(const AstNode *node) const;
+
 	// find symbol node + defining scope
 	virtual AstNode *FindSymbolNode(String &sname, const NamedScope *&nscope) const;
 	// find (leftmost) variable symbol

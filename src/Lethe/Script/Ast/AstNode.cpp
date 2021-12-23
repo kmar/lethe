@@ -683,6 +683,16 @@ const NamedScope *AstNode::GetSymScope(bool parentOnly) const
 {
 	const AstNode *n = this;
 
+	if (qualifiers & AST_Q_CONTEXT_SYMBOL)
+	{
+		auto *rt = parent->GetContextTypeNode(this);
+
+		if (rt && rt->type == AST_ENUM && rt->nodes.GetSize() > 1)
+			return rt->nodes[1]->scopeRef;
+
+		return nullptr;
+	}
+
 	if (parentOnly)
 		return parent->symScopeRef;
 
@@ -721,6 +731,11 @@ AstNodeType AstNode::PromoteSmallType(AstNodeType ntype)
 const AstNode *AstNode::GetTypeNode() const
 {
 	return IsElemType() ? this : nullptr;
+}
+
+const AstNode *AstNode::GetContextTypeNode(const AstNode *) const
+{
+	return nullptr;
 }
 
 AstNode *AstNode::FindSymbolNode(String &, const NamedScope *&) const

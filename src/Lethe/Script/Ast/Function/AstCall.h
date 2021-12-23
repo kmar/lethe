@@ -19,6 +19,8 @@ public:
 	ResolveResult Resolve(const ErrorHandler &e) override;
 	const AstNode *GetTypeNode() const override;
 
+	const AstNode *GetContextTypeNode(const AstNode *node) const;
+
 	bool CodeGen(CompiledProgram &p) override;
 	bool CodeGenRef(CompiledProgram &p, bool allowConst = false, bool derefPtr = false) override;
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
@@ -47,6 +49,8 @@ protected:
 		// size in bytes
 		Int size;
 	};
+
+	const AstNode *GetTypeNodeFunc() const;
 
 	bool CodeGenCommon(CompiledProgram &p, bool keepRefs, bool derefPtr);
 	bool CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef);
