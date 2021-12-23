@@ -271,9 +271,9 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 	{
 		// need to eval full expression
 		LETHE_RET_FALSE(nodes[1]->CodeGen(p));
-		// convert to int
+		// convert to uint (rather than int) - so that we can index via uints without warnings...
 		LETHE_RET_FALSE(p.EmitConv(nodes[1],
-								  nodes[1]->GetTypeDesc(p), QDataType::MakeConstType(p.elemTypes[DT_INT])));
+								  nodes[1]->GetTypeDesc(p), QDataType::MakeConstType(p.elemTypes[DT_UINT])));
 
 		if (dt.type != DT_STATIC_ARRAY && !nobounds)
 		{
