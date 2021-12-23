@@ -687,6 +687,9 @@ const NamedScope *AstNode::GetSymScope(bool parentOnly) const
 	{
 		auto *rt = parent->GetContextTypeNode(this);
 
+		if (rt && rt->type == AST_ENUM_ITEM)
+			rt = rt->parent;
+
 		if (rt && rt->type == AST_ENUM && rt->nodes.GetSize() > 1)
 			return rt->nodes[1]->scopeRef;
 
@@ -1126,6 +1129,9 @@ DataTypeEnum AstNode::TypeEnumFromNode(const AstNode *n)
 
 	case AST_TYPE_CHAR:
 		return DT_CHAR;
+
+	case AST_ENUM_ITEM:
+		return DT_ENUM;
 
 	case AST_TYPE_INT:
 		return DT_INT;
