@@ -1185,6 +1185,33 @@ void CompiledProgram::EmitInternal(UInt ins)
 		}
 
 		break;
+
+	case OPC_UIMOD:
+		if (num > 0 && emitOptBase <= num-1 && Byte(instructions[num-1]) == OPC_PUSH_ICONST)
+		{
+			auto imm24 = (Int)instructions[num-1] >> 8;
+			// if it's a power of 2 greater than zero, we can fold into iand_iconst const-1
+			if (imm24 > 0 && !(imm24 & (imm24-1)))
+			{
+				--imm24;
+				instructions[--num] = imm24*256 + OPC_IAND_ICONST;
+				return;
+			}
+		}
+		break;
+
+	case OPC_UIDIV:
+		if (num > 0 && emitOptBase <= num-1 && Byte(instructions[num-1]) == OPC_PUSH_ICONST)
+		{
+			auto imm24 = (Int)instructions[num-1] >> 8;
+			// if it's a power of 2 greater than zero, we can fold into ishr_iconst log2(const)
+			if (imm24 > 0 && !(imm24 & (imm24-1)))
+			{
+				instructions[--num] = Bits::GetLsb(imm24)*256 + OPC_ISHR_ICONST;
+				return;
+			}
+		}
+		break;
 	}
 
 	instructions.Add(*reinterpret_cast< const Int * >(&ins));
