@@ -19,6 +19,8 @@ public:
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 	const AstNode *GetTypeNode() const override;
 
+	AstNode *GetResolveTarget() const override;
+
 protected:
 	const AstNode *FindUserDefOperatorType(const AstNode *tpe) const;
 

@@ -314,6 +314,11 @@ const AstNode *AstUnaryOp::FindUserDefOperatorType(const AstNode *tpe) const
 	return nullptr;
 }
 
+AstNode *AstUnaryOp::GetResolveTarget() const
+{
+	return nodes[0]->GetResolveTarget();
+}
+
 const AstNode *AstUnaryOp::GetTypeNode() const
 {
 	auto *tpe = nodes[0]->GetTypeNode();
