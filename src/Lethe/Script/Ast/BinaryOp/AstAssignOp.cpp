@@ -166,7 +166,6 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 		p.EmitIntConst(leftType.GetType().elemType.GetSize());
 		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD_INPLACE);
 		p.PopStackType(true);
-		p.EmitI24(OPC_POP, 2);
 
 		if (pop)
 		{

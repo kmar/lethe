@@ -57,7 +57,6 @@ bool AstUnaryPreOp::CodeGen(CompiledProgram &p)
 		p.EmitIntConst(1);
 		p.EmitIntConst(dt.GetType().elemType.GetSize());
 		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD_INPLACE);
-		p.EmitI24(OPC_POP, 2);
 
 		if (pop)
 		{

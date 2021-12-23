@@ -1233,6 +1233,7 @@ void Opcode_SliceFwd_Inplace(Stack &stk)
 	nsize *= nsize <= osize;
 
 	aref->size = nsize;
+	stk.Pop(2);
 }
 
 void Opcode_SliceFwd(Stack &stk)
