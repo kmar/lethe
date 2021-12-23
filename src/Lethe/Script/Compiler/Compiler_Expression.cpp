@@ -18,6 +18,29 @@ AstNode *Compiler::ParsePriority2Operators(Int depth, UniquePtr<AstNode> &first)
 
 		switch(t.type)
 		{
+		case TOK_C_DEREF:
+		{
+			if (!allowCEmulation)
+				LETHE_RET_FALSE(Error("unexpected token"));
+
+			UniquePtr<AstNode> nres = NewAstNode<AstDotOp>(t.location);
+			ts->ConsumeToken();
+			auto *tmp = ParsePriority2(depth+1, 1);
+			LETHE_RET_FALSE(tmp);
+
+			auto *sub = NewAstNode<AstSubscriptOp>(t.location);
+			sub->Add(res.Detach());
+			sub->Add(NewAstNode<AstConstInt>(t.location));
+			sub->nodes[1]->num.i = 0;
+
+			nres->nodes.Reserve(2);
+			nres->Add(sub);
+			nres->Add(tmp);
+
+			Swap(res, nres);
+		}
+		break;
+
 		case TOK_DOT:
 		{
 			UniquePtr<AstNode> nres = NewAstNode<AstDotOp>(t.location);
@@ -181,6 +204,7 @@ AstNode *Compiler::ParsePriority2(Int depth, bool termOnly)
 		switch(ts->PeekToken().type)
 		{
 		case TOK_DOT:
+		case TOK_C_DEREF:
 		case TOK_LARR:
 		case TOK_LBR:
 		case TOK_INC:
@@ -202,6 +226,9 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 	UniquePtr<AstNode> res;
 	AstNode *bottom = nullptr;
 
+	// C emulation
+	StackArray<AstSubscriptOp *, 4> emulatedSubscripts;
+
 	Int openBraces = 0;
 
 	auto cleanup = [&]()->bool
@@ -212,6 +239,21 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 				return ExpectPrev(false, "unexpected token");
 
 			--openBraces;
+		}
+
+		// fix emulated subscripts
+		for (auto *it : emulatedSubscripts)
+		{
+			LETHE_ASSERT(it->nodes.GetSize() == 2);
+
+			if (it->nodes.GetSize() == 2)
+			{
+				Swap(it->nodes[0], it->nodes[1]);
+
+				// invalidate cached index!
+				for (auto *n : it->nodes)
+					n->cachedIndex = -1;
+			}
 		}
 
 		return true;
@@ -418,6 +460,7 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		}
 		break;
 
+		case TOK_MUL:
 		case TOK_MINUS:
 		case TOK_PLUS:
 		case TOK_LNOT:
@@ -462,6 +505,17 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 
 			case TOK_AND:
 				tmp = NewAstNode<AstUnaryRef>(t.location);
+				break;
+
+			case TOK_MUL:
+				if (!allowCEmulation)
+					LETHE_RET_FALSE(Expect(false, "unexpected token"));
+
+				tmp = NewAstNode<AstSubscriptOp>(t.location);
+				tmp->nodes.Resize(1);
+				tmp->nodes[0] = NewAstNode<AstConstInt>(t.location);
+				tmp->nodes[0]->num.i = 0;
+				emulatedSubscripts.Add(AstStaticCast<AstSubscriptOp *>(tmp));
 				break;
 
 			case TOK_KEY_NEW:

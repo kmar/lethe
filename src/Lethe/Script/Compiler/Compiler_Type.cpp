@@ -144,8 +144,16 @@ AstNode *Compiler::ParseArrayType(UniquePtr<AstNode> &ntype, Int depth)
 	{
 		const Token &nt = ts->PeekToken();
 
+		// C-emulated array ref: type *
+		bool caref = false;
+
 		if (nt.type != TOK_LARR)
-			break;
+		{
+			if (allowCEmulation && nt.type == TOK_MUL)
+				caref = true;
+			else
+				break;
+		}
 
 		ts->ConsumeToken();
 		const Token &t = ts->PeekToken();
@@ -156,14 +164,15 @@ AstNode *Compiler::ParseArrayType(UniquePtr<AstNode> &ntype, Int depth)
 		UniquePtr<AstNode> tmp;
 		UniquePtr<AstNode> expr;
 
-		if (t.type == TOK_RARR)
+		if (caref || t.type == TOK_RARR)
 		{
 			tmp = NewAstNode<AstTypeArrayRef>(nt.location);
 
 			// inject resolve scope
 			tmp->scopeRef = arrayRefScope;
 
-			ts->ConsumeToken();
+			if (!caref)
+				ts->ConsumeToken();
 		}
 		else
 		{

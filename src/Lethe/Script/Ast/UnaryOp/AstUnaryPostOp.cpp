@@ -21,12 +21,45 @@ bool AstUnaryPostOp::CodeGen(CompiledProgram &p)
 	LETHE_RET_FALSE(nodes[0]->CodeGenRef(p));
 	const QDataType &dt = nodes[0]->GetTypeDesc(p);
 
+	bool pop = ShouldPop();
+
+	if (!shouldpop && type == AST_UOP_POSTINC && dt.GetTypeEnum() == DT_ARRAY_REF)
+	{
+		p.PopStackType(true);
+
+		if (!pop)
+		{
+			// reserve space for ptr
+			p.EmitI24(OPC_PUSH_RAW, 1);
+			p.EmitI24(OPC_LPUSHPTR, 1);
+
+			// copy out aref
+			p.Emit(OPC_LPUSHPTR);
+			p.Emit(OPC_PLOADPTR_IMM);
+			p.EmitI24(OPC_LSTOREPTR, 2);
+			p.Emit(OPC_LPUSHPTR);
+			p.EmitI24(OPC_PLOAD32_IMM, (Int)sizeof(void *));
+			p.EmitI24(OPC_LSTORE32, 3);
+			auto pdt = dt;
+			pdt.RemoveReference();
+			p.PushStackType(pdt);
+		}
+
+		// allow preinc for array refs
+		p.EmitIntConst(1);
+		p.EmitIntConst(dt.GetType().elemType.GetSize());
+		p.EmitI24(OPC_BCALL, BUILTIN_SLICEFWD_INPLACE);
+
+		p.EmitI24(OPC_POP, 1);
+
+		return true;
+	}
+
 	if (dt.GetTypeEnum() <= DT_BOOL || dt.GetTypeEnum() >= DT_FLOAT)
 		return p.Error(this, "invalid type for post-op");
 
 	const Int amt = type == AST_UOP_POSTINC ? 1 : -1;
 
-	bool pop = ShouldPop();
 	Int &lins = p.instructions.Back();
 	UInt linsOpc = lins & 255u;
 

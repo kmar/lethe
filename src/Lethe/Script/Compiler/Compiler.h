@@ -326,6 +326,9 @@ private:
 	StackArray<Int, 32> conditionalStack;
 	Int conditionalSkipCounter = 0;
 
+	// allow C emulation via * and ->
+	bool allowCEmulation = true;
+
 	void InitTokenStream();
 };
 
