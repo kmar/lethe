@@ -30,6 +30,12 @@ const AstNode *AstVarDecl::GetTypeNode() const
 	return res ? res : ntype->target;
 }
 
+const AstNode *AstVarDecl::GetContextTypeNode(const AstNode *node) const
+{
+	auto tn = parent->nodes[0];
+	return tn->type != AST_TYPE_AUTO ? tn->GetTypeNode() : nullptr;
+}
+
 AstNode *AstVarDecl::GetResolveTarget() const
 {
 	auto ntype = parent->nodes[0];

@@ -755,18 +755,27 @@ AstNode *Compiler::ParseInitializerList(Int depth)
 			LETHE_RET_FALSE(ExpectPrev(dname.type == TOK_IDENT, "expected identifier"));
 			const auto &dstr = AddString(dname.text);
 
-			// make sure it's not a dup-name
-			for (Int i=0; i<ilist->designators.GetSize(); i++)
-				if (ilist->designators[i].name == dstr)
-					LETHE_RET_FALSE(ExpectPrev(false, "designator redefinition"));
+			if (ts->PeekToken().type != TOK_EQ)
+			{
+				// not a designator - could be context-dependent enum class symbol
+				ts->UngetToken(2);
+			}
+			else
+			{
+				// make sure it's not a dup-name
+				for (Int i=0; i<ilist->designators.GetSize(); i++)
+					if (ilist->designators[i].name == dstr)
+						LETHE_RET_FALSE(ExpectPrev(false, "designator redefinition"));
 
-			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_EQ, "expected `='"));
+				// skip =
+				ts->ConsumeToken();
 
-			auto didx = res->nodes.GetSize();
-			ilist->designators.ResizeToFit(didx);
-			auto &dst = ilist->designators[didx];
-			dst.name = dstr;
-			tt = ts->PeekToken().type;
+				auto didx = res->nodes.GetSize();
+				ilist->designators.ResizeToFit(didx);
+				auto &dst = ilist->designators[didx];
+				dst.name = dstr;
+				tt = ts->PeekToken().type;
+			}
 		}
 
 		if (tt == TOK_LBLOCK)
