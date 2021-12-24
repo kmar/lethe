@@ -543,6 +543,9 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 			{
 				auto bitSize = mn->num.i & 65535;
 
+				if (bitSize <= 0 || bitSize > mtype.GetSize()*8)
+					return p.Error(vn, "invalid bitfield size");
+
 				if (bitfieldType == mtype.GetTypeEnum() && bitfieldBudget >= bitSize)
 				{
 					malign = msize = 0;
