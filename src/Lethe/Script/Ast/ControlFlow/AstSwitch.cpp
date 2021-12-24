@@ -11,7 +11,7 @@ namespace lethe
 
 // AstCase
 
-const AstNode *AstCase::GetContextTypeNode(const AstNode *node) const
+const AstNode *AstCase::GetContextTypeNode(const AstNode *) const
 {
 	auto *sw = parent->parent;
 	LETHE_ASSERT(sw && sw->type == AST_SWITCH);

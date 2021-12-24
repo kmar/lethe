@@ -1226,7 +1226,18 @@ void AstBinaryOp::CheckWarn(const DataType &ldt, const CompiledProgram &p, const
 
 const AstNode *AstBinaryOp::GetContextTypeNode(const AstNode *node) const
 {
-	return nodes[0] == node ? nodes[1]->GetTypeNode() : nodes[0]->GetTypeNode();
+	auto *cn = nodes[0] == node ? nodes[1] : nodes[0];
+	auto *res = cn->GetTypeNode();
+
+	if ((!res || (res->type != AST_ENUM && res->type != AST_ENUM_ITEM)) && cn && cn->IsBinaryOp())
+	{
+		// if cn is a binary op and one of it's child nodes is tagged as context, go deeper
+		for (Int i=0; i<2; i++)
+			if (cn->nodes[i]->qualifiers & AST_Q_CONTEXT_SYMBOL)
+				return cn->GetContextTypeNode(cn->nodes[i ^ 1]);
+	}
+
+	return res;
 }
 
 const AstNode *AstBinaryOp::GetTypeNode() const

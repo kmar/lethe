@@ -450,6 +450,11 @@ public:
 		return type == AST_CAST || (type >= AST_UOP_PLUS && type <= AST_UOP_POSTDEC);
 	}
 
+	inline bool IsBinaryOp() const
+	{
+		return type != AST_OP_THROW && type >= AST_OP_MUL && type <= AST_OP_OR_ASSIGN;
+	}
+
 	const AstNode *FindDefinition(Int col, Int line, const String &filename) const;
 
 	virtual void LoadIfVarDecl(CompiledProgram &p);
