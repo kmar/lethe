@@ -46,6 +46,9 @@ bool AstBinaryAssign::CodeGen(CompiledProgram &p)
 	if (rnode->qualifiers & AST_Q_PROPERTY)
 		return AstSymbol::CallPropertySetter(p, nodes[0], nodes[1]);
 
+	if (rnode->qualifiers & AST_Q_BITFIELD)
+		return AstSymbol::BitfieldStore(p, rnode, nodes[0], nodes[1]);
+
 	return CodeGenMaybeConst(p, false);
 }
 

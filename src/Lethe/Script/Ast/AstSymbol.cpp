@@ -123,9 +123,8 @@ bool AstSymbol::ResolveNode(const ErrorHandler &e)
 		target = sym;
 		target->flags |= AST_F_REFERENCED;
 
-		// copy property flag from target
-		if (target->qualifiers & AST_Q_PROPERTY)
-			qualifiers |= AST_Q_PROPERTY;
+		// copy property/bitfield flags from target
+		qualifiers |= target->qualifiers & (AST_Q_PROPERTY | AST_Q_BITFIELD);
 
 		flags |= AST_F_RESOLVED;
 	}
@@ -199,8 +198,11 @@ bool AstSymbol::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 
 	LETHE_ASSERT(target);
 
+	if (qualifiers & AST_Q_BITFIELD)
+		return p.Error(this, "can't generate reference to a bitfield");
+
 	if (qualifiers & AST_Q_PROPERTY)
-		return p.Error(this, "can't generate reference to virtual property");
+		return p.Error(this, "can't generate reference to a virtual property");
 
 	const NamedScope *lscopeRef = target->scopeRef;
 	QDataType dt = target->GetTypeDesc(p);
@@ -449,6 +451,16 @@ bool AstSymbol::Validate(const CompiledProgram &p) const
 }
 
 bool AstSymbol::CodeGen(CompiledProgram &p)
+{
+	LETHE_RET_FALSE(CodeGenInternal(p));
+
+	if (qualifiers & AST_Q_BITFIELD)
+		return BitfieldLoad(p, this);
+
+	return true;
+}
+
+bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 {
 	if (flags & AST_F_SKIP_CGEN)
 		return true;
@@ -859,6 +871,186 @@ bool AstSymbol::CallPropertySetter(CompiledProgram &p, AstNode *dnode, AstNode *
 	tcall.nodes.Clear();
 
 	return res;
+}
+
+bool AstSymbol::ValidateBitfield(CompiledProgram &p, AstNode *node, const QDataType &tpe)
+{
+	if (!tpe.IsNumber())
+		return p.Error(node, "bitfield must be a number");
+
+	if (tpe.IsFloatingPoint())
+		return p.Error(node, "bitfield must be an integer");
+
+	if (tpe.GetTypeEnum() == DT_ENUM)
+		return p.Error(node, "bitfield cannot be an enum");
+
+	if (tpe.IsLongInt())
+		return p.Error(node, "bitfields not supported for long integers");
+
+	LETHE_ASSERT(node->target);
+
+	return true;
+}
+
+bool AstSymbol::BitfieldStore(CompiledProgram &p, AstNode *node, AstNode *dnode, AstNode *snode)
+{
+	auto qdt = node->GetTypeDesc(p);
+	LETHE_RET_FALSE(ValidateBitfield(p, node, qdt));
+
+	if (node->type != AST_IDENT)
+		return p.Error(node, "expected identifier");
+
+	auto *genNode = dnode;
+
+	bool useThis = false;
+
+	if (dnode->type == AST_OP_DOT)
+		genNode = dnode->nodes[0];
+	else
+	{
+		useThis = true;
+
+		if (!dnode->symScopeRef)
+			return p.Error(dnode, "no symbol scope");
+
+		genNode = dnode->symScopeRef->node;
+	}
+
+	auto sdt = genNode->GetTypeDesc(p);
+
+	if (sdt.IsPointer())
+		sdt = sdt.GetType().elemType;
+
+	auto *m = sdt.GetType().FindMember(AstStaticCast<AstText *>(node)->text);
+
+	if (!m)
+		return p.Error(node, "member not found");
+
+	if (useThis)
+	{
+		if (!dnode->scopeRef->FindThis())
+			return p.Error(dnode, "this not found");
+
+		p.Emit(OPC_PUSHTHIS_TEMP);
+		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_STRONG_PTR]));
+	}
+	else
+	{
+		LETHE_RET_FALSE(genNode->CodeGenRef(p, false, true));
+	}
+	// ok, we got ptr to struct/class start on stack
+
+	p.EmitIntConst(m->offset);
+	p.EmitU24(OPC_AADD, 1);
+
+	Instruction opLoad = OPC_HALT, opStore = OPC_HALT;
+
+	switch(qdt.GetSize())
+	{
+	case 1:
+		opLoad = OPC_PLOAD8U_IMM;
+		opStore = OPC_PSTORE8_IMM;
+		break;
+	case 2:
+		opLoad = OPC_PLOAD16U_IMM;
+		opStore = OPC_PSTORE16_IMM;
+		break;
+	case 4:
+		opLoad = OPC_PLOAD32_IMM;
+		opStore = OPC_PSTORE32_IMM;
+		break;
+	}
+
+	p.Emit(OPC_LPUSHPTR);
+	p.Emit(opLoad);
+
+	auto bitSize = (node->target->num.i & 65535);
+
+	LETHE_ASSERT(node->target->type == AST_VAR_DECL);
+
+	// look up type in var decl list
+	auto num = node->target->parent->nodes[0]->num.i;
+
+	auto bitShift = (num >> 16);
+
+	// mask
+	Int mask = Int(((ULong)1 << bitSize)-1);
+	UInt invMask = mask;
+	invMask <<= bitShift;
+	invMask = ~invMask;
+
+	p.EmitIntConst((Int)invMask);
+	p.Emit(OPC_IAND);
+
+	// we have an extra item on stack so adjust before calling CodeGen
+	p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_INT]));
+
+	LETHE_RET_FALSE(snode->CodeGen(p));
+	p.PopStackType(true);
+	p.PopStackType(true);
+	p.PopStackType(true);
+
+	p.EmitIntConst(mask);
+	p.Emit(OPC_IAND);
+
+	if (bitShift > 0)
+		p.EmitI24(OPC_ISHL_ICONST, bitShift);
+
+	p.Emit(OPC_IOR);
+
+	p.EmitI24(OPC_LPUSHPTR, 1);
+	p.Emit(opStore);
+
+	p.EmitI24(OPC_POP, 1);
+
+	return true;
+}
+
+bool AstSymbol::BitfieldLoad(CompiledProgram &p, AstNode *node)
+{
+	auto qdt = node->GetTypeDesc(p);
+	LETHE_RET_FALSE(ValidateBitfield(p, node, qdt));
+
+	auto bitSize = (node->target->num.i & 65535);
+
+	LETHE_ASSERT(node->target->type == AST_VAR_DECL);
+
+	// look up type in var decl list
+	auto num = node->target->parent->nodes[0]->num.i;
+
+	auto bitShift = (num >> 16);
+
+	auto isSigned = qdt.IsSigned();
+
+	if (bitSize <= 0 || bitSize > 32)
+		return p.Error(node, "invalid bitfield size");
+
+	if (isSigned)
+	{
+		Int shl = 32 - bitSize - bitShift;
+
+		if (shl > 0)
+		{
+			p.EmitI24(OPC_ISHL_ICONST, shl);
+		}
+
+		Int sar = 32 - bitSize;
+
+		if (sar > 0)
+			p.EmitI24(OPC_ISAR_ICONST, sar);
+	}
+	else
+	{
+		Int mask = Int(((ULong)1 << bitSize)-1);
+
+		if (bitShift > 0)
+			p.EmitI24(OPC_ISHR_ICONST, bitShift);
+
+		p.EmitIntConst(mask);
+		p.Emit(OPC_IAND);
+	}
+
+	return true;
 }
 
 

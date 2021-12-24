@@ -115,9 +115,9 @@ bool AstScopeResOp::ResolveNode(const ErrorHandler &eh)
 	flags |= newNode->flags;
 	target = newNode->target;
 
-	// copy property flag from target
+	// copy property/bitfield flags from target
 	if (target)
-		qualifiers |= target->qualifiers & AST_Q_PROPERTY;
+		qualifiers |= target->qualifiers & (AST_Q_PROPERTY | AST_Q_BITFIELD);
 
 	symScopeRef = target->scopeRef;
 

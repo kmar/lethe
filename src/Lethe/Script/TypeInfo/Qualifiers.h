@@ -79,7 +79,9 @@ enum AstQualifier : ULong
 	AST_Q_HAS_GAPS = (ULong)1 << 47,
 	// context-resolved symbol, used for enum class values, like if (val == .RED) ...
 	AST_Q_CONTEXT_SYMBOL = (ULong)1 << 48,
-	// note: 15 left
+	// special bitfield type
+	AST_Q_BITFIELD = (ULong)1 << 49,
+	// note: 14 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

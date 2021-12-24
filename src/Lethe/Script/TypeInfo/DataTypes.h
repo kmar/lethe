@@ -137,6 +137,8 @@ struct LETHE_API QDataType
 	bool IsFloatingPoint() const;
 	// is long integer type (64-bit)?
 	bool IsLongInt() const;
+	// is signed integer?
+	bool IsSigned() const;
 	// is func_ptr to method?
 	bool IsMethodPtr() const;
 	// is virtual property?
@@ -245,6 +247,9 @@ public:
 		SharedPtr<Attributes> attributes;
 		QDataType type;
 		Int offset = -1;
+		// member only: bitfield offset and size in bits
+		Short bitOffset = -1;
+		Short bitSize = 0;
 	};
 
 	// for structs/classes:
@@ -363,7 +368,7 @@ private:
 	static DataTypeEnum EvalTypeEnum(DataTypeEnum t);
 	static bool IsNumberEnum(DataTypeEnum t0);
 
-	void GetVariableTextInternal(bool skipReadCheck, HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen = 256, bool baseStruct = false, bool depth0 = false) const;
+	void GetVariableTextInternal(Int bitfieldData, bool skipReadCheck, HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen = 256, bool baseStruct = false, bool depth0 = false) const;
 	static bool ValidReadPtr(const void *ptr, IntPtr size);
 };
 

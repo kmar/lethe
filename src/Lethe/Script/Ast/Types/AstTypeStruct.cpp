@@ -424,6 +424,11 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 	Int nativeMembers = 0;
 	Int scriptMembers = 0;
 
+	Int lastMemberOffset = 0;
+	Int bitfieldOffset = 0;
+	Int bitfieldBudget = 0;
+	DataTypeEnum bitfieldType = DT_NONE;
+
 	// we have to generate members now...
 	for (Int i=2; i<nodes.GetSize(); i++)
 	{
@@ -534,6 +539,35 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 
 			Int mofs = 0;
 
+			if (mn->qualifiers & AST_Q_BITFIELD)
+			{
+				auto bitSize = mn->num.i & 65535;
+
+				if (bitfieldType == mtype.GetTypeEnum() && bitfieldBudget >= bitSize)
+				{
+					malign = msize = 0;
+					m.bitOffset = (Short)bitfieldOffset;
+					m.bitSize = (Short)bitSize;
+					bitfieldBudget -= bitSize;
+					bitfieldOffset += bitSize;
+					mn->num.i |= m.bitOffset << 16;
+					mofs = lastMemberOffset;
+				}
+				else
+				{
+					m.bitOffset = (Short)0;
+					m.bitSize = (Short)bitSize;
+
+					bitfieldType = mtype.GetTypeEnum();
+					bitfieldBudget = mtype.GetSize()*8 - bitSize;
+					bitfieldOffset = bitSize;
+				}
+			}
+			else
+			{
+				bitfieldType = DT_NONE;
+			}
+
 			// handle native members...
 			if (mn->qualifiers & AST_Q_NATIVE)
 			{
@@ -565,6 +599,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 			m.attributes = AstStaticCast<AstVarDeclList *>(n)->attributes;
 			m.type   = mtype;
 			m.offset = mofs;
+			lastMemberOffset = mofs;
 
 			vn->offset = mofs;
 		}
@@ -641,16 +676,21 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 
 	const auto *dtype = dt;
 	Int memberSize = 0;
+	bool hasBitfields = false;
 
 	while (dtype && dtype->type == DT_STRUCT)
 	{
 		for (auto &&it : dtype->members)
+		{
+			hasBitfields |= it.bitSize > 0;
 			memberSize += it.type.GetSize();
+		}
 
 		dtype = &dtype->baseType.GetType();
 	}
 
-	if (memberSize != dt->size)
+	// force fake gaps for bitfields
+	if (hasBitfields || memberSize != dt->size)
 	{
 		qualifiers |= AST_Q_HAS_GAPS;
 		dt->structQualifiers |= AST_Q_HAS_GAPS;

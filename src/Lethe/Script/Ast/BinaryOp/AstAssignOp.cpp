@@ -123,6 +123,18 @@ bool AstAssignOp::CodeGen(CompiledProgram &p)
 		return res;
 	}
 
+	if (rnode->qualifiers & AST_Q_BITFIELD)
+	{
+		AstBinaryOp binop(type, location);
+		binop.nodes = nodes;
+
+		auto res = AstSymbol::BitfieldStore(p, rnode, nodes[0], &binop);
+
+		binop.nodes.Clear();
+
+		return res;
+	}
+
 	auto leftType = nodes[IDX_LEFT]->GetTypeDesc(p);
 
 	if (leftType.IsStruct())

@@ -40,8 +40,13 @@ public:
 
 	static bool CallPropertySetter(CompiledProgram &p, AstNode *dnode, AstNode *snode);
 
+	static bool ValidateBitfield(CompiledProgram &p, AstNode *node, const QDataType &tpe);
+	static bool BitfieldLoad(CompiledProgram &p, AstNode *node);
+	static bool BitfieldStore(CompiledProgram &p, AstNode *bfnode, AstNode *dnode, AstNode *snode);
+
 private:
 	bool Validate(const CompiledProgram &) const;
+	bool CodeGenInternal(CompiledProgram &p);
 };
 
 

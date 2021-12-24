@@ -154,6 +154,19 @@ QDataType AstDotOp::GetTypeDesc(const CompiledProgram &p) const
 
 bool AstDotOp::CodeGen(CompiledProgram &p)
 {
+	LETHE_RET_FALSE(CodeGenInternal(p));
+
+	auto *right = nodes[IDX_RIGHT];
+
+	// handle bitfields
+	if (right->qualifiers & AST_Q_BITFIELD)
+		return AstSymbol::BitfieldLoad(p, right);
+
+	return true;
+}
+
+bool AstDotOp::CodeGenInternal(CompiledProgram &p)
+{
 	AstNode *left = nodes[IDX_LEFT];
 	AstNode *right = nodes[IDX_RIGHT];
 
@@ -274,12 +287,15 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 
 	if (right->type == AST_IDENT)
 	{
+		if (right->qualifiers & AST_Q_BITFIELD)
+			return p.Error(right, "cannot generate reference to a bitfield");
+
 		if (right->qualifiers & AST_Q_PROPERTY)
 		{
 			if (refPropLock)
 				return true;
 
-			return p.Error(right, "cannot generate virtual property reference");
+			return p.Error(right, "cannot generate reference to a virtual property");
 		}
 
 		auto targ = right->target;

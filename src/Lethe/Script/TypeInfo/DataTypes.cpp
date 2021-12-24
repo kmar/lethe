@@ -1408,6 +1408,23 @@ bool QDataType::IsSwitchable() const
 	return false;
 }
 
+bool QDataType::IsSigned() const
+{
+	switch(GetTypeEnum())
+	{
+	case DT_SBYTE:
+	case DT_SHORT:
+	case DT_ENUM:
+	case DT_CHAR:
+	case DT_INT:
+	case DT_LONG:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
 bool QDataType::IsLongInt() const
 {
 	auto dte = GetTypeEnum();
@@ -1740,7 +1757,7 @@ void QDataType::RemoveVirtualProps()
 void DataType::GetVariableText(StringBuilder &sb, const void *ptr, Int maxLen) const
 {
 	HashSet<const void *> hset;
-	GetVariableTextInternal(false, hset, sb, ptr, maxLen, false, true);
+	GetVariableTextInternal(0, false, hset, sb, ptr, maxLen, false, true);
 }
 
 bool DataType::ValidReadPtr(const void *ptr, IntPtr size)
@@ -1778,9 +1795,12 @@ bool DataType::ValidReadPtr(const void *ptr, IntPtr size)
 	return true;
 }
 
-void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen, bool baseStruct, bool depth0) const
+void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen, bool baseStruct, bool depth0) const
 {
 	hset.Add(ptr);
+
+	Int bitSize = bitfld & 65535;
+	Int bitOffset = bitfld >> 16;
 
 	if (!skipReadCheck && !ValidReadPtr(ptr, size))
 	{
@@ -1798,18 +1818,40 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 
 	auto bptr = static_cast<const Byte *>(ptr);
 
+	auto maskVal = [=](Int val)->Int
+	{
+		if (bitSize <= 0)
+			return val;
+
+		Int mask = Int(((ULong)1 << bitSize)-1);
+
+		val >>= bitOffset;
+		val &= mask;
+
+		return val;
+	};
+
+	auto maskValSigned = [=](Int val)->Int
+	{
+		val = maskVal(val);
+		val <<= 32 - bitSize;
+		val >>= 32 - bitSize;
+
+		return val;
+	};
+
 	switch(type)
 	{
 	case DT_BOOL:
 	{
-		Byte val = *static_cast<const Byte *>(ptr);
+		auto val = maskVal(*static_cast<const Byte *>(ptr));
 		sb += val ? "true" : "false";
 	}
 	break;
 
 	case DT_CHAR:
 	{
-		Int val = *static_cast<const Int *>(ptr);
+		auto val = maskValSigned(*static_cast<const Int *>(ptr));
 		char tmp[8] = {0};
 		Int len = CharConv::EncodeUTF8(val, tmp, tmp+8);
 		String s(tmp, len);
@@ -1819,28 +1861,28 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 
 	case DT_BYTE:
 	{
-		Int val = *static_cast<const Byte *>(ptr);
+		auto val = maskVal(*static_cast<const Byte *>(ptr));
 		sb.AppendFormat("%d", val);
 	}
 	break;
 
 	case DT_SBYTE:
 	{
-		Int val = *static_cast<const SByte *>(ptr);
+		auto val = maskValSigned(*static_cast<const SByte *>(ptr));
 		sb.AppendFormat("%d", val);
 	}
 	break;
 
 	case DT_SHORT:
 	{
-		Int val = *static_cast<const Short *>(ptr);
+		auto val = maskValSigned(*static_cast<const Short *>(ptr));
 		sb.AppendFormat("%d", val);
 	}
 	break;
 
 	case DT_USHORT:
 	{
-		Int val = *static_cast<const UShort *>(ptr);
+		auto val = maskVal(*static_cast<const UShort *>(ptr));
 		sb.AppendFormat("%d", val);
 	}
 	break;
@@ -1862,14 +1904,14 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 
 	case DT_INT:
 	{
-		Int val = *static_cast<const Int *>(ptr);
+		auto val = maskValSigned(*static_cast<const Int *>(ptr));
 		sb.AppendFormat("%d", val);
 	}
 	break;
 
 	case DT_UINT:
 	{
-		UInt val = *static_cast<const UInt *>(ptr);
+		UInt val = maskVal((Int)*static_cast<const UInt *>(ptr));
 		sb.AppendFormat("%u", val);
 	}
 	break;
@@ -1954,7 +1996,7 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 				sb += obj->GetScriptClassType()->name;
 				sb += ' ';
 
-				obj->GetScriptClassType()->GetVariableTextInternal(false, hset, sb, ptrval, maxLen);
+				obj->GetScriptClassType()->GetVariableTextInternal(0, false, hset, sb, ptrval, maxLen);
 			}
 		}
 	}
@@ -1971,7 +2013,7 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 		{
 			for (Int i=0; i<arrayDims; i++)
 			{
-				elemType.GetType().GetVariableTextInternal(true, hset, sb, bptr, maxLen);
+				elemType.GetType().GetVariableTextInternal(0, true, hset, sb, bptr, maxLen);
 
 				if (i+1 < arrayDims)
 					sb += ", ";
@@ -2011,7 +2053,7 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 				if (hset.FindIndex(bptr) >= 0)
 					sb += "?";
 				else
-					elemType.GetType().GetVariableTextInternal(true, hset, sb, bptr, maxLen);
+					elemType.GetType().GetVariableTextInternal(0, true, hset, sb, bptr, maxLen);
 
 				if (i + 1 < count)
 					sb += ", ";
@@ -2038,7 +2080,7 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 		if (baseType.GetTypeEnum() != DT_NONE)
 		{
 			auto olen = sb.GetLength();
-			baseType.GetType().GetVariableTextInternal(false, hset, sb, bptr, maxLen, true);
+			baseType.GetType().GetVariableTextInternal(0, false, hset, sb, bptr, maxLen, true);
 
 			if (sb.GetLength() > olen && !members.IsEmpty())
 				sb += ", ";
@@ -2055,7 +2097,15 @@ void DataType::GetVariableTextInternal(bool skipReadCheck, HashSet<const void *>
 			if (m.type.IsReference())
 				mptr = reinterpret_cast<const Byte *>(*(const void **)mptr);
 
-			m.type.GetType().GetVariableTextInternal(!m.type.IsReference(), hset, sb, mptr, maxLen);
+			Int nbitfld = 0;
+
+			if (m.bitSize > 0)
+			{
+				// it's a bitfield!
+				nbitfld = m.bitSize + m.bitOffset*65536;
+			}
+
+			m.type.GetType().GetVariableTextInternal(nbitfld, !m.type.IsReference(), hset, sb, mptr, maxLen);
 
 			if (i+1 < members.GetSize())
 				sb += ", ";

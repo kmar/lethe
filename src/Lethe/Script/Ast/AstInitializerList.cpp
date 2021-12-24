@@ -47,6 +47,9 @@ bool AstInitializerList::GenInitializeElem(CompiledProgram &p, AstNode *n, QData
 	if (n->type == AST_INITIALIZER_LIST)
 		return n->GenInitializerList(p, elem, ofs, global);
 
+	if (elem.qualifiers & AST_Q_BITFIELD)
+		return p.Error(n, "bitfields cannot be used in initializer lists");
+
 	// eval node!
 	QDataType ntype = n->GetTypeDesc(p);
 

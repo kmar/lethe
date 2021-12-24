@@ -391,11 +391,39 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 		if (ntt == TOK_COLON && !currentScope->IsLocal())
 		{
 			ts->ConsumeToken();
+
+			if (ts->PeekToken().type == TOK_ULONG)
+			{
+				// bitfield!
+				// [0] = type, [1+] = var decls
+				if (res->nodes.GetSize() != 2)
+				{
+					ExpectPrev(false, "bitfields can only be defined for a single variable (parsing restriction)");
+					return nullptr;
+				}
+
+				auto numTok = ts->GetToken();
+
+				if (numTok.type != TOK_ULONG || numTok.number.l > 64)
+					LETHE_RET_FALSE(ExpectPrev(false, "expected bit size or too large"));
+
+				auto *tpe = res->nodes[0];
+
+				if (tpe->qualifiers & AST_Q_STATIC)
+					LETHE_RET_FALSE(ExpectPrev(false, "bitfield cannot be static"));
+
+				tpe->qualifiers |= AST_Q_BITFIELD;
+				tpe->num.i = res->nodes[1]->num.i = (Int)numTok.number.l;
+				res->nodes[1]->qualifiers |= AST_Q_BITFIELD;
+				res->nodes[1]->nodes[0]->qualifiers |= AST_Q_BITFIELD;
+				return res.Detach();
+			}
+
 			ntt = ts->PeekToken().type;
 
 			if (ntt != TOK_LBLOCK)
 			{
-				Expect(false, "`{' expected to start virtual property block");
+				Expect(false, "`{' expected to start a virtual property block");
 				return nullptr;
 			}
 

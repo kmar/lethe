@@ -48,6 +48,8 @@ public:
 
 private:
 	Int refPropLock = 0;
+
+	bool CodeGenInternal(CompiledProgram &p);
 };
 
 
