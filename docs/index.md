@@ -15,7 +15,8 @@
 	* [enum](#enum_type)
 	* [string](#string_type)
 	* [name](#name_type)
-	* [virtual property](#virtual_props)
+	* [virtual properties](#virtual_props)
+	* [bit fields](#bitfields)
 	* [struct](#struct_type)
 	* [class](#class_type)
 	* [pointer](#pointer_type)
@@ -116,6 +117,30 @@ struct S
 	}
 }
 ```
+<a id="bitfields"></a>
+#### bit fields
+bit fields are practically identical to C, with some additional limitations
+
+they cannot be static and they're only valid inside a struct/class declaration
+
+they cannot be auto-initialized and unly up to 32-bit integers are supported (including bool)
+
+also keep in mind that bit field performance isn't great
+```cpp
+struct S
+{
+	bool bool1 : 1;
+	bool bool2 : 1;
+	uint myint : 4;
+	uint myint : 24;
+}
+```
+bit fields are packed least significant byte first with extra breaks at type boundaries or bit budget overflows
+
+two additional operators can be used with bitfields: bitsizeof() and bitoffsetof()
+
+both of them return 0 for normal fields, for bitfields, however, bitsizeof returns number of bits and bitoffsetof
+returns bit index, starting at least significant bit
 <a id="struct_type"></a>
 #### structs
 **struct** is a lightweight, POD-like data type. it can contain methods but has no vtable, so all methods are _final_.
@@ -455,7 +480,7 @@ can't skip over variable declarations
 * no memory safety/sandboxing (it's possible for the script to crash the host process)
 * no anonymous functions (lambdas)
 * no unions
-* no bitfields
+* limited support for bitfields
 * only a limited scoped macro preprocessor
 * no coroutines, just simple states that require manual support
 
