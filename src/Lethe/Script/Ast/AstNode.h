@@ -219,7 +219,10 @@ enum AstNodeType : Short
 	AST_LABEL,
 	AST_GOTO,
 	// static assert
-	AST_STATIC_ASSERT
+	AST_STATIC_ASSERT,
+	// bitfield sizeof/offsetof; both return 0 for normal fields
+	AST_BITSIZEOF,
+	AST_BITOFFSETOF
 };
 
 template<typename T>

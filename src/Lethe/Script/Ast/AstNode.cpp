@@ -172,6 +172,8 @@ static const char *AST_TYPE_NAMES[] =
 	"AST_LABEL",
 	"AST_GOTO",
 	"AST_STATIC_ASSERT",
+	"AST_BITSIZEOF",
+	"AST_BITOFFSETOF",
 	nullptr
 };
 

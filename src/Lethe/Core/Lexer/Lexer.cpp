@@ -67,6 +67,8 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"cast", TOK_KEY_CAST},
 	{"sizeof", TOK_KEY_SIZEOF},
 	{"offsetof", TOK_KEY_OFFSETOF},
+	{"bitsizeof", TOK_KEY_BITSIZEOF},
+	{"bitoffsetof", TOK_KEY_BITOFFSETOF},
 	{"alignof", TOK_KEY_ALIGNOF},
 	{"typeid", TOK_KEY_TYPEID},
 	{"auto", TOK_KEY_AUTO},

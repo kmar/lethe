@@ -248,7 +248,7 @@ public:
 		QDataType type;
 		Int offset = -1;
 		// member only: bitfield offset and size in bits
-		Short bitOffset = -1;
+		Short bitOffset = 0;
 		Short bitSize = 0;
 	};
 
