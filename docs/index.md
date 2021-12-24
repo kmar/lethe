@@ -125,6 +125,8 @@ they cannot be static and they're only valid inside a struct/class declaration
 
 they cannot be auto-initialized and unly up to 32-bit integers are supported (including bool)
 
+they cannot be initialized using initializer lists
+
 also keep in mind that bit field performance isn't great
 ```cpp
 struct S
@@ -158,7 +160,19 @@ this is very useful for vectors:
 
 	my_vector v;
 	v[0] = 42;
+	my_vector w = {1,2,3};
 ```
+note that designater initializers can also be used in conjuctions with struct, however rules similar to C++ apply
+(no mixing allowed, warns if unordered)
+```cpp
+	my_vector a = {.y=3.0, .z=5.0};
+```
+
+struct literals work in a different way than C++, think initializer list with explicit type, like this:
+```cpp
+	auto b = my_vector{-1, -2, -3};
+```
+
 simple generics can be used with structs, but no specialization and no nested generics
 ```cpp
 	struct generic<T>
