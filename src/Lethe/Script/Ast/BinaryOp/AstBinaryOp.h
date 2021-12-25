@@ -31,7 +31,7 @@ public:
 
 	const AstNode *GetTypeNode() const override;
 
-	const AstNode *GetContextTypeNode(const AstNode *node) const;
+	const AstNode *GetContextTypeNode(const AstNode *node) const override;
 
 	static const AstNode *FindUserDefOperatorType(const char *opName, const AstNode *type0, const AstNode *type1);
 

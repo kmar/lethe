@@ -19,7 +19,7 @@ public:
 	ResolveResult Resolve(const ErrorHandler &e) override;
 	const AstNode *GetTypeNode() const override;
 
-	const AstNode *GetContextTypeNode(const AstNode *node) const;
+	const AstNode *GetContextTypeNode(const AstNode *node) const override;
 
 	bool CodeGen(CompiledProgram &p) override;
 	bool CodeGenRef(CompiledProgram &p, bool allowConst = false, bool derefPtr = false) override;

@@ -24,7 +24,7 @@ public:
 	const AstNode *GetTypeNode() const override;
 	AstNode *GetResolveTarget() const override;
 
-	const AstNode *GetContextTypeNode(const AstNode *node) const;
+	const AstNode *GetContextTypeNode(const AstNode *node) const override;
 
 	static bool CallInit(CompiledProgram &p, const AstNode *varType, Int globalOfs, Int localOfs = 0);
 
