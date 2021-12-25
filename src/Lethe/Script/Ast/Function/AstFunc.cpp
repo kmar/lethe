@@ -274,6 +274,8 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 
 			AstNode *asgn = new AstBinaryAssignAllowConst(nloc);
 			AstSymbol *resIdent = new AstSymbol("", nloc);
+			// must copy bitfield flag here
+			resIdent->qualifiers |= n->nodes[ofs]->qualifiers & AST_Q_BITFIELD;
 			resIdent->text = AstStaticCast<AstText *>(n->nodes[ofs])->text;
 			// FIXME: for multi-default initializers, symbol target is null except for the first one
 			// this is odd any might hide a bug
@@ -311,6 +313,12 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 					if (qdt.qualifiers & AST_Q_STATIC)
 					{
 						p.Error(tn->nodes[j], "default init cannot be used for static variables");
+						err = true;
+					}
+
+					if (qdt.qualifiers & (AST_Q_CONST | AST_Q_CONSTEXPR))
+					{
+						p.Error(tn->nodes[j], "default init cannot be used for constants");
 						err = true;
 					}
 

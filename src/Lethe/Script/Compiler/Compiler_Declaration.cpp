@@ -385,7 +385,7 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 		// now stop or continue parsing
 		TokenType ntt = ts->PeekToken().type;
 
-		// : { ... virtual_props ... }
+		// : { ... virtual_props ... } or : n (bitfields)
 		// I decided to use extra colon so that I don't close doors to modern C++-style constructor calls, like int i{1};
 		// also, ignored in local scope to avoid clashes with range based for loops
 		if (ntt == TOK_COLON && !currentScope->IsLocal())
@@ -416,6 +416,15 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 				tpe->num.i = res->nodes[1]->num.i = (Int)numTok.number.l;
 				res->nodes[1]->qualifiers |= AST_Q_BITFIELD;
 				res->nodes[1]->nodes[0]->qualifiers |= AST_Q_BITFIELD;
+
+				if (ts->PeekToken().type == TOK_EQ)
+				{
+					ts->ConsumeToken();
+					auto *iniExpr = ParseAssignExpression(depth+1);
+					LETHE_RET_FALSE(iniExpr);
+					res->nodes[1]->Add(iniExpr);
+				}
+
 				return res.Detach();
 			}
 
