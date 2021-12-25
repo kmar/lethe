@@ -990,13 +990,30 @@ bool AstSymbol::BitfieldStore(CompiledProgram &p, AstNode *node, AstNode *dnode,
 	p.PopStackType(true);
 	p.PopStackType(true);
 
-	p.EmitIntConst(mask);
-	p.Emit(OPC_IAND);
+	if (p.CanOptPrevious() && (p.instructions.Back() & 255) == OPC_PUSH_ICONST)
+	{
+		// optimize constant case
+		auto iconst = Int(p.instructions.Back()) >> 8;
+		p.instructions.Pop();
+		iconst &= mask;
+		iconst <<= bitShift;
 
-	if (bitShift > 0)
-		p.EmitI24(OPC_ISHL_ICONST, bitShift);
+		if (iconst != 0)
+		{
+			p.EmitIntConst(iconst);
+			p.Emit(OPC_IOR);
+		}
+	}
+	else
+	{
+		p.EmitIntConst(mask);
+		p.Emit(OPC_IAND);
 
-	p.Emit(OPC_IOR);
+		if (bitShift > 0)
+			p.EmitI24(OPC_ISHL_ICONST, bitShift);
+
+		p.Emit(OPC_IOR);
+	}
 
 	p.EmitI24(OPC_LPUSHPTR, 1);
 	p.Emit(opStore);
