@@ -123,7 +123,7 @@ bit fields are practically identical to C, with some additional limitations
 
 they cannot be static and they're only valid inside a struct/class declaration
 
-they cannot be auto-initialized and unly up to 32-bit integers are supported (including bool)
+only up to 32-bit integers are supported (including bool)
 
 they cannot be initialized using initializer lists
 
