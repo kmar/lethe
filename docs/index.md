@@ -464,7 +464,7 @@ can't skip over variable declarations
 		string mystring = "abcd";
 ```
 * expressions, also nothing special
-	* function calls **func(..)**
+	* function calls **func(..)** with named arguments for consistency and readability: call(argname1:expr, argname2:expr)
 * blocks **{** .. **}**
 * function return: **return** _expr_
 * **defer** _statement_, defer execution of statement to the end of the block; inspired by Go
