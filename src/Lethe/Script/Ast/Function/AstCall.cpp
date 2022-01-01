@@ -1163,6 +1163,17 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 		AstNode *argValue = i < nodes.GetSize() ? nodes[i] : args->nodes[fidx]->nodes[2];
 
+		// check named args first
+		if (fidx < namedArgs.GetSize())
+		{
+			const auto &narg = namedArgs[fidx];
+
+			auto *argname = !isEllipsis ? args->nodes[fidx]->nodes[1] : nullptr;
+
+			if (isEllipsis || !narg.IsEmpty() && argname->type == AST_IDENT && narg != AstStaticCast<AstText *>(argname)->text)
+				return p.Error(nodes[i], "named argument mismatch");
+		}
+
 		QDataType tdesc = args->nodes[fidx]->GetTypeDesc(p);
 
 		if (tdesc.GetTypeEnum() == DT_DELEGATE && i >= nodes.GetSize())

@@ -82,7 +82,8 @@ AstNode *Compiler::ParsePriority2Operators(Int depth, UniquePtr<AstNode> &first)
 		case TOK_LBR:
 			// function call...
 		{
-			UniquePtr<AstNode> fcall = NewAstNode<AstCall>(t.location);
+			auto *fcallPtr = AstStaticCast<AstCall *>(NewAstNode<AstCall>(t.location));
+			UniquePtr<AstNode> fcall = fcallPtr;
 			LETHE_RET_FALSE(fcall);
 			ts->ConsumeToken();
 			fcall->Add(res.Detach());
@@ -96,8 +97,25 @@ AstNode *Compiler::ParsePriority2Operators(Int depth, UniquePtr<AstNode> &first)
 
 			TokenType tt = TOK_INVALID;
 
+			Int argIndex = 0;
+
 			for (;;)
 			{
+				// check named arg
+				if (ts->PeekToken().type == TOK_IDENT)
+				{
+					const auto &argname = ts->GetToken();
+
+					if (ts->PeekToken().type != TOK_COLON)
+						ts->UngetToken();
+					else
+					{
+						ts->ConsumeToken();
+						fcallPtr->namedArgs.ResizeToFit(argIndex);
+						fcallPtr->namedArgs[argIndex] = AddString(argname.text);
+					}
+				}
+
 				AstNode *tmp = ParseAssignExpression(depth+1);
 				LETHE_RET_FALSE(tmp);
 				fcall->Add(tmp);
@@ -107,6 +125,7 @@ AstNode *Compiler::ParsePriority2Operators(Int depth, UniquePtr<AstNode> &first)
 					break;
 
 				ts->ConsumeToken();
+				argIndex++;
 			}
 
 			LETHE_RET_FALSE(ExpectPrev(tt == TOK_RBR, "expected `)`"));

@@ -39,6 +39,9 @@ public:
 
 	AstNode *forceFunc;
 
+	// named arguments, can be empty
+	Array<String> namedArgs;
+
 	void CopyTo(AstNode *n) const override;
 
 protected:
