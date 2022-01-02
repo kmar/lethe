@@ -1170,7 +1170,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 			auto *argname = !isEllipsis ? args->nodes[fidx]->nodes[1] : nullptr;
 
-			if (isEllipsis || !narg.IsEmpty() && argname->type == AST_IDENT && narg != AstStaticCast<AstText *>(argname)->text)
+			if (isEllipsis || (!narg.IsEmpty() && argname->type == AST_IDENT && narg != AstStaticCast<AstText *>(argname)->text))
 				return p.Error(nodes[i], "named argument mismatch");
 		}
 
