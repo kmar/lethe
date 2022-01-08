@@ -20,7 +20,7 @@ NativeClassProxy::NativeClassProxy(ScriptEngine &eng)
 {
 }
 
-NativeClassProxy &NativeClassProxy::Member(const String &name, size_t offset)
+NativeClassProxy &NativeClassProxy::Member(const char *name, size_t offset)
 {
 	if (success)
 	{

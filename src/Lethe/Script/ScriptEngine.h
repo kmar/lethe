@@ -53,7 +53,7 @@ public:
 
 	explicit NativeClassProxy(ScriptEngine &eng);
 
-	NativeClassProxy &Member(const String &name, size_t offset);
+	NativeClassProxy &Member(const char *name, size_t offset);
 };
 
 struct ScriptBreakpoint
