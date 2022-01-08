@@ -81,6 +81,11 @@ void Compiler::InitTokenStream()
 	ts->SetVarArgMacros("__VA_ARGS", "__VA_COUNT");
 	ts->SetStringizeMacros("__stringize", "__concat");
 	ts->SetMacroMap(&macroMap);
+	ts->SetMacroKeyword(TOK_KEY_MACRO);
+	ts->onParseMacro = [this]()->bool
+	{
+		return ParseMacro(0);
+	};
 }
 
 void Compiler::SetFloatLiteralIsDouble(bool nfloatLitIsDouble)
@@ -490,6 +495,9 @@ bool Compiler::ParseMacro(Int depth, bool conditionalOnly)
 	{
 		if (processIfs)
 		{
+			if (conditionalStack.IsEmpty())
+				return ExpectPrev(false, "conditional stack is empty");
+
 			auto &csb = conditionalStack.Back();
 
 			if (csb & CSF_GOT_ELSE)
@@ -803,10 +811,6 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 			cur->Add(tdef);
 		}
 		break;
-
-		case TOK_KEY_MACRO:
-			LETHE_RET_FALSE(ParseMacro(depth+1));
-			break;
 
 		case TOK_KEY_STATIC_ASSERT:
 		{

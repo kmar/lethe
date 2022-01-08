@@ -29,6 +29,8 @@ TokenStream::TokenStream(Lexer &l, Int nbufSize)
 	, macroScopeIndex(0)
 	, lastMacroScopeIndex(0)
 	, macroLock(0)
+	, parseMacroLock(0)
+	, macroKeyword(TOK_INVALID)
 	, macroExpandCounter(0)
 {
 	buffer.Resize(nbufSize);
@@ -208,6 +210,7 @@ TokenType TokenStream::FetchTokenInternal(Token &ntok)
 
 const Token &TokenStream::GetToken()
 {
+retry:
 	Int rp = readPtr;
 
 	if (readPtr == writePtr)
@@ -223,6 +226,51 @@ const Token &TokenStream::GetToken()
 			auto loc = buffer[writePtr].location;
 			*static_cast<Token *>(&buffer[writePtr]) = eofTokens[eofIndex++];
 			buffer[writePtr].location = loc;
+		}
+
+		if (!parseMacroLock && macroKeyword != TOK_INVALID && buffer[rp].type == macroKeyword)
+		{
+			auto opos = position;
+
+			++parseMacroLock;
+			auto res = onParseMacro();
+			--parseMacroLock;
+
+			if (res)
+			{
+				while (readPtr != writePtr && buffer[readPtr].type == macroKeyword)
+				{
+					if (!onParseMacro())
+						goto fail;
+				}
+
+				if (readPtr != writePtr)
+				{
+					// special handling!
+					auto dst = owritePtr;
+
+					while (readPtr != writePtr)
+					{
+						if (dst != readPtr)
+							Swap(buffer[dst], buffer[readPtr]);
+
+						AdvanceIndex(readPtr);
+						AdvanceIndex(dst);
+					}
+
+					owritePtr = dst;
+					ofullSize = Max(ofullSize, owritePtr+1);
+				}
+
+				position = opos;
+				readPtr = rp;
+				writePtr = owritePtr;
+				fullSize = ofullSize;
+				goto retry;
+			}
+fail:
+			// parse macro failed => return invalid token
+			buffer[rp].type = TOK_INVALID;
 		}
 
 		fullSize = Max(fullSize, writePtr+1);
@@ -655,6 +703,11 @@ void TokenStream::SetFuncName(const String &fname)
 void TokenStream::SetMacroMap(TokenMacroMap *nmap)
 {
 	macros = nmap;
+}
+
+void TokenStream::SetMacroKeyword(TokenType tt)
+{
+	macroKeyword = tt;
 }
 
 }

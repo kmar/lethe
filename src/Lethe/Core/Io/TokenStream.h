@@ -4,6 +4,7 @@
 #include "../Memory/BucketAlloc.h"
 #include "../Collect/HashMap.h"
 #include "../Ptr/UniquePtr.h"
+#include "../Delegate/Delegate.h"
 
 namespace lethe
 {
@@ -79,6 +80,8 @@ public:
 
 	void SetFuncName(const String &fname);
 
+	void SetMacroKeyword(TokenType tt);
+
 	void EnableMacros(bool enable);
 
 	void BeginMacroScope();
@@ -87,6 +90,8 @@ public:
 	// add simple macro, swapping-in tokens
 	// macro redefinitions are illegal, so this returns false if so
 	bool AddSwapSimpleMacro(const String &name, Array<Token> &args, Array<Token> &tokens);
+
+	Delegate<bool()> onParseMacro;
 
 private:
 	using Macro = TokenMacro;
@@ -134,6 +139,9 @@ private:
 	Int lastMacroScopeIndex;
 	// global macro lock
 	Int macroLock;
+	Int parseMacroLock;
+	// keyword for token macro parsing externally
+	TokenType macroKeyword;
 
 	TokenLocation macroExpandLocation;
 
