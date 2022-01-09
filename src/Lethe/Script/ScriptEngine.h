@@ -53,7 +53,7 @@ public:
 
 	explicit NativeClassProxy(ScriptEngine &eng);
 
-	NativeClassProxy &Member(const char *name, size_t offset);
+	LETHE_NOINLINE NativeClassProxy &Member(const char *name, size_t offset);
 };
 
 struct ScriptBreakpoint
@@ -134,7 +134,8 @@ public:
 	void *GetClassVtable(Name n) const;
 
 	// bind native function (fully qualified name)
-	bool BindNativeFunction(const String &fname, const ConstPool::NativeCallback &callback);
+	LETHE_NOINLINE bool BindNativeFunction(const char *fname, const ConstPool::NativeCallback &callback);
+	LETHE_NOINLINE bool BindNativeFunction(const String &fname, const ConstPool::NativeCallback &callback);
 
 	// get function signature for a function
 	// empty => not found
@@ -142,10 +143,12 @@ public:
 
 	// bind native class (fully qualified name)
 	// this should return a binding proxy
-	NativeClassProxy BindNativeClass(const String &cname, size_t size, size_t align, void (*ctor)(void *instptr) = nullptr, void (*dtor)(void *instptr) = nullptr);
+	LETHE_NOINLINE NativeClassProxy BindNativeClass(const char *cname, size_t size, size_t align, void (*ctor)(void *instptr) = nullptr, void (*dtor)(void *instptr) = nullptr);
+	LETHE_NOINLINE NativeClassProxy BindNativeClass(const String &cname, size_t size, size_t align, void (*ctor)(void *instptr) = nullptr, void (*dtor)(void *instptr) = nullptr);
 
 	// bind native struct (fully qualified name)
-	NativeClassProxy BindNativeStruct(const String &cname, size_t size, size_t align);
+	LETHE_NOINLINE NativeClassProxy BindNativeStruct(const char *cname, size_t size, size_t align);
+	LETHE_NOINLINE NativeClassProxy BindNativeStruct(const String &cname, size_t size, size_t align);
 
 	// link compiled programs (all native functions must be bound at this point)
 	// see LinkFlags

@@ -781,10 +781,20 @@ String ScriptEngine::GetFunctionSignature(const StringRef &funcName) const
 	return program->functions.GetValue(fidx).typeSignature;
 }
 
+bool ScriptEngine::BindNativeFunction(const char *fname, const ConstPool::NativeCallback &callback)
+{
+	return BindNativeFunction(String(fname), callback);
+}
+
 bool ScriptEngine::BindNativeFunction(const String &fname, const ConstPool::NativeCallback &callback)
 {
 	program->cpool.BindNativeFunc(fname, callback);
-	return 1;
+	return true;
+}
+
+NativeClassProxy ScriptEngine::BindNativeClass(const char *cname, size_t size, size_t align, void(*ctor)(void *instptr), void(*dtor)(void *instptr))
+{
+	return BindNativeClass(String(cname), size, align, ctor, dtor);
 }
 
 NativeClassProxy ScriptEngine::BindNativeClass(const String &cname, size_t size, size_t align, void(*ctor)(void *instptr), void(*dtor)(void *instptr))
@@ -794,6 +804,11 @@ NativeClassProxy ScriptEngine::BindNativeClass(const String &cname, size_t size,
 	res.handle = program->cpool.BindNativeClass(cname, (Int)size, (Int)align, ctor, dtor);
 
 	return res;
+}
+
+NativeClassProxy ScriptEngine::BindNativeStruct(const char *cname, size_t size, size_t align)
+{
+	return BindNativeStruct(String(cname), size, align);
 }
 
 NativeClassProxy ScriptEngine::BindNativeStruct(const String &cname, size_t size, size_t align)
