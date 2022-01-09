@@ -217,7 +217,7 @@ void native_pass_ptr(lethe::Stack &stk)
 	// unlike result, ass function arguments are passed as raw pointers in lethe (this is to reduce refcounting)
 	// you have to explicitly hold a smart pointer on stack to force refcount
 	auto *obj = ap.Get<lethe::ScriptBaseObject *>();
-	xprintf("obj: %p strong ref: %u\n", obj, obj->strongRefCount);
+	xprintf("obj: %p strong ref: %u\n", (void *)obj, obj->strongRefCount);
 }
 
 void test_script_spawn(lethe::ScriptContext *ctx)
