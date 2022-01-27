@@ -710,15 +710,54 @@ AstNode *Compiler::ParseVarDeclOrExpr(Int depth, bool refFirstInit, bool initOnl
 	if (expr)
 		return expr;
 
-	// if we get here, it's probably invalid var decl; so reparse and get proper error
+	// if we get here, it's an error; so reparse and get proper error
+	ts->UngetToken(ts->GetPosition() - pos);
+
+	auto old = onError;
+
+	struct ErrorInfo
+	{
+		String msg;
+		TokenLocation loc;
+	};
+
+	Array<ErrorInfo> errors;
+
+	onError = [&](const String &msg, const TokenLocation &loc)
+	{
+		errors.Add(ErrorInfo{msg, loc});
+	};
+
+	// get both errors. should actually use the one that goes further OR at least sort them by location position...
+	ParseExpression(depth+1);
 	ts->UngetToken(ts->GetPosition() - pos);
 
 	ntype = ParseType(depth+1);
-	LETHE_RET_FALSE(ntype);
-	nname = ParseName(depth+1);
-	LETHE_RET_FALSE(nname);
 
-	return ParseVarDecl(ntype, nname, depth+1, refFirstInit, initOnly);
+	if (ntype)
+	{
+		nname = ParseName(depth+1);
+		if (nname)
+			ParseVarDecl(ntype, nname, depth+1, refFirstInit, initOnly);
+	}
+
+	onError = old;
+
+	// pick error that goes further and report that; may still be wrong but better than before
+	auto sortLambda = [](const ErrorInfo &a, const ErrorInfo &b)->bool
+	{
+		if (a.loc.line != b.loc.line)
+			return a.loc.line < b.loc.line;
+
+		return a.loc.column < b.loc.column;
+	};
+
+	errors.Sort(sortLambda);
+
+	if (!errors.IsEmpty())
+		onError(errors.Back().msg, errors.Back().loc);
+
+	return nullptr;
 }
 
 AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)

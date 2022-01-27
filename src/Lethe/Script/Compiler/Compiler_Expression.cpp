@@ -128,7 +128,7 @@ AstNode *Compiler::ParsePriority2Operators(Int depth, UniquePtr<AstNode> &first)
 				argIndex++;
 			}
 
-			LETHE_RET_FALSE(ExpectPrev(tt == TOK_RBR, "expected `)`"));
+			LETHE_RET_FALSE(Expect(tt == TOK_RBR, "expected `)`"));
 			ts->ConsumeToken();
 			res = fcall;
 		}
