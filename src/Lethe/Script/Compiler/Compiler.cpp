@@ -904,7 +904,7 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 			}
 			// fall through
 		default:
-			LETHE_RET_FALSE(ExpectPrev(false, "unexpected token"));
+			LETHE_RET_FALSE(Expect(false, "unexpected token"));
 		}
 	}
 }
