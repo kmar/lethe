@@ -212,6 +212,9 @@ bool AstUnaryOp::CodeGen(CompiledProgram &p)
 		if (fctor >= 0)
 			LETHE_RET_FALSE(p.EmitBackwardJump(OPC_CALL, fctor));
 
+		if (dt.IsPointer())
+			dt.qualifiers &= ~AST_Q_SKIP_DTOR;
+
 		p.PushStackType(dt);
 		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_RAW_PTR]));
 
