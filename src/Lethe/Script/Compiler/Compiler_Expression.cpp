@@ -514,12 +514,17 @@ AstNode *Compiler::ParseUnaryExpression(Int depth)
 		case TOK_KEY_BITOFFSETOF:
 		case TOK_KEY_ALIGNOF:
 		case TOK_KEY_TYPEID:
+		case TOK_SWAP:
 		{
 			AstNode *tmp = nullptr;
 			bool testBrace = false;
 
 			switch(t.type)
 			{
+			case TOK_SWAP:
+				tmp = NewAstNode<AstUnaryOp>(AST_OP_SWAP_NULL, t.location);
+				break;
+
 			case TOK_MINUS:
 				tmp = NewAstNode<AstUnaryMinus>(t.location);
 				break;

@@ -8,6 +8,8 @@
 #include <Lethe/Script/Ast/Function/AstFunc.h>
 #include <Lethe/Script/Ast/AstText.h>
 
+#include <Lethe/Script/Vm/Stack.h>
+
 namespace lethe
 {
 
@@ -193,6 +195,35 @@ bool AstUnaryOp::CodeGenOperator(CompiledProgram &p)
 bool AstUnaryOp::CodeGen(CompiledProgram &p)
 {
 	auto dt = nodes[0]->GetTypeDesc(p);
+
+	if (type == AST_OP_SWAP_NULL)
+	{
+		if (dt.IsReference())
+			return true;
+
+		const Int nwords = (dt.GetSize() + Stack::WORD_SIZE-1) / Stack::WORD_SIZE;
+
+		p.EmitI24(OPC_PUSHZ_RAW, nwords);
+
+		p.EmitI24(OPC_LPUSHADR, 0);
+
+		auto fctor = dt.GetType().funCtor;
+
+		if (fctor >= 0)
+			LETHE_RET_FALSE(p.EmitBackwardJump(OPC_CALL, fctor));
+
+		p.PushStackType(dt);
+		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_RAW_PTR]));
+
+		LETHE_RET_FALSE(nodes[0]->CodeGenRef(p));
+
+		p.EmitU24(OPC_PSWAP, dt.GetSize());
+
+		p.PopStackType(true);
+		p.PopStackType();
+
+		return true;
+	}
 
 	if (dt.IsStruct())
 		return CodeGenOperator(p);

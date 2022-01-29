@@ -123,6 +123,7 @@ enum AstNodeType : Short
 	AST_OP_XOR_ASSIGN,
 	AST_OP_OR_ASSIGN,
 	AST_OP_SWAP,
+	AST_OP_SWAP_NULL,
 	AST_OP_COMMA,		// not used
 	AST_NEW,
 	AST_CAST_OR_CALL,	// [0] = cast_type or f_name, [1] = expr or args

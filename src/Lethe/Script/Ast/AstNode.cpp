@@ -98,6 +98,7 @@ static const char *AST_TYPE_NAMES[] =
 	"AST_OP_XOR_ASSIGN",
 	"AST_OP_OR_ASSIGN",
 	"AST_OP_SWAP",
+	"AST_OP_SWAP_NULL",
 	"AST_OP_COMMA",
 	"AST_NEW",
 	"AST_CAST_OR_CALL",
