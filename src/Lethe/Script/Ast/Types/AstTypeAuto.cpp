@@ -90,13 +90,23 @@ AstNode *AstTypeAuto::GetExprNode() const
 	case AST_VAR_DECL_LIST:
 		if (qualifiers & AST_Q_AUTO_RANGE_FOR)
 		{
+			// special handling when iterating integers
 			auto *fornode = parent->parent;
-			auto *cmpnode = fornode->nodes[1];
 
-			if (cmpnode->type == AST_OP_LT)
+			if (fornode->type == AST_FOR_RANGE)
 			{
-				res = cmpnode->nodes[1];
-				break;
+				auto *cmpnode = fornode->nodes[1];
+
+				if (cmpnode->type == AST_OP_LT)
+				{
+					auto *tn = cmpnode->nodes[1]->GetTypeNode();
+
+					if (tn && tn->IsElemType())
+					{
+						res = cmpnode->nodes[1];
+						break;
+					}
+				}
 			}
 		}
 
