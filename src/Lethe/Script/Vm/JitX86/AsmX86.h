@@ -46,16 +46,6 @@ struct LETHE_API RegExpr
 	RegExpr(Long ofs) : base(NoRegister), index(NoRegister), offset(ofs), scale(1), mem(MEM_NONE) {}
 	RegExpr(ULong ofs) : base(NoRegister), index(NoRegister), offset((Long)ofs), scale(1), mem(MEM_NONE) {}
 
-	RegExpr &operator =(const RegExpr &o)
-	{
-		base = o.base;
-		index = o.index;
-		offset = o.offset;
-		scale = o.scale;
-		mem = o.mem;
-		return *this;
-	}
-
 	friend RegExpr operator *(Int a, const RegExpr &b)
 	{
 		RegExpr res(b);
