@@ -80,7 +80,7 @@ public:
 		return *this;
 	}
 
-	template< typename X > DelegateVA &Set(const X *ptr, R (X::*cpmem)(P...))
+	template< typename X > LETHE_NOINLINE DelegateVA &Set(const X *ptr, R (X::*cpmem)(P...))
 	{
 		LETHE_ASSERT(ptr);
 
@@ -99,7 +99,7 @@ public:
 		return *this;
 	}
 
-	template< typename X > DelegateVA &Set(const X *ptr, R (X::*cpmem)(P...) const)
+	template< typename X > LETHE_NOINLINE DelegateVA &Set(const X *ptr, R (X::*cpmem)(P...) const)
 	{
 		LETHE_ASSERT(ptr);
 
@@ -117,7 +117,7 @@ public:
 		return *this;
 	}
 
-	DelegateVA &Set(PFun fun)
+	LETHE_NOINLINE DelegateVA &Set(PFun fun)
 	{
 		Set(reinterpret_cast<FuncWrapper *>(&lambdaStorage), &FuncWrapper::Invoke);
 		lambdaStorage = new FuncWrapper(fun);
@@ -125,7 +125,7 @@ public:
 		return *this;
 	}
 
-	template< typename X > DelegateVA &Set(const X &lam)
+	template< typename X > LETHE_NOINLINE DelegateVA &Set(const X &lam)
 	{
 		Set(reinterpret_cast<LambdaWrapper<X> *>(&lambdaStorage), &LambdaWrapper<X>::Invoke);
 		lambdaStorage = new LambdaWrapper<X>(lam);

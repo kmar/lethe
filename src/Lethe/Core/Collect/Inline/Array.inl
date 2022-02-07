@@ -170,7 +170,7 @@ Array<T,S,A> &Array<T,S,A>::Reserve(S newReserve)
 	if (GetCapacity() >= newReserve)
 		return *this;
 
-	return Reallocate(newReserve);
+	return Reallocate(newReserve, &Array::ReallocateInternal);
 }
 
 template< typename T, typename S, typename A >
@@ -183,7 +183,7 @@ Array<T,S,A> &Array<T,S,A>::Clear()
 template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::Shrink()
 {
-	return Reallocate(this->size);
+	return Reallocate(this->size, &Array::ReallocateInternal);
 }
 
 template< typename T, typename S, typename A >
@@ -194,7 +194,32 @@ Array<T,S,A> &Array<T,S,A>::Reset()
 }
 
 template< typename T, typename S, typename A >
-Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve)
+void Array<T,S,A>::ReallocateInternal(T *newData, S newSize)
+{
+	ConstructObjectRange(newData, newSize);
+
+	if (this->data)
+	{
+		if (MemCopyTraits<T>::VALUE)
+		{
+			if (newSize > 0)
+				MemCpy(newData, this->data, (size_t)newSize*sizeof(T));
+		}
+		else
+		{
+			for (S i=0; i<newSize; i++)
+				SwapCopy(newData[i], this->data[i]);
+		}
+
+		DestroyObjectRange(this->data, this->size);
+
+		if (this->reserve > 0)
+			this->Free(this->data);
+	}
+}
+
+template< typename T, typename S, typename A >
+Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve, void (Array::*p)(T *, S))
 {
 // FIXME: I was unable to fix this (or Add) using asserts
 // I don't like this hack at all, but at the moment it's the best I've got
@@ -224,26 +249,7 @@ Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve)
 			newSize = 0;		// keep SA happy
 		}
 
-		ConstructObjectRange(newData, newSize);
-
-		if (this->data)
-		{
-			if (MemCopyTraits<T>::VALUE)
-			{
-				if (newSize > 0)
-					MemCpy(newData, this->data, (size_t)newSize*sizeof(T));
-			}
-			else
-			{
-				for (S i=0; i<newSize; i++)
-					SwapCopy(newData[i], this->data[i]);
-			}
-
-			DestroyObjectRange(this->data, this->size);
-
-			if (this->reserve > 0)
-				this->Free(this->data);
-		}
+		(this->*p)(newData, newSize);
 	}
 	else
 		LETHE_ASSERT(newSize == this->size);
