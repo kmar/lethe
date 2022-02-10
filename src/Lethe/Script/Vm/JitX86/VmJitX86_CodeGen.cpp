@@ -2458,7 +2458,7 @@ ExecResult VmJitX86::ExecScriptFuncPtr(Vm &vm, const void *codeadr)
 	// the rest of the world (gcc/clang) having inline assembly
 	// unfortunately, some clang versions report "inline assembly requires more registers than available"
 	// so I have to use a temporary buffer
-	const void *paramptr = param;
+	const void **paramptr = param;
 	asm(
 		"movq %0, %%rax;"
 		"movq 0*8(%%rax), %%rdi;"
@@ -2472,7 +2472,7 @@ ExecResult VmJitX86::ExecScriptFuncPtr(Vm &vm, const void *codeadr)
 		"call *%%rax;"
 		"popq %%rbp;"
 		"movq %%rdi, 0(%%r12);"
-		: : "m"(paramptr) :
+		: : "m"(paramptr), "m"(param) :
 		"cc", "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r12", "r13", "r14",
 		"xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"
 	);
