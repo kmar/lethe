@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Types.h"
+#include "Platform.h"
 
 namespace lethe
 {
@@ -10,16 +11,24 @@ namespace lethe
 template <typename T1, typename T2>
 struct offset_of_impl
 {
-	static inline int offset(T1 T2::*member)
+	static size_t offset(T1 T2::*member)
 	{
-		T2 obj;
-		return (int)size_t(&(obj.*member)) -
-		(int)size_t(&obj);
+#if LETHE_COMPILER_GCC
+#	pragma GCC diagnostic push
+#	pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+		ULong tmp;
+		T2 &obj = (T2 &)tmp;
+		return size_t(&(obj.*member)) -
+		size_t(&obj);
+#if LETHE_COMPILER_GCC
+#	pragma GCC diagnostic pop
+#endif
 	}
 };
 
 template <typename T1, typename T2>
-inline int offset_of(T1 T2::*member)
+inline size_t offset_of(T1 T2::*member)
 {
 	return offset_of_impl<T1, T2>::offset(member);
 }
