@@ -25,12 +25,12 @@ namespace lethe
 // platform-specific stuff, i.e. allocs etc.
 #if LETHE_OS_WINDOWS
 
-static size_t GetPageSize()
+static size_t GetPageSize(size_t minsz = 65536)
 {
 	SYSTEM_INFO si;
 	GetSystemInfo(&si);
 	// 64k is minimum for MEM_RESERVE, we won't get contiguous space otherwise!
-	return Max((size_t)si.dwPageSize, (size_t)65536);
+	return Max((size_t)si.dwPageSize, minsz);
 }
 
 // request new segment
@@ -82,9 +82,9 @@ static bool WriteProtectSegment(void *ptr, size_t size, bool enable)
 #	define MAP_ANONYMOUS MAP_ANON
 #endif
 
-static size_t GetPageSize()
+static size_t GetPageSize(long minSize = 65536l)
 {
-	return (size_t)Max(sysconf(_SC_PAGE_SIZE), 65536l);
+	return (size_t)Max(sysconf(_SC_PAGE_SIZE), minSize);
 }
 
 // request new segment
@@ -128,7 +128,7 @@ static bool WriteProtectSegment(void *ptr, size_t size, bool enable)
 
 size_t Heap::GetOSPageSize()
 {
-	return GetPageSize();
+	return GetPageSize(4096);
 }
 
 void *Heap::AllocateExecutableMemory(size_t &size)
