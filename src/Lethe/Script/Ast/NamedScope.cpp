@@ -11,6 +11,8 @@ namespace lethe
 
 // NamedScope
 
+LETHE_BUCKET_ALLOC_DEF(NamedScope)
+
 NamedScope::NamedScope()
 	: parent(nullptr)
 	, base(nullptr)
@@ -25,6 +27,7 @@ NamedScope::NamedScope()
 	, needExtraScope(false)
 	, ctorDefined(false)
 	, blockThis(0)
+	, deferredTop(0x7fffffff)
 {
 }
 
@@ -42,7 +45,13 @@ NamedScope::NamedScope(NamedScopeType ntype)
 	, needExtraScope(false)
 	, ctorDefined(false)
 	, blockThis(0)
+	, deferredTop(0x7fffffff)
 {
+}
+
+void NamedScope::ResetDeferredTop()
+{
+	deferredTop = 0x7fffffff;
 }
 
 NamedScope *NamedScope::Add(NamedScope *nsc)

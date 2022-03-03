@@ -222,6 +222,8 @@ void CompiledProgram::EnterScope(NamedScope *scopeRef)
 	for (Int i=0; i<scopeRef->deferred.GetSize(); i++)
 		scopeRef->deferred[i]->flags &= ~AST_F_DEFER;
 
+	scopeRef->ResetDeferredTop();
+
 	// FIXME: I wonder WHY this condition was even here => this broke for loop unrolling!
 	//if (GetInline())
 	{
@@ -265,11 +267,7 @@ bool CompiledProgram::GotoScope(const AstLabel *label)
 			if (label->pc >= 0)
 			{
 				// jumping backwards....
-				for (Int j=cscope->deferred.GetSize()-1; j>=label->deferredSize; j--)
-				{
-					auto dn = cscope->deferred[j];
-					LETHE_RET_FALSE(!(dn->flags & AST_F_DEFER) || dn->CodeGen(*this));
-				}
+				LETHE_RET_FALSE(EmitDefer(cscope, label->deferredSize));
 
 				if (cscope->varOfs != label->varOfsBase)
 				{
@@ -283,11 +281,7 @@ bool CompiledProgram::GotoScope(const AstLabel *label)
 
 		ScopeDesc sd = scopeStack[i];
 
-		for (Int j=cscope->deferred.GetSize()-1; j>=0; j--)
-		{
-			auto dn = cscope->deferred[j];
-			LETHE_RET_FALSE(!(dn->flags & AST_F_DEFER) || dn->CodeGen(*this));
-		}
+		LETHE_RET_FALSE(EmitDefer(cscope));
 
 		Int vofsBase = sd.varOfsBase;
 
@@ -316,11 +310,7 @@ NamedScope *CompiledProgram::BreakScope(bool isContinue)
 
 		ScopeDesc sd = scopeStack[i];
 
-		for (Int j = cscope->deferred.GetSize() - 1; j >= 0; j--)
-		{
-			auto dn = cscope->deferred[j];
-			LETHE_RET_FALSE(!(dn->flags & AST_F_DEFER) || dn->CodeGen(*this));
-		}
+		LETHE_RET_FALSE(EmitDefer(cscope));
 
 		Int vofsBase = sd.varOfsBase;
 
@@ -351,8 +341,12 @@ bool CompiledProgram::StateBreakScope()
 
 		Int vofsBase = sd.varOfsBase;
 
-		for (Int j = cscope->deferred.GetSize() - 1; j >= 0; j--)
+		const auto olddtop = cscope->deferredTop;
+		const auto dstart = Min<Int>(olddtop, cscope->deferred.GetSize());
+
+		for (Int j = dstart - 1; j >= 0; j--)
 		{
+			cscope->deferredTop = j;
 			auto dn = cscope->deferred[j];
 
 			if (!(dn->flags & AST_F_DEFER) || (dn->qualifiers & AST_Q_NOSTATEBREAK))
@@ -360,10 +354,13 @@ bool CompiledProgram::StateBreakScope()
 
 			if (!dn->CodeGen(*this))
 			{
+				cscope->deferredTop = olddtop;
 				--stateBreakLock;
 				return false;
 			}
 		}
+
+		cscope->deferredTop = olddtop;
 
 		if (cscope->varOfs != vofsBase)
 		{
@@ -385,6 +382,32 @@ bool CompiledProgram::StateBreakScope()
 
 	LETHE_ASSERT(false && "broken statebreak return");
 	return false;
+}
+
+bool CompiledProgram::EmitDefer(NamedScope *cscope, Int nstart)
+{
+	bool res = true;
+	const auto olddtop = cscope->deferredTop;
+	const auto dstart = Min<Int>(olddtop, cscope->deferred.GetSize());
+
+	for (Int j = dstart-1; j >= nstart; j--)
+	{
+		cscope->deferredTop = j;
+		auto dn = cscope->deferred[j];
+
+		if (!(dn->flags & AST_F_DEFER))
+			continue;
+
+		if (!dn->CodeGen(*this))
+		{
+			res = false;
+			break;
+		}
+	}
+
+	cscope->deferredTop = olddtop;
+
+	return res;
 }
 
 bool CompiledProgram::ReturnScope(bool retOpt)
@@ -417,11 +440,7 @@ bool CompiledProgram::ReturnScope(bool retOpt)
 			return 0;
 		}
 
-		for (Int j = cscope->deferred.GetSize() - 1; j >= 0; j--)
-		{
-			auto dn = cscope->deferred[j];
-			LETHE_RET_FALSE(!(dn->flags & AST_F_DEFER) || dn->CodeGen(*this));
-		}
+		LETHE_RET_FALSE(EmitDefer(cscope));
 
 		if (cscope->varOfs != vofsBase)
 		{
@@ -449,11 +468,7 @@ bool CompiledProgram::LeaveScope(bool virt)
 
 	if (!virt)
 	{
-		for (Int i=curScope->deferred.GetSize()-1; i>=0; i--)
-		{
-			auto dn = curScope->deferred[i];
-			LETHE_RET_FALSE(!(dn->flags & AST_F_DEFER) || dn->CodeGen(*this));
-		}
+		LETHE_RET_FALSE(EmitDefer(curScope));
 	}
 
 	if (curScope->IsLocal())

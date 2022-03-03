@@ -41,6 +41,7 @@ class AstNode;
 
 class LETHE_API NamedScope : public RefCounted
 {
+	LETHE_BUCKET_ALLOC(NamedScope)
 public:
 	NamedScope();
 	explicit NamedScope(NamedScopeType ntype);
@@ -149,8 +150,14 @@ public:
 	// helper for vardecl of statics
 	Int blockThis;
 
+	// to support nested scope exits during deferred codegen
+	Int deferredTop;
+
 	// deferred statements
 	Array<AstNode *> deferred;
+
+	// reset deferred top
+	void ResetDeferredTop();
 
 private:
 	// break/continue handles

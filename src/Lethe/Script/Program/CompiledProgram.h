@@ -506,6 +506,8 @@ private:
 
 	// encode helper
 	bool CanEncodeI24(Int val) const;
+
+	bool EmitDefer(NamedScope *cscope, Int nstart = 0);
 };
 
 }
