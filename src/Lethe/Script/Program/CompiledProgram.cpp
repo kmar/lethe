@@ -569,11 +569,13 @@ bool CompiledProgram::FixupForwardTarget(Int fwHandle)
 
 		if (IsCondJumpNoFloat(pins))
 		{
-			// must be jump over next
-			// and range-validate (assuming 2's complement: FIXME: better, too cryptic)
-			if ((pins >> 8) == 1 && (pins >> 8) != -(1 << 24))
+			// assuming 2's complement
+			auto brdelta = Int(instructions.Back()) >> 8;
+			auto pinsdelta = Int(pins) >> 8;
+			// must be jump over next, but skip if it's "infinite loop" or overflow
+			if (pinsdelta == 1 && brdelta != -1 && CanEncodeI24(brdelta + pinsdelta))
 			{
-				pins = FlipJump(pins) - (2 << 8);
+				pins = FlipJump(pins);
 				pins += instructions.Back() & ~255;
 
 				// look for pending forward jumps at num-1
