@@ -371,7 +371,7 @@ AstNode *Compiler::ParseStatement(Int depth)
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_SEMICOLON, "expected `;`"));
 			TokenType ntt = ts->PeekToken().type;
 
-			if (ntt != TOK_RBR && ntt != TOK_LBLOCK && ntt != TOK_LBR)
+			if (ntt != TOK_RBR && ntt != TOK_LBLOCK)
 			{
 				inc = ParseExpression(depth+1);
 				LETHE_RET_FALSE(inc);
