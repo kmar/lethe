@@ -195,6 +195,19 @@ struct map<K, V>
 		return m.values[res];
 	}
 
+	// range based for support
+	struct key_value
+	{
+		K key;
+		V value;
+	}
+
+	//---------------------------------------------------------------------
+	inline nodiscard static key_value __index(const map &m, int index)
+	{
+		return key_value{m.keys.get(index), m.values[index]};
+	}
+
 ///////////////////////////////////////////////////////////////////////////////
 // private
 

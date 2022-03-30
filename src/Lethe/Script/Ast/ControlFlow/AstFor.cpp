@@ -10,6 +10,7 @@
 #include <Lethe/Script/Ast/BinaryOp/AstBinaryOp.h>
 #include <Lethe/Script/Ast/BinaryOp/AstDotOp.h>
 #include <Lethe/Script/Ast/BinaryOp/AstSubscriptOp.h>
+#include <Lethe/Script/Ast/Function/AstCall.h>
 #include "../AstExpr.h"
 #include "../AstBlock.h"
 #include "../NamedScope.h"
@@ -19,7 +20,7 @@ namespace lethe
 
 // AstFor
 
-bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p)
+bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, bool isStruct)
 {
 	// optional nobreak node
 	LETHE_ASSERT(nodes.GetSize() == 4 || nodes.GetSize() == 5);
@@ -141,8 +142,28 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p)
 	arrClone->scopeRef = bscope;
 
 	// we still need to turn cloned array into subscript operator with index
-	auto *sub  = new AstSubscriptOp(stmt->location);
+
+	AstNode *sub;
+
+	if (isStruct)
+	{
+		// call __index function
+		StringRef idxstr = "__index";
+		auto *idxsym = new AstSymbol(p.AddString(idxstr), stmt->location);
+		idxsym->target = nullptr;
+		idxsym->flags &= ~AST_F_RESOLVED;
+		idxsym->scopeRef = bscope;
+
+		sub  = new AstCall(stmt->location);
+		sub->Add(idxsym);
+	}
+	else
+	{
+		sub  = new AstSubscriptOp(stmt->location);
+	}
+
 	sub->Add(arrClone);
+	sub->scopeRef = bscope;
 
 	auto subidx = opsym->Clone();
 	subidx->scopeRef = bscope;
@@ -258,8 +279,9 @@ bool AstFor::ResolveNode(const ErrorHandler &e)
 			case AST_TYPE_DYNAMIC_ARRAY:
 			case AST_TYPE_ARRAY_REF:
 			case AST_TYPE_ARRAY:
+			case AST_STRUCT:
 				// turn this into iteration...
-				LETHE_RET_FALSE(ConvertRangeBasedFor(e));
+				LETHE_RET_FALSE(ConvertRangeBasedFor(e, tnode->type == AST_STRUCT));
 				break;
 
 			default:;
