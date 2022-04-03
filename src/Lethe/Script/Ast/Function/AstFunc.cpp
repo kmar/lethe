@@ -255,6 +255,19 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 
 		// okay, now we should extract all var decls (struct auto-init-hack)
 		AstNode *fbody = nodes[IDX_BODY];
+		// virtual node to hold def inits so that we can place them before manual ctor body, also avoids inserting at index 0 (perf)
+		AstNode *defInitRoot = nullptr;
+
+		auto defInitCreateRoot = [&]()
+		{
+			if (!defInitRoot)
+			{
+				defInitRoot = new AstNode(AST_NONE, location);
+				defInitRoot->flags |= AST_F_RESOLVED;
+				fbody->nodes.InsertIndex(0, defInitRoot);
+				defInitRoot->parent = fbody;
+			}
+		};
 
 		auto defInit = [&](AstNode *n, Int ofs)
 		{
@@ -294,11 +307,11 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			auto tmp = new AstExpr(nloc);
 			tmp->Add(asgn);
 
-			fbody->nodes.InsertIndex(0, tmp);
-			tmp->parent = fbody;
+			defInitCreateRoot();
+			defInitRoot->Add(tmp);
 		};
 
-		for (Int i=snode->nodes.GetSize()-1; i>=2; i--)
+		for (Int i=2; i<snode->nodes.GetSize(); i++)
 		{
 			AstNode *tn = snode->nodes[i];
 
@@ -306,9 +319,9 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			{
 				for (auto *it : tn->nodes)
 				{
-					fbody->nodes.InsertIndex(0, it);
-					it->cachedIndex = -1;
-					it->parent = fbody;
+					defInitCreateRoot();
+					it->parent = nullptr;
+					defInitRoot->Add(it);
 				}
 
 				tn->nodes.Clear();
@@ -320,7 +333,7 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 
 			const auto *nt = tn->nodes[0];
 
-			for (Int j=tn->nodes.GetSize()-1; j>=1; j--)
+			for (Int j=1; j<tn->nodes.GetSize(); j++)
 			{
 				AstNode *n = tn->nodes[j];
 
@@ -335,6 +348,11 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 					defInit(n, 0);
 			}
 		}
+
+		// invalidate cache indices for consistency; if needed
+		if (defInitRoot)
+			for (auto *it : fbody->nodes)
+				it->cachedIndex = -1;
 	}
 
 	if (qualifiers & AST_Q_NATIVE)
