@@ -319,6 +319,12 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			{
 				for (auto *it : tn->nodes)
 				{
+					// fixup scope chain
+					if (it->scopeRef == snode->scopeRef)
+						it->scopeRef = fbody->scopeRef;
+					else if (it->scopeRef && it->scopeRef->parent == snode->scopeRef)
+						it->scopeRef->parent = fbody->scopeRef;
+
 					defInitCreateRoot();
 					it->parent = nullptr;
 					defInitRoot->Add(it);
