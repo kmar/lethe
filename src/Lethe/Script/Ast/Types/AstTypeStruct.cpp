@@ -507,7 +507,8 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 
 		qualifiers |= mtype.qualifiers & AST_Q_NOCOPY;
 
-		dt->align = Max(dt->align, mtype.GetAlign());
+		if (!(mtype.qualifiers & AST_Q_PROPERTY))
+			dt->align = Max(dt->align, mtype.GetAlign());
 
 		for (Int j=1; j<n->nodes.GetSize(); j++)
 		{
