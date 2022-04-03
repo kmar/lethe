@@ -304,33 +304,13 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 
 			if (tn->type == AST_DEFAULT_INIT)
 			{
-				bool err = false;
-				// don't forget default init now
-				for (Int j=tn->nodes.GetSize()-2; j >= 0; j -= 2)
+				for (auto *it : tn->nodes)
 				{
-					auto qdt = tn->nodes[j]->GetTypeDesc(p);
-
-					if (qdt.qualifiers & AST_Q_STATIC)
-					{
-						p.Error(tn->nodes[j], "default init cannot be used for static variables");
-						err = true;
-					}
-
-					if (qdt.qualifiers & (AST_Q_CONST | AST_Q_CONSTEXPR))
-					{
-						p.Error(tn->nodes[j], "default init cannot be used for constants");
-						err = true;
-					}
-
-					defInit(tn, j);
-					delete tn->nodes[j];
+					it->parent = nullptr;
+					fbody->Add(it);
 				}
 
 				tn->nodes.Clear();
-
-				if (err)
-					return false;
-
 				continue;
 			}
 

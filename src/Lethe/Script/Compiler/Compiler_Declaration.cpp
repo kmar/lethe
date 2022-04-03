@@ -1574,24 +1574,10 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			UniquePtr<AstNode> defInit = NewAstNode<AstDefaultInit>(nt.location);
 			defInit->flags |= AST_F_SKIP_CGEN;
 			ts->ConsumeToken();
+			AstNode *stmt = ParseStatement(depth+1);
+			LETHE_RET_FALSE(stmt);
 
-			for (;;)
-			{
-				UniquePtr<AstNode> varName = ParseScopeResolution(depth + 1);
-				LETHE_RET_FALSE(varName);
-				LETHE_RET_FALSE(Expect(ts->GetToken().type == TOK_EQ, "expected default assignment"));
-
-				UniquePtr<AstNode> expr = ParseAssignExpression(depth + 1);
-				LETHE_RET_FALSE(expr);
-
-				defInit->Add(varName.Detach());
-				defInit->Add(expr.Detach());
-
-				if (ts->PeekToken().type != TOK_COMMA)
-					break;
-
-				ts->ConsumeToken();
-			}
+			defInit->Add(stmt);
 
 			ts->ConsumeTokenIf(TOK_SEMICOLON);
 			ntype->Add(defInit.Detach());
