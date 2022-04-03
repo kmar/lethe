@@ -306,8 +306,9 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 			{
 				for (auto *it : tn->nodes)
 				{
-					it->parent = nullptr;
-					fbody->Add(it);
+					fbody->nodes.InsertIndex(0, it);
+					it->cachedIndex = -1;
+					it->parent = fbody;
 				}
 
 				tn->nodes.Clear();
