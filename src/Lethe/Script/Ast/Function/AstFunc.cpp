@@ -55,7 +55,16 @@ AstNode::ResolveResult AstFunc::Resolve(const ErrorHandler &e)
 	}
 
 	if (qualifiers & AST_Q_CTOR)
+	{
 		targ = this;
+
+		// need noderef for ctor because of default init statements
+		if (IsValidArrayIndex(IDX_BODY, nodes.GetSize()))
+		{
+			if (auto *sref = nodes[IDX_BODY]->scopeRef)
+				sref->node = this;
+		}
+	}
 
 	if (targ && targ != this)
 	{
