@@ -217,11 +217,7 @@ class LETHE_API AsmX86
 public:
 
 	// machine code buffer
-#if 0//LETHE_USE_HEAP
-	CacheAlignedArray<Byte> code;
-#else
 	JITPageAlignedArray<Byte> code;
-#endif
 
 	enum Cond
 	{

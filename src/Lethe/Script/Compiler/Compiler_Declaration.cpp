@@ -951,7 +951,7 @@ AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)
 	}
 
 	UniquePtr<AstNode> name = isOperator
-							  ? NewAstText<AstText>(isOperator, AST_NONE, ts->PeekToken().location)
+							  ? NewAstText<AstText>(isOperator, AST_IDENT, ts->PeekToken().location)
 							  : ParseScopeResolution(depth+1);
 	LETHE_RET_FALSE(name);
 
