@@ -29,6 +29,8 @@
 
 * [statements](#statements)
 
+* [qualifiers](#qualifiers)
+
 * [missing features](#missing_features)
 
 * [limitations](#limitations)
@@ -483,6 +485,37 @@ can't skip over variable declarations
 	for (auto &it : arr)
 		it = it_index;
 ```
+
+<a id="qualifiers"></a>
+#### qualifiers
+
+ * const: a constant that cannot be modified or a constant method
+ * constexpr: same as const but don't generate (member) variable
+ * static: a global variable or function; note that local static variables inside functions behave differently from C++,
+ 	they're simply moved into global scope
+ * final: simply a non-virtual function (all struct methods are non-virtual, all class methods are virtual by default)
+ 	marking struct/classes with final means they cannot be derived from
+ * inline: required on functions/methods that are to be inlined for performance, may fail if function is too big
+ * override: marks virtual function overrides
+ * nocopy (for structs): don't allow copying a struct
+ * nobounds: explictly disable array bounds checks (if enabled)
+ * notemp: for function arguments: disallow temporaries to be passed to const ref args
+```cpp
+const int &mirror(notemp const int &v) {return v}
+```
+ * noinit: explicitly skip zero-init for local variables or function return values (ignored in DEBUG mode)
+ * nodiscard: failing to consume a return value results in a compile time error
+```cpp
+nodiscard int get_something();
+```
+ * native: a variable or type that is exposed from C++ code
+ * nontrivial: useful when wrapping complex native structs, forces ctor call before copy, meaning it can't be zero-init constructed 
+
+ * transient: user-handled flag to mark fields/structs to avoid serialization
+ * editable: user-handled flag to mark fields as editable
+ * placeable: user-handled flag to mark classes as placeable
+ * state: marks state classes and state functions
+ * statebreak: functions marked as such will force a state to break execution after the call
 
 <a id="missing_features"></a>
 #### missing features
