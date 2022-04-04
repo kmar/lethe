@@ -510,12 +510,18 @@ nodiscard int get_something();
 ```
  * native: a variable or type that is exposed from C++ code
  * nontrivial: useful when wrapping complex native structs, forces ctor call before copy, meaning it can't be zero-init constructed 
-
+ * state: marks state classes and state functions
+ * statebreak: functions marked as such will force a state to break execution after the call
+ * latent: latent functions used from within states that return a bool to continue execution
+```cpp
+	latent final bool Wait(float timeSecs)
+	{
+		...
+	}
+```
  * transient: user-handled flag to mark fields/structs to avoid serialization
  * editable: user-handled flag to mark fields as editable
  * placeable: user-handled flag to mark classes as placeable
- * state: marks state classes and state functions
- * statebreak: functions marked as such will force a state to break execution after the call
 
 <a id="missing_features"></a>
 #### missing features
