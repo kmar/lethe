@@ -489,6 +489,8 @@ can't skip over variable declarations
 <a id="qualifiers"></a>
 #### qualifiers
 
+ * weak: weak pointer to a class instance
+ * raw: raw (unsafe but fast) pointer to a class instance
  * const: a constant that cannot be modified or a constant method
  * constexpr: same as const but don't generate (member) variable
  * static: a global variable or function; note that local static variables inside functions behave differently from C++,
