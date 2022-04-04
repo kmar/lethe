@@ -81,7 +81,9 @@ enum AstQualifier : ULong
 	AST_Q_CONTEXT_SYMBOL = (ULong)1 << 48,
 	// special bitfield type
 	AST_Q_BITFIELD = (ULong)1 << 49,
-	// note: 14 left
+	// arguments tagged with this cannot accept temporary args
+	AST_Q_NOTEMP = (ULong)1 << 50,
+	// note: 13 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

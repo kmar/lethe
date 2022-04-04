@@ -1224,6 +1224,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 		if (isRef && tdesc.IsConst() && !argValue->CanPassByReference(p))
 		{
+			if (tdesc.qualifiers & AST_Q_NOTEMP)
+				return p.Error(argValue, "cannot pass a temporary here");
+
 			// creating temp (inline => must simulate inline call later)
 			tempArg = true;
 			tempArgs.Add({cscope.varOfs, 0});
@@ -1683,6 +1686,7 @@ void AstCall::CopyTo(AstNode *n) const
 	Super::CopyTo(n);
 	auto *tmp = AstStaticCast<AstCall *>(n);
 	tmp->forceFunc = forceFunc;
+	tmp->namedArgs = namedArgs;
 }
 
 

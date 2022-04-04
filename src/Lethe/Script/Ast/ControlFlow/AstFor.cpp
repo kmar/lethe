@@ -121,7 +121,7 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, bool isStruct)
 	ocond->nodes[1] = oprhs;
 	oprhs->parent = ocond;
 
-	const String size = "size";
+	const StringRef size = "size";
 	auto *sizeSym = new AstSymbol(p.AddString(size), ocond->location);
 	oprhs->Add(sizeSym);
 	sizeSym->scopeRef = arr->scopeRef;
@@ -148,7 +148,7 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, bool isStruct)
 	if (isStruct)
 	{
 		// call __index function
-		StringRef idxstr = "__index";
+		const StringRef idxstr = "__index";
 		auto *idxsym = new AstSymbol(p.AddString(idxstr), stmt->location);
 		idxsym->target = nullptr;
 		idxsym->flags &= ~AST_F_RESOLVED;

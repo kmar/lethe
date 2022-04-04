@@ -830,6 +830,7 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 		case TOK_KEY_STATIC:
 		case TOK_KEY_NATIVE:
 		case TOK_KEY_NOCOPY:
+		case TOK_KEY_NOTEMP:
 		case TOK_KEY_NOBOUNDS:
 		case TOK_KEY_NOINIT:
 		case TOK_KEY_NONTRIVIAL:

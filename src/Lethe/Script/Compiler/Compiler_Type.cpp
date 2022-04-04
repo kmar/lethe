@@ -48,6 +48,10 @@ ULong Compiler::ParseQualifiers(bool ref)
 			res |= AST_Q_NOCOPY;
 			break;
 
+		case TOK_KEY_NOTEMP:
+			res |= AST_Q_NOTEMP;
+			break;
+
 		case TOK_KEY_NOBOUNDS:
 			res |= AST_Q_NOBOUNDS;
 			break;
