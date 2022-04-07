@@ -23,14 +23,18 @@ QDataType AstThis::GetTypeDesc(const CompiledProgram &p) const
 	if (!tscope)
 		return QDataType();
 
+	auto constqual = scopeRef->IsConstMethod()*AST_Q_CONST;
+
 	if (tscope->node->type == AST_CLASS)
 	{
 		auto qdt = AstStaticCast<AstTypeClass *>(tscope->node)->GetTypeDescPtr(DT_RAW_PTR);
+		qdt.qualifiers |= constqual;
 		return qdt;
 	}
 
 	QDataType res = tscope->node->GetTypeDesc(p);
-	res.qualifiers |= AST_Q_REFERENCE;
+	res.qualifiers |= AST_Q_REFERENCE | constqual;
+
 	return res;
 }
 
@@ -67,7 +71,10 @@ bool AstThis::CodeGen(CompiledProgram &p)
 
 	auto *thisClass = AstStaticCast<AstTypeClass *>(thisScope->node);
 	p.Emit(OPC_PUSHTHIS_TEMP);
-	p.PushStackType(thisClass->GetTypeDescPtr(DT_RAW_PTR));
+
+	auto qdt = thisClass->GetTypeDescPtr(DT_RAW_PTR);
+	qdt.qualifiers |= scopeRef->IsConstMethod()*AST_Q_CONST;
+	p.PushStackType(qdt);
 	return true;
 }
 

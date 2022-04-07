@@ -1684,7 +1684,7 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 		return ref->IsBaseOf(*o.ref);
 	}
 
-	if (!allowPointers && IsPointer())
+	if (IsPointer())
 	{
 		if (o.GetTypeEnum() == DT_NULL)
 			return true;
@@ -1694,6 +1694,9 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 		// don't break const-correctness
 		if (!IsConst() && o.IsConst())
 			return false;
+
+		if (allowPointers)
+			return true;
 
 		const auto &el0 = GetType().elemType;
 		const auto &el1 = o.GetType().elemType;

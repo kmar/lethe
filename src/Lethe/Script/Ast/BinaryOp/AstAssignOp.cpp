@@ -423,7 +423,7 @@ bool AstAssignOp::CodeGenCommon(CompiledProgram &p, bool needConv, bool asRef, b
 		LETHE_ASSERT(thisScope);
 
 		if (thisScope->type == NSCOPE_CLASS)
-			return p.Error(nodes[0], "cannot assign to this inside class");
+			return p.Error(nodes[0], "cannot assign to this inside a class");
 	}
 
 	auto src = nodes[needConv]->GetTypeDesc(p);
