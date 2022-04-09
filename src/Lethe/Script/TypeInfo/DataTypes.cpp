@@ -1776,7 +1776,8 @@ bool DataType::ValidReadPtr(const void *ptr, IntPtr size)
 		while (src < end)
 		{
 			// reference: https://stackoverflow.com/questions/496034/most-efficient-replacement-for-isbadreadptr
-			MEMORY_BASIC_INFORMATION mbi = {0};
+			MEMORY_BASIC_INFORMATION mbi;
+			MemSet(&mbi, 0, sizeof(mbi));
 
 			if (::VirtualQuery(src, &mbi, sizeof(mbi)))
 			{
