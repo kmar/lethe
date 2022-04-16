@@ -79,6 +79,12 @@ AstNode *AstSubscriptOp::GetResolveTarget() const
 	const auto *tn = ntarg->GetTypeNode();
 	LETHE_RET_FALSE(tn);
 
+	if (tn->type == AST_TYPEDEF)
+	{
+		tn = tn->GetTypeNode();
+		LETHE_RET_FALSE(tn);
+	}
+
 	if (tn->type == AST_TYPE_ARRAY || tn->type == AST_TYPE_DYNAMIC_ARRAY || tn->type == AST_TYPE_ARRAY_REF)
 		return tn->nodes[0]->GetResolveTarget();
 
