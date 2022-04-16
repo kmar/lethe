@@ -484,69 +484,66 @@ bool AstFunc::CodeGen(CompiledProgram &p)
 	// TODO: we'll need to know more (later)
 	if (!p.GetInline())
 	{
-		////if (1||!(qualifiers & AST_Q_NATIVE))
+		bool isOperator = (nodes[IDX_NAME]->qualifiers & AST_Q_OPERATOR) != 0;
+
+		if (isOperator)
+			p.EmitFunc(fname + " " + typeRef.GetName(), this, typeRef.GetName());
+		else
 		{
-			bool isOperator = nodes[IDX_NAME]->type == AST_NONE;
-
-			if (isOperator)
-				p.EmitFunc(fname + " " + typeRef.GetName(), this, typeRef.GetName());
+			if (qualifiers & AST_Q_CTOR)
+				p.EmitFunc(fname + "$ctor", this, typeRef.GetName());
 			else
+				p.EmitFunc(fname, this, typeRef.GetName());
+		}
+
+		startPC = p.instructions.GetSize();
+
+		auto thisScope = scopeRef->FindThis();
+
+		if (thisScope && !(qualifiers & (AST_Q_CTOR | AST_Q_DTOR /*| AST_Q_NATIVE*/)))
+		{
+			auto qdt = thisScope->node->GetTypeDesc(p);
+			auto dt = const_cast<DataType *>(qdt.ref);
+
+			const auto fnamePlain = AstStaticCast<AstText *>(nodes[IDX_NAME])->text;
+			Int midx = vtblIndex >= 0 ? -vtblIndex : p.instructions.GetSize();
+			dt->methods[fnamePlain] = midx;
+		}
+
+		// try to handle special __cmp function
+		if (ftext->text == "__cmp")
+		{
+			auto args = GetArgs();
+
+			if (!thisScope || thisScope->type != NSCOPE_STRUCT)
+				return p.Error(nodes[IDX_NAME], "__cmp can only be defined inside a struct");
+
+			if ((qualifiers & (AST_Q_NATIVE | AST_Q_STATIC)) != AST_Q_STATIC)
+				return p.Error(nodes[IDX_NAME], "invalid __cmp qualifiers (must be non-native static)");
+
+			if (args->nodes.GetSize() != 2)
+				return p.Error(nodes[IDX_NAME], "__cmp takes two arguments");
+
+			auto rtype = nodes[IDX_RET]->GetTypeDesc(p);
+
+			if (rtype.IsReference() || rtype.GetTypeEnum() != DT_INT)
+				return p.Error(nodes[IDX_NAME], "__cmp must return an int");
+
+			LETHE_ASSERT(thisScope->node);
+			auto stype = thisScope->node->GetTypeDesc(p);
+
+			// verify cmp takes const reference to struct type
+			for (auto &&n : args->nodes)
 			{
-				if (qualifiers & AST_Q_CTOR)
-					p.EmitFunc(fname + "$ctor", this, typeRef.GetName());
-				else
-					p.EmitFunc(fname, this, typeRef.GetName());
+				auto ntype = n->GetTypeDesc(p);
+				if ((ntype.qualifiers & (AST_Q_CONST | AST_Q_REFERENCE)) != (AST_Q_CONST | AST_Q_REFERENCE))
+					return p.Error(n, "__cmp args must be const reference");
+
+				if (!(ntype.GetType() == stype.GetType()))
+					return p.Error(n, "invalid __cmp arg type");
 			}
 
-			startPC = p.instructions.GetSize();
-
-			auto thisScope = scopeRef->FindThis();
-
-			if (thisScope && !(qualifiers & (AST_Q_CTOR | AST_Q_DTOR /*| AST_Q_NATIVE*/)))
-			{
-				auto qdt = thisScope->node->GetTypeDesc(p);
-				auto dt = const_cast<DataType *>(qdt.ref);
-
-				const auto fnamePlain = AstStaticCast<AstText *>(nodes[IDX_NAME])->text;
-				Int midx = vtblIndex >= 0 ? -vtblIndex : p.instructions.GetSize();
-				dt->methods[fnamePlain] = midx;
-			}
-
-			// try to handle special __cmp function
-			if (ftext->text == "__cmp")
-			{
-				auto args = GetArgs();
-
-				if (!thisScope || thisScope->type != NSCOPE_STRUCT)
-					return p.Error(nodes[IDX_NAME], "__cmp can only be defined inside a struct");
-
-				if ((qualifiers & (AST_Q_NATIVE | AST_Q_STATIC)) != AST_Q_STATIC)
-					return p.Error(nodes[IDX_NAME], "invalid __cmp qualifiers (must be non-native static)");
-
-				if (args->nodes.GetSize() != 2)
-					return p.Error(nodes[IDX_NAME], "__cmp takes two arguments");
-
-				auto rtype = nodes[IDX_RET]->GetTypeDesc(p);
-
-				if (rtype.IsReference() || rtype.GetTypeEnum() != DT_INT)
-					return p.Error(nodes[IDX_NAME], "__cmp must return an int");
-
-				LETHE_ASSERT(thisScope->node);
-				auto stype = thisScope->node->GetTypeDesc(p);
-
-				// verify cmp takes const reference to struct type
-				for (auto &&n : args->nodes)
-				{
-					auto ntype = n->GetTypeDesc(p);
-					if ((ntype.qualifiers & (AST_Q_CONST | AST_Q_REFERENCE)) != (AST_Q_CONST | AST_Q_REFERENCE))
-						return p.Error(n, "__cmp args must be const reference");
-
-					if (!(ntype.GetType() == stype.GetType()))
-						return p.Error(n, "invalid __cmp arg type");
-				}
-
-				stype.ref->funCmp = startPC;
-			}
+			stype.ref->funCmp = startPC;
 		}
 
 		// fixup forward refs

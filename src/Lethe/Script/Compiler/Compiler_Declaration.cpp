@@ -955,6 +955,9 @@ AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)
 							  : ParseScopeResolution(depth+1);
 	LETHE_RET_FALSE(name);
 
+	if (isOperator)
+		name->qualifiers |= AST_Q_OPERATOR;
+
 	if (name->type != AST_OP_SCOPE_RES)
 		name->flags |= AST_F_RESOLVED;
 
