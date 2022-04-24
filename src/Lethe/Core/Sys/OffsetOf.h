@@ -17,7 +17,7 @@ struct offset_of_impl
 #	pragma GCC diagnostic push
 #	pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
-		ULong tmp;
+		ULong tmp[sizeof(T2)/sizeof(ULong)+1];
 		T2 &obj = (T2 &)tmp;
 		return size_t(&(obj.*member)) -
 		size_t(&obj);
