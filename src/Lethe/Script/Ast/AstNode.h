@@ -5,13 +5,10 @@
 #include <Lethe/Core/Collect/Queue.h>
 #include <Lethe/Core/Sys/NoCopy.h>
 #include <Lethe/Core/Sys/Types.h>
-#include <Lethe/Core/Ptr/UniquePtr.h>
 #include <Lethe/Core/String/String.h>
 #include <Lethe/Core/String/StringBuilder.h>
 #include <Lethe/Core/Lexer/Token.h>
 #include <Lethe/Core/Ptr/RefCounted.h>
-#include <Lethe/Core/Ptr/SharedPtr.h>
-#include <Lethe/Core/Collect/HashMap.h>
 #include <Lethe/Core/Io/StreamDecl.h>
 #include <Lethe/Core/Memory/BucketAlloc.h>
 #include <Lethe/Script/TypeInfo/DataTypes.h>
