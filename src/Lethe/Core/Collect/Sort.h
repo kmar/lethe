@@ -7,8 +7,7 @@ namespace lethe
 
 // FIXME: const C &cmp everywhere is actually less predicate
 
-// O: optimize bounds, default is true
-template< typename T, typename S = Int, bool O = 1 >
+template< typename T, typename S = Int >
 struct QuickSort
 {
 	static inline void Sort(T *ptr, S size)
@@ -22,15 +21,8 @@ struct QuickSort
 	template< typename C > static void Sort(T *ptr, S size, const C &cmp);
 	template< typename C > static void Sort(T *ptr, const T *end, const C &cmp);
 private:
-	static const int MAX_SORT_DEPTH = 512;
 	// use insertion sort if # of elems <= this
 	static const int INSERTION_THRESHOLD = 8;
-
-	struct SortStack
-	{
-		S start;
-		S end;
-	};
 
 	static inline S PickPivot(S start, S end);
 

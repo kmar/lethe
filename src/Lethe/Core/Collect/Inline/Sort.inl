@@ -1,29 +1,30 @@
-template< typename T, typename S, bool O >
+template< typename T, typename S >
 template< typename C >
-void QuickSort<T,S,O>::Sort(T *ptr, S size, const C &cmp)
+void QuickSort<T,S>::Sort(T *ptr, S size, const C &cmp)
 {
 	LETHE_ASSERT(!size || ptr);
 	Sort(ptr, 0, size-1, cmp);
 }
 
-template< typename T, typename S, bool O >
+template< typename T, typename S >
 template< typename C >
-void QuickSort<T,S,O>::Sort(T *ptr, const T *end, const C &cmp)
+void QuickSort<T,S>::Sort(T *ptr, const T *end, const C &cmp)
 {
 	LETHE_ASSERT(ptr && end >= ptr);
 	Sort(ptr, 0, (S)(end - ptr)-1, cmp);
 }
 
-template< typename T, typename S, bool O >
-inline S QuickSort<T,S,O>::PickPivot(S start, S end)
+template< typename T, typename S >
+inline S QuickSort<T,S>::PickPivot(S start, S end)
 {
+	// simply pick the middle index, should favor already sorted lists
 	S mid = (start+end) >> 1;
 	return mid;
 }
 
-template< typename T, typename S, bool O >
+template< typename T, typename S >
 template< typename C >
-S QuickSort<T,S,O>::Partition(T *ptr, S start, S end, const C &cmp)
+S QuickSort<T,S>::Partition(T *ptr, S start, S end, const C &cmp)
 {
 	if (start >= end)
 		return end;
@@ -46,53 +47,39 @@ S QuickSort<T,S,O>::Partition(T *ptr, S start, S end, const C &cmp)
 	return partIndex;
 }
 
-template< typename T, typename S, bool O >
+// space-friendly version
+template< typename T, typename S >
 template< typename C >
-void QuickSort<T,S,O>::Sort(T *ptr, S start, S end, const C &cmp)
+void QuickSort<T,S>::Sort(T *ptr, S start, S end, const C &cmp)
 {
-	SortStack stk[MAX_SORT_DEPTH];
-	int stkPtr = 0;
-	stk[0].start = start;
-	stk[0].end = end;
-
-	while (stkPtr >= 0)
+	while (start < end)
 	{
-		// pop
-		SortStack &stkTop = stk[stkPtr];
-		start = stkTop.start;
-		end = stkTop.end;
-
-		if (start >= end)
-		{
-			stkPtr--;
-			continue;
-		}
-
 		if (end - start < INSERTION_THRESHOLD)
 		{
-			InsertionSort<T,S>::Sort(ptr + start, end - start + 1, cmp);
-			stkPtr--;
-			continue;
+			InsertionSort<T, S>::Sort(ptr + start, end - start + 1, cmp);
+			return;
 		}
 
 		S p = Partition(ptr, start, end, cmp);
 		S l = p-1;
 		S h = p+1;
 
-		if (O)
+		// note: due to the way partitioning works, all element equal to pivot are partitioned before it,
+		// so one loop will do here
+		while (l > start && !cmp(ptr[l], ptr[p]))
+			l--;
+
+		// doing start, l and h, end
+		if (l-start < end-h)
 		{
-			while (l > start && cmp(ptr[l], ptr[p]) == cmp(ptr[p], ptr[l]))
-				l--;
-
-			while (h < end && cmp(ptr[p], ptr[h]) == cmp(ptr[h], ptr[p]))
-				h++;
+			Sort(ptr, start, l, cmp);
+			start = h;
 		}
-
-		stkTop.start = start;
-		stkTop.end = l;
-		SortStack &stkTop2 = stk[++stkPtr];
-		stkTop2.start = h;
-		stkTop2.end = end;
+		else
+		{
+			Sort(ptr, h, end, cmp);
+			end = l;
+		}
 	}
 }
 
