@@ -207,9 +207,6 @@ static const int BITS = 32;
 #define LETHE_CONCAT_MACROS__(x, y) x##y
 #define LETHE_CONCAT_MACROS(x, y) LETHE_CONCAT_MACROS__(x, y)
 
-// defer lambda (or "scope exit")
-#define LETHE_DEFER(f) struct LETHE_CONCAT_MACROS(lethe_defer__, __LINE__) { inline ~LETHE_CONCAT_MACROS(lethe_defer__, __LINE__)(){f();} } LETHE_CONCAT_MACROS(lethe_defer_, __LINE__)
-
 // fake pre-C++11 stuff for pre-vs2012
 #if LETHE_COMPILER_MSC_ONLY
 #	if _MSC_VER < 1900 && !defined(_ALLOW_KEYWORD_MACROS)
