@@ -20,14 +20,10 @@ struct queue<T>
 	void push_back(T value)
 	{
 		if (count == data.size)
-		{
 			grow();
-			end += end+1 == count;
-		}
 
+		end *= end < data.size;
 		data[end++] = value;
-
-		end *= end <= data.size;
 
 		++count;
 	}
@@ -186,7 +182,6 @@ struct queue<T>
 	{
 		// because we can't destroy range in the script, we simply
 		// swap with default
-		T nullT;
-		nullT <-> elem;
+		<->elem;
 	}
 }
