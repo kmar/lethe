@@ -198,8 +198,7 @@ bool AstUnaryOp::CodeGen(CompiledProgram &p)
 
 	if (type == AST_OP_SWAP_NULL)
 	{
-		if (dt.IsReference())
-			return true;
+		dt.RemoveReference();
 
 		const Int nwords = (dt.GetSize() + Stack::WORD_SIZE-1) / Stack::WORD_SIZE;
 
