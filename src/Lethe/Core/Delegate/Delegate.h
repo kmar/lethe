@@ -34,7 +34,7 @@ protected:
 		}
 	}
 public:
-	inline DelegateBase()
+	LETHE_NOINLINE DelegateBase()
 		: pmem(nullptr)
 		, classptr(nullptr)
 		, lambdaStorage(nullptr)
@@ -42,7 +42,7 @@ public:
 		MemSet(&pmem, 0, sizeof(pmem));
 	}
 
-	inline DelegateBase(const DelegateBase &o)
+	LETHE_NOINLINE DelegateBase(const DelegateBase &o)
 		: pmem(nullptr)
 		, classptr(nullptr)
 		, lambdaStorage(nullptr)
