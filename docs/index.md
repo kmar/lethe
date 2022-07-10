@@ -355,17 +355,20 @@ but this would break translation to/from C and C++
 note that pre/post increment doesn't work with floating point types and += style operators cannot be chained like in C/C++
 
 just like C++, special alternative tokens for operators are supported:
-and    ... &&
-and_eq ... &=
-bitand ... &
-bitor  ... |
-compl  ... ~
-not    ... !
-not_eq ... !=
-or     ... |
-or_eq  ... |=
-xor    ... ^
-xor_eq ... ^=
+
+alt name|operator
+-------|-----
+and    | &&
+and_eq | &=
+bitand | &
+bitor  | \|
+compl  | ~
+not    | !
+not_eq | !=
+or     | \|\|
+or_eq  | \|=
+xor    | ^
+xor_eq | ^=
 
 note that nor digraphs or trigraphs are supported
 
