@@ -75,7 +75,7 @@ public:
 	void SetMacroMap(TokenMacroMap *nmap);
 
 	void SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName);
-	void SetVarArgMacros(const String &varArgName, const String &varArgCountName);
+	void SetVarArgMacros(const String &varArgName, const String &varArgCountName, const String &varArgOptName);
 	void SetStringizeMacros(const String &stringizeName, const String &concatName);
 
 	void SetFuncName(const String &fname);
@@ -157,6 +157,8 @@ private:
 	String varArgMacroName;
 	// non-std extension __VA_COUNT
 	String varArgCountMacroName;
+	// equivalent for __VA_OPT
+	String varArgOptMacroName;
 	// non-std __stringize
 	String stringizeMacroName;
 	// non-std __concat

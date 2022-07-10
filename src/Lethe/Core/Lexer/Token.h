@@ -205,7 +205,9 @@ enum TokenNumberFlags
 	TOKF_UNSIGNED_SUFFIX	=	1,
 	TOKF_LONG_SUFFIX		=	2,
 	TOKF_FLOAT_SUFFIX		=	4,
-	TOKF_DOUBLE_SUFFIX		=	8
+	TOKF_DOUBLE_SUFFIX		=	8,
+	// special token ignore flag for macros
+	TOKF_MACRO_IGNORE		=	1 << 30
 };
 
 // note: we don't wrap anything here with methods, that would be just useless waste of effort

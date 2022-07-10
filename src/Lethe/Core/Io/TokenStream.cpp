@@ -134,6 +134,9 @@ TokenType TokenStream::FetchTokenInternal(Token &ntok)
 
 		ntok = *macroTokens[ms.index++];
 
+		if (ntok.numberFlags & TOKF_MACRO_IGNORE)
+			continue;
+
 		if (ntok.type != TOK_IDENT)
 			break;
 
@@ -157,12 +160,48 @@ TokenType TokenStream::FetchTokenInternal(Token &ntok)
 		}
 		else
 		{
-			if (sr == varArgCountMacroName && ms.argIndex < ms.argEnd &&
-				macroTokens[ms.argEnd-1]->type == TOK_ELLIPSIS)
+			if (ms.argIndex < ms.argEnd && macroTokens[ms.argEnd-1]->type == TOK_ELLIPSIS)
 			{
-				const auto *mt = macroTokens[ms.argEnd-1];
-				ntok.SetULong(mt->userIndex);
-				break;
+				auto argCount = macroTokens[ms.argEnd-1]->userIndex;
+
+				if (sr == varArgCountMacroName)
+				{
+					ntok.SetULong(argCount);
+					break;
+				}
+
+				if (sr == varArgOptMacroName)
+				{
+					if (ms.index >= ms.end || macroTokens[ms.index++]->type != TOK_LBR)
+						return TOK_INVALID;
+
+					Int start = ms.index;
+
+					Int openBr = 0;
+
+					while (ms.index < ms.end)
+					{
+						auto *mt = macroTokens[ms.index++];
+
+						if (mt->type == TOK_LBR)
+						{
+							++openBr;
+							continue;
+						}
+
+						if (mt->type == TOK_RBR && --openBr < 0)
+						{
+							// mark as ignored
+							mt->numberFlags |= TOKF_MACRO_IGNORE;
+							break;
+						}
+					}
+
+					if (argCount)
+						ms.index = start;
+
+					continue;
+				}
 			}
 
 			if (sr == stringizeMacroName && ms.index < ms.end)
@@ -683,10 +722,11 @@ void TokenStream::SetLineFileMacros(const String &lineName, const String &fileNa
 	funcMacroName = funcName;
 }
 
-void TokenStream::SetVarArgMacros(const String &varArgName, const String &varArgCountName)
+void TokenStream::SetVarArgMacros(const String &varArgName, const String &varArgCountName, const String &varArgOptName)
 {
 	varArgMacroName = varArgName;
 	varArgCountMacroName = varArgCountName;
+	varArgOptMacroName = varArgOptName;
 }
 
 void TokenStream::SetStringizeMacros(const String &stringizeName, const String &concatName)

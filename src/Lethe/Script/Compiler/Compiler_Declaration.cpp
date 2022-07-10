@@ -526,7 +526,7 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 			return res.Detach();
 		}
 
-		if (ntt == TOK_SEMICOLON || ntt == TOK_RBR || ntt == TOK_RBLOCK || ntt == TOK_COLON)
+		if (ntt != TOK_COMMA)
 		{
 			if (!isStateVar)
 				return res.Detach();
@@ -633,7 +633,8 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 			return typedefRoot.Detach();
 		}
 
-		LETHE_RET_FALSE(Expect(ntt == TOK_COMMA, "expected `,`"));
+		LETHE_ASSERT(ntt == TOK_COMMA);
+
 		ts->ConsumeToken();
 
 		if (isCArray)

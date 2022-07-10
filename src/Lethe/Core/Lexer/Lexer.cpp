@@ -97,6 +97,19 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"endif", TOK_KEY_ENDIF},
 	{"static_assert", TOK_KEY_STATIC_ASSERT},
 
+	// alternative operators as in C++
+	{"and", TOK_LAND},
+	{"and_eq", TOK_AND_EQ},
+	{"bitand", TOK_AND},
+	{"bitor", TOK_OR},
+	{"compl", TOK_NOT},
+	{"not", TOK_LNOT},
+	{"not_eq", TOK_NOT_EQ},
+	{"or", TOK_LOR},
+	{"or_eq", TOK_OR_EQ},
+	{"xor", TOK_XOR},
+	{"xor_eq", TOK_XOR_EQ},
+
 	{nullptr, TOK_INVALID}
 };
 
