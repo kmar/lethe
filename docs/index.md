@@ -354,6 +354,21 @@ but this would break translation to/from C and C++
 
 note that pre/post increment doesn't work with floating point types and += style operators cannot be chained like in C/C++
 
+just like C++, special alternative tokens for operators are supported:
+and    ... &&
+and_eq ... &=
+bitand ... &
+bitor  ... |
+compl  ... ~
+not    ... !
+not_eq ... !=
+or     ... |
+or_eq  ... |=
+xor    ... ^
+xor_eq ... ^=
+
+note that nor digraphs or trigraphs are supported
+
 <a id="macros"></a>
 #### macros
 
@@ -371,7 +386,7 @@ integrated support for a simple, scoped, single pass token-based macros
 		macro_name(arg1, arg2)
 		macro_name(arg1, arg2, ...)
 
-		special keywords: __VA_ARGS couple ellipsis, __VA_COUNT holds ellipsis argument count
+		special keywords: __VA_ARGS couple ellipsis, __VA_COUNT holds ellipsis argument count and __VA_OPT(x) evaluates x only if __VA_COUNT>0
 
 * special keywords inside macros:
 	* __LINE, __FILE, __func and __COUNTER (just like the C preprocessor counterpart)
