@@ -683,6 +683,27 @@ typename Array<T,S,A>::Iterator Array<T,S,A>::FindMin()
 }
 
 template< typename T, typename S, typename A >
+template<typename F>
+S Array<T,S,A>::EraseIf(F func)
+{
+	S dst = 0;
+
+	for (Int i=0; i<this->size; i++)
+	{
+		if (!func(this->data[i]))
+		{
+			if (i != dst)
+				Swap(this->data[i], this->data[dst]);
+
+			dst++;
+		}
+	}
+
+	Resize(dst);
+	return dst;
+}
+
+template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::Erase(S index)
 {
 	LETHE_ASSERT(index >= 0 && index < this->size);

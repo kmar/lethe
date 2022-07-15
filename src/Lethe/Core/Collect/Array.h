@@ -160,6 +160,11 @@ public:
 	inline Iterator Erase(Iterator it, Iterator itEnd);
 	inline Iterator EraseFast(Iterator it, Iterator itEnd);
 
+	// erase based on a predicate
+	// returns new size
+	template<typename F>
+	S EraseIf(F func);
+
 	// insert element
 	Array &Insert(S index, const T &elem);
 	inline Array &InsertIndex(S index, const T &elem);
