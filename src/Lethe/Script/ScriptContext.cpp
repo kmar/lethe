@@ -3,6 +3,11 @@
 #include "Utils/NativeHelpers.h"
 #include <Lethe/Core/Thread/Thread.h>
 
+#include <Lethe/Core/String/StringBuilder.h>
+
+#include "Program/CompiledProgram.h"
+#include "Program/ConstPool.h"
+
 namespace lethe
 {
 

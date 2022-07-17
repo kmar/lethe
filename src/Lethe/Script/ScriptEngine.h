@@ -1,10 +1,14 @@
 #pragma once
 
+#include <Lethe/Core/Collect/FreeIdList.h>
+
 #include "ScriptContext.h"
 #include "DebugServer/DebugServer.h"
 
 namespace lethe
 {
+
+class Compiler;
 
 enum LinkFlags
 {
@@ -116,20 +120,11 @@ public:
 		return *compiler;
 	}
 
-	inline const Array<UniquePtr<DataType>> &GetTypes() const
-	{
-		return program->types;
-	}
+	const Array<UniquePtr<DataType>> &GetTypes() const;
 
-	inline const DataType *FindClass(Name n) const
-	{
-		return program->FindClass(n);
-	}
+	const DataType *FindClass(Name n) const;
 
-	inline const Array<String> &GetConstStrings() const
-	{
-		return program->cpool.sPool;
-	}
+	const Array<String> &GetConstStrings() const;
 
 	void *GetClassVtable(Name n) const;
 

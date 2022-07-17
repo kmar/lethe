@@ -10,6 +10,8 @@
 #include <Lethe/Core/Io/MemoryStream.h>
 #include <Lethe/Core/Time/Timer.h>
 
+#include "Compiler/Compiler.h"
+
 namespace lethe
 {
 
@@ -1054,6 +1056,21 @@ size_t ScriptEngine::GetMemUsageTypes() const
 	res += program->nullStructTypeHash.GetMemUsage();
 
 	return res;
+}
+
+const Array<UniquePtr<DataType>> &ScriptEngine::GetTypes() const
+{
+	return program->types;
+}
+
+const DataType *ScriptEngine::FindClass(Name n) const
+{
+	return program->FindClass(n);
+}
+
+const Array<String> &ScriptEngine::GetConstStrings() const
+{
+	return program->cpool.sPool;
 }
 
 bool ScriptEngine::StartDebugServer()

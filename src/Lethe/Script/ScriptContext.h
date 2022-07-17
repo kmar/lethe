@@ -17,9 +17,10 @@
 #include <Lethe/Core/Time/Timer.h>
 
 #include "Vm/Vm.h"
-#include "Compiler/Compiler.h"
-#include "Program/CompiledProgram.h"
+
 #include "Program/ConstPool.h"
+
+#include "TypeInfo/DataTypes.h"
 
 #include "TypeInfo/BaseObject.h"
 

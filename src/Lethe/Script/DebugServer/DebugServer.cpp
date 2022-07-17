@@ -5,6 +5,10 @@
 
 #include <Lethe/Core/Sys/Fs.h>
 #include <Lethe/Core/Time/Timer.h>
+#include <Lethe/Core/String/StringBuilder.h>
+
+#include <Lethe/Script/Program/CompiledProgram.h>
+#include <Lethe/Script/Ast/AstNode.h>
 
 namespace lethe
 {
