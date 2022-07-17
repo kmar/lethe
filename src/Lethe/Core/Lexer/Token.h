@@ -83,6 +83,8 @@ enum TokenTypeBase
 
 	TOK_SHARP,			// #
 
+	TOK_COLON_EQ,		// :=
+
 	// keywords
 	TOK_KEYWORD,		// this just marks keyword base indices
 

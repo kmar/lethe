@@ -310,6 +310,12 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 
 		UniquePtr<AstNode> init;
 
+		auto nttype = nt.type;
+
+		// note: force assignment for :=
+		if (nttype == TOK_COLON_EQ)
+			nttype = TOK_EQ;
+
 		if (initOnly && !idx)
 		{
 			// note: TOK_COLON for range based for
@@ -660,7 +666,18 @@ AstNode *Compiler::ParseVarDeclOrExpr(Int depth, bool refFirstInit, bool initOnl
 
 	if (ntype)
 	{
-		nname = ParseName(depth+1);
+		if (ts->PeekToken().type == TOK_COLON_EQ)
+		{
+			Swap(ntype, nname);
+			ntype = NewAstNode<AstTypeAuto>(nname->location);
+			ntype->qualifiers = nname->qualifiers;
+			nname->qualifiers = 0;
+			--nofail;
+			return ParseVarDecl(ntype, nname, depth + 1, refFirstInit, initOnly);
+		}
+		else
+			nname = ParseName(depth+1);
+
 		Int delta = ts->GetPosition() - pos;
 
 		if (nname)
@@ -793,6 +810,17 @@ AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)
 		ntype = NewAstNode<AstTypeVoid>(ntype->location);
 		ts->UngetToken();
 		ntype->qualifiers |= qual;
+	}
+
+	if (ts->PeekToken().type == TOK_COLON_EQ)
+	{
+		UniquePtr<AstNode> name;
+		Swap(ntype, name);
+		ntype = NewAstNode<AstTypeAuto>(name->location);
+		ntype->qualifiers = name->qualifiers;
+		name->qualifiers = 0;
+
+		return ParseVarDecl(ntype, name, depth+1);
 	}
 
 	const char *isOperator = nullptr;

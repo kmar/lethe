@@ -690,6 +690,9 @@ TokenType Lexer::PeekColon(Token &tok)
 	if (ch == ':')
 		return FinishPeek(TOK_DOUBLE_COLON, tok);
 
+	if (ch == '=')
+		return FinishPeek(TOK_COLON_EQ, tok);
+
 	str->UngetByte(ch);
 	return FinishPeek(TOK_COLON, tok);
 }
