@@ -2,6 +2,8 @@
 
 #include "ScriptBaseObject.h"
 
+#include <Lethe/Core/Math/Templates.h>
+
 namespace lethe
 {
 
