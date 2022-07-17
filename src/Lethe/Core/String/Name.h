@@ -2,7 +2,6 @@
 
 #include "../Sys/Types.h"
 #include "../Sys/Singleton.h"
-#include "../Thread/Lock.h"
 #include "../Collect/HashMap.h"
 
 #include "NameTableNum.h"
