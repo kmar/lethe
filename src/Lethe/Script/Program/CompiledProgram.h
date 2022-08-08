@@ -68,6 +68,9 @@ public:
 	// fold sizeof flag
 	bool foldSizeof = false;
 
+	// check variable shadowing
+	static void CheckShadowing(const NamedScope *cscope, const String &nname, AstNode *nnode, const Delegate<void(const String &msg, const TokenLocation &loc, Int warnid)> &onWarn);
+
 private:
 	mutable SpinMutex lateDeleteMutex;
 	mutable HashSet<AstNode *> lateDeleteNodes;

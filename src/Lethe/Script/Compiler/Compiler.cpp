@@ -264,26 +264,7 @@ NamedScope *Compiler::FindAddNamedScope(const String &nname)
 
 bool Compiler::AddScopeMember(const String &nname, AstNode *nnode, bool isCtor)
 {
-	if (currentScope->IsLocal() && (nnode->type == AST_VAR_DECL || nnode->type == AST_ARG))
-	{
-		const auto *tmp = currentScope->parent;
-
-		while (tmp)
-		{
-			auto *sym = tmp->FindSymbol(nname);
-
-			if (sym && (sym->type == AST_VAR_DECL || sym->type == AST_ARG))
-			{
-				Path pth = sym->location.file;
-				WarningLoc(
-					String::Printf("declaration of %s shadows a previous variable at line %d in %s", nname.Ansi(), sym->location.line, pth.GetFilename().Ansi()),
-					nnode->location, WARN_SHADOW);
-				break;
-			}
-
-			tmp = tmp->parent;
-		}
-	}
+	ErrorHandler::CheckShadowing(currentScope, nname, nnode, onWarning);
 
 	if ((isCtor && currentScope->ctorDefined) || currentScope->members.FindIndex(nname) >= 0 ||
 			currentScope->namedScopes.FindIndex(nname) >= 0)

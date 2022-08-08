@@ -118,6 +118,26 @@ AstNode::ResolveResult AstFunc::Resolve(const ErrorHandler &e)
 		nodes[IDX_BODY]->scopeRef->parent = targ->nodes[IDX_ARGS]->scopeRef;
 		nodes[IDX_BODY]->scopeRef->node = targ;
 
+		// recheck variable shadowing
+		const auto *sref = nodes[IDX_BODY]->scopeRef;
+
+		StackArray<const NamedScope *, 256> scopeStack;
+
+		scopeStack.Add(sref);
+
+		while (!scopeStack.IsEmpty())
+		{
+			sref = scopeStack.Back();
+			scopeStack.Pop();
+
+			for (auto &&it : sref->scopes)
+				scopeStack.Add(it);
+
+			for (auto &&it : sref->members)
+				if (it.value->type == AST_VAR_DECL)
+					ErrorHandler::CheckShadowing(sref, it.key, it.value, e.onWarning);
+		}
+
 		targ->nodes.Add(nodes[IDX_BODY]);
 		targ->flags &= ~AST_F_RESOLVED;
 		nodes.EraseIndex(IDX_BODY);

@@ -1,4 +1,5 @@
 #include <Lethe/Core/String/String.h>
+#include <Lethe/Core/Sys/Path.h>
 #include "CompiledProgram.h"
 #include <Lethe/Script/Ast/AstNode.h>
 #include <Lethe/Script/Ast/CodeGenTables.h>
@@ -13,6 +14,30 @@ namespace lethe
 {
 
 // ErrorHandler
+
+void ErrorHandler::CheckShadowing(const NamedScope *cscope, const String &nname, AstNode *nnode, const Delegate<void(const String &msg, const TokenLocation &loc, Int warnid)> &onWarn)
+{
+	if (cscope->IsLocal() && (nnode->type == AST_VAR_DECL || nnode->type == AST_ARG))
+	{
+		const auto *tmp = cscope->parent;
+
+		while (tmp)
+		{
+			auto *sym = tmp->FindSymbol(nname);
+
+			if (sym && (sym->type == AST_VAR_DECL || sym->type == AST_ARG))
+			{
+				Path pth = sym->location.file;
+				onWarn(
+					String::Printf("declaration of %s shadows a previous variable at line %d in %s", nname.Ansi(), sym->location.line, pth.GetFilename().Ansi()),
+					nnode->location, WARN_SHADOW);
+				break;
+			}
+
+			tmp = tmp->parent;
+		}
+	}
+}
 
 bool ErrorHandler::Error(const AstNode *n, const String &msg) const
 {
