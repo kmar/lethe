@@ -448,7 +448,7 @@ String &String::operator +=(int w)
 		return *this = w;
 
 	Byte buf[7];
-	int sl = CharConv::EncodeUTF8(w, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(w, buf, buf+7);
 	buf[sl] = 0;
 
 	return AppendData(l, sl, reinterpret_cast<const char *>(buf));
@@ -1000,7 +1000,7 @@ String String::Printf(const char *fmt, ...)
 int String::Find(wchar_t ch, int pos) const
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(ch, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(ch, buf, buf+7);
 	buf[sl] = 0;
 	return Find(buf, buf+sl, pos);
 }
@@ -1267,7 +1267,7 @@ int String::Remove(wchar_t ch)
 int String::Insert(int pos, wchar_t ch)
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(ch, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(ch, buf, buf+7);
 	buf[sl] = 0;
 	Insert(buf, buf+sl, pos);
 	return GetLength();
@@ -1290,7 +1290,7 @@ int String::Insert(int pos, const String &str)
 int String::Replace(wchar_t oldc, wchar_t newc)
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(oldc, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(oldc, buf, buf+7);
 	buf[sl] = 0;
 	char buf2[7];
 	int sl2 = CharConv::EncodeUTF8(newc, buf2, buf2+6);
@@ -1367,7 +1367,7 @@ String &String::Trim(void)
 bool String::StartsWith(const wchar_t ch) const
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(ch, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(ch, buf, buf+7);
 	return StartsWith(buf, sl);
 }
 
@@ -1409,7 +1409,7 @@ bool String::StartsWith(const String &str) const
 bool String::EndsWith(const wchar_t ch) const
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(ch, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(ch, buf, buf+7);
 	buf[sl] = 0;
 	return EndsWith(buf, sl);
 }
@@ -1452,7 +1452,7 @@ bool String::EndsWith(const String &str) const
 String String::Tokenize(wchar_t ch, int &pos) const
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(ch, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(ch, buf, buf+7);
 	buf[sl] = 0;
 	return Tokenize(buf, buf+sl, pos);
 }
@@ -1475,7 +1475,7 @@ String String::Tokenize(const String &chset, int &pos) const
 Array<String> String::Split(const int ch, bool keepEmpty) const
 {
 	char buf[7];
-	int sl = CharConv::EncodeUTF8(ch, buf, buf+6);
+	int sl = CharConv::EncodeUTF8(ch, buf, buf+7);
 	buf[sl] = 0;
 	return Split(String(buf, sl), keepEmpty);
 }
