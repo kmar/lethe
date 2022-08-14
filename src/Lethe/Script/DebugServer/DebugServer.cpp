@@ -312,6 +312,17 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			auto line = cmds[2].AsInt();
 			auto pc = GetEngine().GetBreakpointPCList(cmds[1], line);
 
+			if (pc.IsEmpty())
+			{
+				StringBuilder sb;
+				sb = "invalid_breakpoint\n";
+				sb += cmds[1];
+				sb += '\n';
+				sb += cmds[2];
+				sb += '\n';
+				nsocket->SendData(sb.Get());
+			}
+
 			for (auto &&it : pc)
 				GetEngine().ToggleBreakpoint(cmds[1], it);
 
