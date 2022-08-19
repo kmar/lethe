@@ -89,61 +89,7 @@ int free_id_list::lower_bound(int key) const
 //-----------------------------------------------------------------------------
 void free_id_list::free(int idx)
 {
-	assert(idx >=0 && idx < counter);
-
-	if (idx+1 == counter)
-	{
-		// just decrease counter BUT still may need to compact last range
-		--counter;
-	}
-	else
-	{
-		range r = {idx, idx+1};
-
-		auto it = lower_bound(idx);
-
-		auto prev = it;
-
-		if (prev)
-			--prev;
-
-		if (prev != freeList.size && freeList[prev].to == r.from)
-		{
-			// expand prev
-			freeList[prev].to = r.to;
-
-			// still may want to merge with next
-			if (it != freeList.size && r.to == freeList[it].from)
-			{
-				freeList[prev].to = freeList[it].to;
-				freeList.erase(it);
-			}
-		}
-		else if (it != freeList.size && r.to == freeList[it].from)
-		{
-			// expand from
-			freeList[it].from = r.from;
-		}
-		else
-		{
-			// finally simply insert if cannot merge
-			freeList.insert(it, r);
-		}
-	}
-
-	// remove last range if possible
-	while (freeList.size)
-	{
-		auto &fl = freeList[freeList.size-1];
-
-		if (fl.to != counter)
-			break;
-
-		--counter;
-
-		if (--fl.to <= fl.from)
-			freeList.pop();
-	}
+	free_sequence(idx, 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -195,7 +141,60 @@ int free_id_list::alloc_sequence(int count)
 //-----------------------------------------------------------------------------
 void free_id_list::free_sequence(int start, int count)
 {
-	// simply free iteratively
-	for (int i=start : count)
-		free(i);
+	const int idx = start;
+
+	assert(idx >= 0 && count > 0 && idx + count <= counter);
+
+	if (idx+count == counter)
+	{
+		// just decrease counter BUT still may need to compact last range
+		counter -= count;
+	}
+	else
+	{
+		range r = {idx, idx+count};
+
+		auto it = lower_bound(idx);
+
+		auto prev = it;
+
+		if (prev)
+			--prev;
+
+		if (prev != freeList.size && freeList[prev].to == r.from)
+		{
+			// expand prev
+			freeList[prev].to = r.to;
+
+			// still may want to merge with next
+			if (it != freeList.size && r.to == freeList[it].from)
+			{
+				freeList[prev].to = freeList[it].to;
+				freeList.erase(it);
+			}
+		}
+		else if (it != freeList.size && r.to == freeList[it].from)
+		{
+			// expand from
+			freeList[it].from = r.from;
+		}
+		else
+		{
+			// finally simply insert if cannot merge
+			freeList.insert(it, r);
+		}
+	}
+
+	// remove last range if possible
+	while (freeList.size)
+	{
+		auto &fl = freeList[freeList.size-1];
+
+		if (fl.to != counter)
+			break;
+
+		counter = fl.from;
+
+		freeList.pop();
+	}
 }

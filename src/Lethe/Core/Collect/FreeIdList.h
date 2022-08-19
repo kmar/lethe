@@ -52,7 +52,11 @@ public:
 	// free memory
 	void Reset();
 
+	// get minimum free id
+	Int GetMinFreeId() const;
+
 	inline Int GetCounter() const {return counter;}
+	inline Int GetNumRanges() const {return freeList.GetSize();}
 
 	void SwapWith(FreeIdListRange &o);
 

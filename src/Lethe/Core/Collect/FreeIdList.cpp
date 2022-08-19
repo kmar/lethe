@@ -108,6 +108,11 @@ FreeIdListRange::FreeIdListRange()
 {
 }
 
+Int FreeIdListRange::GetMinFreeId() const
+{
+	return freeList.IsEmpty() ? counter : freeList[0].from;
+}
+
 Int FreeIdListRange::Alloc()
 {
 	if (freeList.IsEmpty())
@@ -150,22 +155,18 @@ Int FreeIdListRange::AllocSequence(Int count)
 
 void FreeIdListRange::FreeSequence(Int start, Int count)
 {
-	for (Int i=0; i<count; i++)
-		Free(start + i);
-}
+	const Int idx = start;
 
-void FreeIdListRange::Free(Int idx)
-{
-	LETHE_ASSERT(idx >=0 && idx < counter);
+	LETHE_ASSERT(idx >= 0 && count > 0 && idx + count <= counter);
 
-	if (idx+1 == counter)
+	if (idx+count == counter)
 	{
 		// just decrease counter BUT still may need to compact last range
-		--counter;
+		counter -= count;
 	}
 	else
 	{
-		Range r = {idx, idx+1};
+		Range r = {idx, idx+count};
 
 		auto *it = LowerBound(freeList.Begin(), freeList.End(), r);
 
@@ -206,11 +207,14 @@ void FreeIdListRange::Free(Int idx)
 		if (fl.to != counter)
 			break;
 
-		--counter;
-
-		if (--fl.to <= fl.from)
-			freeList.Pop();
+		counter = fl.from;
+		freeList.Pop();
 	}
+}
+
+void FreeIdListRange::Free(Int idx)
+{
+	FreeSequence(idx, 1);
 }
 
 void FreeIdListRange::Clear()
