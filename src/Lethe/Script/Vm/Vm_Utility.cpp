@@ -756,7 +756,7 @@ Int Vm::GetCallStackDepth(const Instruction *iptr) const
 
 	const Stack::StackWord *stkptr = stk.GetTop();
 
-	for (Int idx=0;;idx++)
+	for (;;)
 	{
 		auto frame = FindStackFrame(stkptr);
 
