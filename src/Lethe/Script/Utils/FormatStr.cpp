@@ -86,6 +86,16 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 	// problem with printf: unsafe! => must use special qualifiers to check args
 
 	const char *wc = str.Ansi();
+	const char *start = wc;
+
+	auto flushStr = [&](const char *c)
+	{
+		if (c > start)
+		{
+			res += StringRef(start, c);
+			start = c;
+		}
+	};
 
 	while (*wc)
 	{
@@ -93,22 +103,24 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 
 		if (c == '\r')
 		{
+			flushStr(wc-1);
+
 			if (*wc != '\n')
 				res += '\n';
 
+			start = wc;
 			continue;
 		}
 
 		if (c != '%')
-		{
-			res += c;
 			continue;
-		}
+
+		flushStr(wc-1);
 
 		if (*wc == '%')
 		{
 			res += c;
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -145,7 +157,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			type->GetVariableText(res, src);
 
 			ofs += (type->size + Stack::WORD_SIZE-1)/Stack::WORD_SIZE;
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -161,7 +173,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			WChar tmp[2] = { 0, 0 };
 			tmp[0] = (WChar)stk.GetInt(ofs++);
 			res += tmp;
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -192,7 +204,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 				res.AppendFormat(optstr, num);
 			}
 
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -221,7 +233,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 				res.AppendFormat(optstr, num);
 			}
 
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -251,7 +263,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 				res.AppendFormat(optstr, num);
 			}
 
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -280,7 +292,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			else
 				res.AppendFormat(optstr, num);
 
-			wc++;
+			start = ++wc;
 			continue;
 		}
 
@@ -297,7 +309,8 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			ofs += Stack::STRING_WORDS;
 			fmt = 's';
 			res.AppendFormat(optstr, tmp.Ansi());
-			wc++;
+
+			start = ++wc;
 			continue;
 		}
 
@@ -313,7 +326,8 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			n.SetIndex(stk.GetSignedInt(ofs++));
 			fmt = 's';
 			res.AppendFormat(optstr, n.ToString().Ansi());
-			wc++;
+
+			start = ++wc;
 			continue;
 		}
 
@@ -340,7 +354,8 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			op += "%s";
 
 			res.AppendFormat(op.Ansi(), ptr, extra.Ansi());
-			wc++;
+
+			start = ++wc;
 			continue;
 		}
 
@@ -351,9 +366,13 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 		// unknown format type => just copy!
 		res += '%';
 
-		while (opts < wc)
-			res += *opts++;
+		if (opts < wc)
+			res += StringRef(opts, wc);
+
+		start = wc;
 	}
+
+	flushStr(wc);
 
 	return res;
 }
