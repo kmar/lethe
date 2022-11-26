@@ -70,8 +70,22 @@ struct map<K, V>
 	}
 
 	//---------------------------------------------------------------------
+	// mutable version because no overloads
+	nodiscard inline V &get_mutable(int index)
+	{
+		return values[index];
+	}
+
+	//---------------------------------------------------------------------
 	// get value at index (alias)
 	nodiscard inline const V &get_value(int index) const
+	{
+		return values[index];
+	}
+
+	//---------------------------------------------------------------------
+	// mutable version because no overloads
+	nodiscard inline V &get_value_mutable(int index)
 	{
 		return values[index];
 	}
