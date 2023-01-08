@@ -333,7 +333,7 @@ String DataType::GetName() const
 		;
 	}
 
-	return String::Printf("%p", (const void *)this);
+	return String::Printf(LETHE_FORMAT_UINTPTR_HEX, (UIntPtr)(const void *)this);
 }
 
 String DataType::GetSimpleTypeName(DataTypeEnum dte)
@@ -1986,7 +1986,7 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 		{
 			auto obj = static_cast<const BaseObject *>(ptrval);
 
-			sb.AppendFormat("0x%p#%d/%d", ptrval, obj->strongRefCount, obj->weakRefCount);
+			sb.AppendFormat("0x" LETHE_FORMAT_UINTPTR_HEX "#%d/%d", (UIntPtr)ptrval, obj->strongRefCount, obj->weakRefCount);
 
 			if (depth0)
 			{
@@ -2145,7 +2145,9 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 			if (type == DT_DELEGATE)
 			{
 				auto vidx = (UIntPtr)funptr;
-				sb += String::Printf((vidx & 2) ? "struct: 0x%p " : "obj: 0x%p ", ptrval);
+				sb += String::Printf((vidx & 2) ?
+					"struct: 0x" LETHE_FORMAT_UINTPTR_HEX " " :
+					"obj: 0x" LETHE_FORMAT_UINTPTR_HEX " ", (UIntPtr)ptrval);
 
 				if (vidx & 1)
 					sb += String::Printf("vtblidx: %d", int(vidx >> 2));
@@ -2153,11 +2155,11 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 				{
 					vidx &= ~(UIntPtr)3;
 					funptr = (const void *)vidx;
-					sb += String::Printf("funptr: 0x%p", funptr);
+					sb += String::Printf("funptr: 0x" LETHE_FORMAT_UINTPTR_HEX, (UIntPtr)funptr);
 				}
 			}
 			else
-				sb += String::Printf("funptr: 0x%p", funptr);
+				sb += String::Printf("funptr: 0x" LETHE_FORMAT_UINTPTR_HEX, (UIntPtr)funptr);
 		}
 	}
 	break;

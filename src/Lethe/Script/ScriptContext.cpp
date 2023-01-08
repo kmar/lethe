@@ -37,7 +37,7 @@ ScriptContext::ScriptContext(Int stkSize)
 
 		auto &eng = ctx.GetEngine();
 
-		eng.onInfo(String::Printf("debug break in context %p", (void *)&ctx));
+		eng.onInfo(String::Printf("debug break in context 0x" LETHE_FORMAT_UINTPTR_HEX, (UIntPtr)(void *)&ctx));
 
 		for (auto &&it : tmp)
 			eng.onInfo(it.Ansi());
@@ -70,7 +70,7 @@ ScriptContext::~ScriptContext()
 	if (!profiling.IsEmpty())
 	{
 		engine->onInfo("");
-		engine->onInfo(String::Printf("context %p (percentage of context totals, 100%% = %0.6lf msec)", (void *)this, totalSec*1000.0));
+		engine->onInfo(String::Printf("context 0x" LETHE_FORMAT_UINTPTR_HEX " (percentage of context totals, 100%% = %0.6lf msec)", (UIntPtr)(void *)this, totalSec*1000.0));
 		engine->onInfo("-------------------------------------------------------------------------------");
 	}
 
@@ -97,7 +97,7 @@ SharedPtr<ScriptContext> ScriptContext::Clone() const
 
 String ScriptContext::GetName() const
 {
-	return String::Printf("%s (%p)", debugName.Ansi(), (const void *)this);
+	return String::Printf("%s (0x" LETHE_FORMAT_UINTPTR_HEX ")", debugName.Ansi(), (UIntPtr)(const void *)this);
 }
 
 void ScriptContext::SetName(const String &ctxname)
