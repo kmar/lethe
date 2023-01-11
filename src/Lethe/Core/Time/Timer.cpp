@@ -48,7 +48,7 @@ void Timer::Init()
 #	if defined(USE_TIMEGETTIME)
 	timeBeginPeriod(1);
 #	endif
-#elif LETHE_OS_LINUX
+#elif LETHE_OS_LINUX || LETHE_PLATFORM_EMSCRIPTEN
 	hiTimerFreq = 1000000000;
 	GetHiCounterFunc = GetHiCounterInternal;
 	hiTimerAvail = true;
@@ -123,7 +123,7 @@ ULong Timer::GetHiCounterInternal()
 	LARGE_INTEGER pc;
 	LETHE_VERIFY(QueryPerformanceCounter(&pc));
 	return pc.QuadPart;
-#elif LETHE_OS_LINUX
+#elif LETHE_OS_LINUX || LETHE_PLATFORM_EMSCRIPTEN
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	return (ULong)ts.tv_sec * hiTimerFreq + ts.tv_nsec;
@@ -211,7 +211,7 @@ void PerfWatch::Start()
 	startTicks = Timer::GetHiCounter();
 }
 
-// stop, return delta time in ms
+// stop, return delta time in us
 Long PerfWatch::Stop()
 {
 	if (running)
@@ -223,7 +223,7 @@ Long PerfWatch::Stop()
 	return deltaTicks;
 }
 
-// continue, return delta time in ms
+// continue, return delta time in us
 Long PerfWatch::Continue()
 {
 	ULong current = Timer::GetHiCounter();
