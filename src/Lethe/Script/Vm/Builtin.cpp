@@ -1164,7 +1164,7 @@ void Opcode_BSWAPL(Stack &stk)
 	stk.SetLong(0, v);
 }
 
-const char *Opcode_SetStateLabel(Stack &stk)
+void Opcode_SetStateLabel(Stack &stk)
 {
 	auto labelName = stk.GetString(0);
 	Name clsname;
@@ -1200,7 +1200,6 @@ const char *Opcode_SetStateLabel(Stack &stk)
 	auto *stktop = stk.GetTop();
 	stktop += 1 + !stk.GetProgram().GetJitFriendly();
 	auto *stkbot = stk.GetBottom();*/
-	return nullptr;
 }
 
 void Opcode_IncObjCounter(Stack &stk)
@@ -1408,7 +1407,7 @@ static const BuiltinTable BUILTIN_TABLE[] =
 	{ BUILTIN_INTRIN_POPCNTL,   "*POPCNTL",             Opcode_POPCNTL          },
 	{ BUILTIN_INTRIN_BSWAPL,    "*BSWAPL",              Opcode_BSWAPL           },
 
-	{ BUILTIN_SET_STATE_LABEL,  "*SETSTATELABEL",       (BuiltinCallback)(void *)Opcode_SetStateLabel    },
+	{ BUILTIN_SET_STATE_LABEL,  "*SETSTATELABEL",       Opcode_SetStateLabel    },
 
 	{ BUILTIN_INC_OBJECT_COUNTER, "*INCOBJCOUNTER",     Opcode_IncObjCounter    },
 	{ BUILTIN_DEC_OBJECT_COUNTER, "*DECOBJCOUNTER",     Opcode_DecObjCounter    },
