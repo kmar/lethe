@@ -282,6 +282,9 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 		LETHE_ASSERT(tscope && tscope->node);
 		auto snode = tscope->node;
 
+		if (IDX_BODY >= nodes.GetSize())
+			return p.Error(this, "function body not defined");
+
 		// okay, now we should extract all var decls (struct auto-init-hack)
 		AstNode *fbody = nodes[IDX_BODY];
 		// virtual node to hold def inits so that we can place them before manual ctor body, also avoids inserting at index 0 (perf)
