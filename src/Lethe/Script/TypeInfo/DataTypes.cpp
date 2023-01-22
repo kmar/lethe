@@ -44,6 +44,7 @@ DataType::DataType()
 	, nativeCtor(nullptr)
 	, nativeDtor(nullptr)
 {
+	location.column = location.line = 0;
 }
 
 const DataType::Member *DataType::FindMember(const StringRef &nname) const

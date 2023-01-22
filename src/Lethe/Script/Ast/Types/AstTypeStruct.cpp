@@ -647,6 +647,7 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 				LETHE_RET_FALSE(it->TypeGen(p));
 
 	dt->attributes = attributes;
+	dt->location = nodes[IDX_NAME]->location;
 
 	if ((qualifiers & AST_Q_NATIVE) && type == AST_STRUCT)
 	{

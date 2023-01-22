@@ -259,6 +259,7 @@ public:
 	HashMap<String, Int> methods;
 	// user-defined attributes (only valid for enums, struct and classes)
 	SharedPtr<Attributes> attributes;
+	TokenLocation location;
 
 	// get complementary pointer type
 	const DataType *GetPointerType(DataTypeEnum dte) const;
