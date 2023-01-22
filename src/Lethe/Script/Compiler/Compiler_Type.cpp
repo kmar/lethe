@@ -253,6 +253,16 @@ AstNode *Compiler::ParseScopeResolution(Int depth)
 	UniquePtr<AstNode> res;
 	LETHE_RET_FALSE(CheckDepth(depth));
 	const Token &t = ts->GetToken();
+
+	if (t.type == TOK_KEY_THIS)
+	{
+		// inline ctor/dtor
+		auto *tnode = currentScope->FindThis();
+		LETHE_RET_FALSE(ExpectPrev(tnode != nullptr, "couldn't find this"));
+		res = NewAstText<AstSymbol>(tnode->name.Ansi(), t.location);
+		return res.Detach();
+	}
+
 	LETHE_RET_FALSE(ExpectPrev(t.type == TOK_IDENT || t.type == TOK_DOUBLE_COLON, "expected identifier or `::`"));
 
 	auto checkTemplate = [&](AstNode *tmp)
@@ -292,12 +302,12 @@ AstNode *Compiler::ParseScopeResolution(Int depth)
 	{
 		ts->ConsumeToken();
 
-		bool dtorName = 0;
+		bool dtorName = false;
 
 		if (ts->PeekToken().type == TOK_NOT)
 		{
 			ts->ConsumeToken();
-			dtorName = 1;
+			dtorName = true;
 		}
 
 		const Token &nt = ts->GetToken();

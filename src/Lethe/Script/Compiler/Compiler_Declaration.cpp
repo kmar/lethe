@@ -1190,6 +1190,7 @@ AstNode *Compiler::ParseQualifiedDecl(ULong qualifiers, Int depth)
 	case TOK_DOUBLE_COLON:
 	case TOK_NOT:
 	case TOK_IDENT:
+	case TOK_KEY_THIS:
 	case TOK_KEY_TYPE_VOID:
 	case TOK_KEY_TYPE_BOOL:
 	case TOK_KEY_TYPE_BYTE:
@@ -1210,7 +1211,13 @@ AstNode *Compiler::ParseQualifiedDecl(ULong qualifiers, Int depth)
 	{
 		UniquePtr<AstNode> tmp;
 
-		if (t.type == TOK_NOT)
+		if (t.type == TOK_KEY_THIS)
+		{
+			tmp = NewAstNode<AstTypeVoid>(t.location);
+			tmp->qualifiers |= AST_Q_CTOR;
+			ts->ConsumeToken();
+		}
+		else if (t.type == TOK_NOT)
 		{
 			tmp = NewAstNode<AstTypeVoid>(t.location);
 			tmp->qualifiers |= AST_Q_DTOR;
