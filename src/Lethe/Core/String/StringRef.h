@@ -17,10 +17,10 @@ public:
 	inline StringRef(const char (&str)[len])
 		: ref(str), refLen((int)len-1), refHash(Hash(str)) {}
 
-	inline StringRef(const String &str) : ref(str.Ansi()), refLen(str.GetLength()), refHash(str.GetStoredHash()) {}
+	LETHE_NOINLINE StringRef(const String &str) : ref(str.Ansi()), refLen(str.GetLength()), refHash(str.GetStoredHash()) {}
 	// explicit
-	explicit inline StringRef(const char *str, int nlen=-1) : ref(str), refLen(nlen < 0 ? (int)StrLen(str) : nlen), refHash(0) {}
-	inline StringRef(const char *str, const char *strEnd) : ref(str), refLen(strEnd ? (int)(strEnd - str) : (int)StrLen(str)),
+	explicit LETHE_NOINLINE StringRef(const char *str, int nlen=-1) : ref(str), refLen(nlen < 0 ? (int)StrLen(str) : nlen), refHash(0) {}
+	LETHE_NOINLINE StringRef(const char *str, const char *strEnd) : ref(str), refLen(strEnd ? (int)(strEnd - str) : (int)StrLen(str)),
 		refHash(0) {}
 
 	String::CharIterator Begin() const;
