@@ -16,7 +16,7 @@ class DelegateVA : public DelegateBase
 		{
 			AddRef();
 		}
-		LambdaStorageBase *Clone()
+		LambdaStorageBase *Clone() override
 		{
 			AddRef();
 			return this;
@@ -33,7 +33,7 @@ class DelegateVA : public DelegateBase
 		{
 			AddRef();
 		}
-		LambdaStorageBase *Clone()
+		LambdaStorageBase *Clone() override
 		{
 			AddRef();
 			return this;
@@ -178,6 +178,13 @@ public:
 	template< typename X > Delegate(const X *ptr, R (X::*cpmem)(P...))
 		: DelegateVA< R, P... >(ptr, cpmem)
 	{
+	}
+
+	template<typename X>
+	inline Delegate &operator =(const X &lam)
+	{
+		this->Set(lam);
+		return *this;
 	}
 
 };
