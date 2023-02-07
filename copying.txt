@@ -1,2 +1,2 @@
-(c) 2016-2022 Martin Sedlák
+(c) 2016-2023 Martin Sedlák
 distributed under the Boost Software License, Version 1.0, see license.txt
