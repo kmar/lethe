@@ -32,6 +32,96 @@ void AstFunc::AddForwardRef(Int handle)
 	forwardRefs.Add(handle);
 }
 
+AstFunc::ResolveResult AstFunc::MoveBody(const ErrorHandler &e, AstNode *targ)
+{
+	// we must have a body
+	if (IDX_BODY >= nodes.GetSize())
+	{
+		e.Error(nodes[IDX_NAME], "function body missing");
+		return RES_ERROR;
+	}
+
+	// const must match
+	if ((targ->qualifiers ^ qualifiers) & AST_Q_CONST)
+	{
+		e.Error(nodes[IDX_NAME], "qualifiers don't match");
+		return RES_ERROR;
+	}
+
+	if (targ->type != AST_FUNC)
+	{
+		e.Error(nodes[IDX_NAME], "invalid method name");
+		return RES_ERROR;
+	}
+
+	if (IDX_BODY < targ->nodes.GetSize())
+	{
+		e.Error(nodes[IDX_NAME], "method already has a body");
+		return RES_ERROR;
+	}
+
+	// TODO: now try to match function signature: all nodes MUST match (sigh)
+
+	targ->nodes[IDX_NAME]->location = nodes[IDX_NAME]->location;
+	targ->location = location;
+
+	// still have to replace all return assignments!
+	AstIterator ai(nodes[IDX_BODY]);
+
+	LETHE_ASSERT(scopeRef && targ->scopeRef);
+
+	while (auto n = ai.Next())
+	{
+		if (n->target == scopeRef->resultPtr)
+		{
+			// remap return
+			n->target = targ->scopeRef->resultPtr;
+		}
+	}
+
+
+	nodes[IDX_BODY]->parent = targ;
+	nodes[IDX_BODY]->scopeRef->parent = targ->nodes[IDX_ARGS]->scopeRef;
+	nodes[IDX_BODY]->scopeRef->node = targ;
+
+	// recheck variable shadowing
+	const auto *sref = nodes[IDX_BODY]->scopeRef;
+
+	StackArray<const NamedScope *, 256> scopeStack;
+
+	scopeStack.Add(sref);
+
+	while (!scopeStack.IsEmpty())
+	{
+		sref = scopeStack.Back();
+		scopeStack.Pop();
+
+		for (auto &&it : sref->scopes)
+			scopeStack.Add(it);
+
+		for (auto &&it : sref->members)
+			if (it.value->type == AST_VAR_DECL)
+				ErrorHandler::CheckShadowing(sref, it.key, it.value, e.onWarning);
+	}
+
+	targ->nodes.Add(nodes[IDX_BODY]);
+	targ->flags &= ~AST_F_RESOLVED;
+	nodes.EraseIndex(IDX_BODY);
+	flags |= AST_F_SKIP_CGEN | AST_F_RESOLVED;
+
+	AstNode *dummy = new AstNode(AST_NONE, location);
+	dummy->flags |= AST_F_RESOLVED;
+	parent->ReplaceChild(this, dummy);
+
+	auto res = RES_MORE;
+
+	if (targ->Resolve(e) == RES_ERROR)
+		res = RES_ERROR;
+
+	delete this;
+	return res;
+}
+
 AstNode::ResolveResult AstFunc::Resolve(const ErrorHandler &e)
 {
 	if (!ResolveNode(e))
@@ -68,92 +158,7 @@ AstNode::ResolveResult AstFunc::Resolve(const ErrorHandler &e)
 
 	if (targ && targ != this)
 	{
-		// we must have a body
-		if (IDX_BODY >= nodes.GetSize())
-		{
-			e.Error(nodes[IDX_NAME], "function body missing");
-			return RES_ERROR;
-		}
-
-		// const must match
-		if ((targ->qualifiers ^ qualifiers) & AST_Q_CONST)
-		{
-			e.Error(nodes[IDX_NAME], "qualifiers don't match");
-			return RES_ERROR;
-		}
-
-		if (targ->type != AST_FUNC)
-		{
-			e.Error(nodes[IDX_NAME], "invalid method name");
-			return RES_ERROR;
-		}
-
-		if (IDX_BODY < targ->nodes.GetSize())
-		{
-			e.Error(nodes[IDX_NAME], "method already has a body");
-			return RES_ERROR;
-		}
-
-		// TODO: now try to match function signature: all nodes MUST match (sigh)
-
-		targ->nodes[IDX_NAME]->location = nodes[IDX_NAME]->location;
-		targ->location = location;
-
-		// still have to replace all return assignments!
-		AstIterator ai(nodes[IDX_BODY]);
-
-		LETHE_ASSERT(scopeRef && targ->scopeRef);
-
-		while (auto n = ai.Next())
-		{
-			if (n->target == scopeRef->resultPtr)
-			{
-				// remap return
-				n->target = targ->scopeRef->resultPtr;
-			}
-		}
-
-
-		nodes[IDX_BODY]->parent = targ;
-		nodes[IDX_BODY]->scopeRef->parent = targ->nodes[IDX_ARGS]->scopeRef;
-		nodes[IDX_BODY]->scopeRef->node = targ;
-
-		// recheck variable shadowing
-		const auto *sref = nodes[IDX_BODY]->scopeRef;
-
-		StackArray<const NamedScope *, 256> scopeStack;
-
-		scopeStack.Add(sref);
-
-		while (!scopeStack.IsEmpty())
-		{
-			sref = scopeStack.Back();
-			scopeStack.Pop();
-
-			for (auto &&it : sref->scopes)
-				scopeStack.Add(it);
-
-			for (auto &&it : sref->members)
-				if (it.value->type == AST_VAR_DECL)
-					ErrorHandler::CheckShadowing(sref, it.key, it.value, e.onWarning);
-		}
-
-		targ->nodes.Add(nodes[IDX_BODY]);
-		targ->flags &= ~AST_F_RESOLVED;
-		nodes.EraseIndex(IDX_BODY);
-		flags |= AST_F_SKIP_CGEN | AST_F_RESOLVED;
-
-		AstNode *dummy = new AstNode(AST_NONE, location);
-		dummy->flags |= AST_F_RESOLVED;
-		parent->ReplaceChild(this, dummy);
-
-		auto res = RES_MORE;
-
-		if (targ->Resolve(e) == RES_ERROR)
-			res = RES_ERROR;
-
-		delete this;
-		return res;
+		return MoveBody(e, targ);
 	}
 
 	return Super::Resolve(e);

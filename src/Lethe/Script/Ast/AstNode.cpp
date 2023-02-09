@@ -186,7 +186,7 @@ AstIterator::AstIterator(AstNode *node)
 		queue.AddBack(node);
 }
 
-AstNode *AstIterator::Next()
+AstNode *AstIterator::Next(Int exclude)
 {
 	AstNode *res;
 
@@ -196,8 +196,9 @@ AstNode *AstIterator::Next()
 		res = queue.Front();
 		queue.PopFront();
 
-		for (Int i=0; i<res->nodes.GetSize(); i++)
-			queue.AddBack(res->nodes[i]);
+		if (res->type != exclude)
+			for (Int i=0; i<res->nodes.GetSize(); i++)
+				queue.AddBack(res->nodes[i]);
 	}
 	while (!Accept(res));
 

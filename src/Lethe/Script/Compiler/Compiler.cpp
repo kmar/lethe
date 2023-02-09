@@ -1042,9 +1042,10 @@ bool Compiler::Resolve(bool ignoreErrors)
 	{
 		eh.onError = onError;
 		eh.onWarning = onWarning;
-
-		LETHE_RET_FALSE(InstantiateTemplates(eh));
 	}
+
+	LETHE_RET_FALSE(MoveExternalFunctions(eh));
+	LETHE_RET_FALSE(InstantiateTemplates(eh));
 
 	Int resolveSteps = 0;
 	bool resolveError = false;

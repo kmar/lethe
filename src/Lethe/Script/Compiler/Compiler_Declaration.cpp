@@ -5,6 +5,63 @@
 namespace lethe
 {
 
+bool Compiler::MoveExternalFunctions(ErrorHandler &eh)
+{
+	AstIterator ait(progList);
+
+	Array<AstNode *> externalFuncs;
+
+	while (auto *node = ait.Next(AST_BLOCK))
+	{
+		if (node->type != AST_FUNC)
+			continue;
+
+		if (AstFunc::IDX_BODY >= node->nodes.GetSize())
+			continue;
+
+		if (node->nodes[AstFunc::IDX_NAME]->type != AST_OP_SCOPE_RES)
+			continue;
+
+		externalFuncs.Add(node);
+	}
+
+	for (auto *n : externalFuncs)
+	{
+		// try to find target
+		const auto &parts = n->nodes[AstFunc::IDX_NAME]->nodes;
+
+		if (parts.IsEmpty())
+			continue;
+
+		auto *cur = n;
+
+		for (auto *it : parts)
+		{
+			LETHE_ASSERT(it->type == AST_IDENT);
+			if (it->type != AST_IDENT)
+				continue;
+
+			auto *ntext = AstStaticCast<AstText *>(it);
+
+			const NamedScope *nscope;
+			auto *nsym = cur->scopeRef->FindSymbolFull(ntext->text, nscope);
+
+			if (!nsym)
+				break;
+
+			cur = nsym;
+		}
+
+		if (cur && cur != n && cur->type == AST_FUNC)
+		{
+			// got func!
+			LETHE_RET_FALSE(AstStaticCast<AstFunc *>(n)->MoveBody(eh, cur) != AstFunc::RES_ERROR);
+		}
+	}
+
+	return true;
+}
+
 AstNode *Compiler::ParseFuncArgsDecl(Int depth)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));

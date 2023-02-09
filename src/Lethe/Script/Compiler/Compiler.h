@@ -300,6 +300,9 @@ private:
 
 	AstNode *AddNativeProp(const char *nname, AstNodeType type);
 
+	// move external functions (bodies) into struct/class scope
+	bool MoveExternalFunctions(ErrorHandler &eh);
+
 	// template support: instantiate templates
 	bool InstantiateTemplates(ErrorHandler &eh);
 

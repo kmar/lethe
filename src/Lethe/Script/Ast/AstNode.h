@@ -239,7 +239,8 @@ class LETHE_API AstIterator
 {
 public:
 	AstIterator(AstNode *node);
-	AstNode *Next();
+	// ast node type to exclude
+	AstNode *Next(Int exclude = -1);
 
 	// override to iterate selected nodes
 	virtual bool Accept(AstNode *node) const;
