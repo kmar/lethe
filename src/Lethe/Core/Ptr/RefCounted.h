@@ -119,7 +119,8 @@ public:
 protected:
 	void ResetRefCounters()
 	{
-		strongRefCount = weakRefCount = 0;
+		strongRefCount = 0;
+		weakRefCount = 0;
 	}
 
 	using CustomDeleterFunc = void(*)(const void *);
