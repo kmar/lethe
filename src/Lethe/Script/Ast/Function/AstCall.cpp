@@ -1,5 +1,6 @@
 #include "AstCall.h"
 #include "AstFunc.h"
+#include "../UnaryOp/AstUnaryRef.h"
 #include "../AstText.h"
 #include "../NamedScope.h"
 #include <Lethe/Script/Program/CompiledProgram.h>
@@ -416,6 +417,36 @@ AstNode *AstCall::GetResolveTarget() const
 
 bool AstCall::TypeGen(CompiledProgram &p)
 {
+	// handle ref ellipsis
+	auto *fntarg = nodes[0]->target;
+
+	if (fntarg && fntarg->type == AST_FUNC)
+	{
+		auto *fn = AstStaticCast<AstFuncBase *>(nodes[0]->target);
+		auto *args = fn->GetArgs();
+
+		// check if ref ellipsis
+		if (args && !args->nodes.IsEmpty() && args->nodes.Back()->type == AST_ARG_ELLIPSIS &&
+			(args->nodes.Back()->qualifiers & AST_Q_REFERENCE))
+		{
+			// first ellipsis argument
+			Int firstEllipsis = args->nodes.GetSize();
+
+			// rewrite args
+			for (Int i=firstEllipsis; i<nodes.GetSize(); i++)
+			{
+				auto *n = nodes[i];
+				auto *nn = new AstUnaryRef(n->location);
+				nn->flags |= AST_F_RESOLVED;
+
+				ReplaceChild(n, nn);
+
+				n->parent = nullptr;
+				nn->Add(n);
+			}
+		}
+	}
+
 	bool res = Super::TypeGen(p);
 
 	Int callArgs = nodes.GetSize()-1;

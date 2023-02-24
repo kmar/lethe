@@ -89,8 +89,16 @@ AstNode *Compiler::ParseFuncArgsDecl(Int depth)
 		if (nt.type == TOK_ELLIPSIS)
 		{
 			// FIXME: not really constant but resolved by default
-			res->Add(NewAstNode<AstConstant>(AST_ARG_ELLIPSIS, nt.location));
+			auto *ellipsis = res->Add(NewAstNode<AstConstant>(AST_ARG_ELLIPSIS, nt.location));
 			ts->ConsumeToken();
+
+			// allow & suffix for special ref-ellipsis where we'll automatically box as arrayref of size 1
+			if (ts->PeekToken().type == TOK_AND)
+			{
+				ts->ConsumeToken();
+				ellipsis->qualifiers |= AST_Q_REFERENCE;
+			}
+
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)`"));
 			break;
 		}

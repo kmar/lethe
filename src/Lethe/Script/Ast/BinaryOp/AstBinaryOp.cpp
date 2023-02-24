@@ -841,6 +841,10 @@ bool AstBinaryOp::CodeGenOperator(CompiledProgram &p)
 
 bool AstBinaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 {
+	// still - want this for structs implying an operator has to be present
+	if (nodes[0]->GetTypeDesc(p).IsStruct() || nodes[1]->GetTypeDesc(p).IsStruct())
+		return CodeGenCommon(p, true);
+
 	// no CodeGenRef for binary operators => was broken previously anyway!
 	return Super::CodeGenRef(p, allowConst, derefPtr);
 /*	(void)allowConst;
