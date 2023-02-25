@@ -503,6 +503,31 @@ AstNode *AstCall::FindFunction(String &fname) const
 	return nodes[0]->FindSymbolNode(fname, tmp);
 }
 
+const AstFuncBase *AstCall::GetFuncBase() const
+{
+	String fname;
+
+	const AstFuncBase *res = nullptr;
+
+	auto *fdef = forceFunc ? forceFunc : FindFunction(fname);
+
+	if (!fdef)
+		return res;
+
+	if (fdef->type != AST_TYPE_FUNC_PTR)
+	{
+		if (fdef->type != AST_FUNC && fdef->type != AST_VAR_DECL)
+			return res;
+
+		if (fdef->type == AST_VAR_DECL)
+			fdef = fdef->parent->nodes[0];
+	}
+
+	res = AstStaticCast<AstFuncBase *>(fdef);
+
+	return res;
+}
+
 bool AstCall::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 {
 	// only allow if returns (non)-const reference
@@ -1230,7 +1255,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		}
 
 		// FIXME: hack? but necessary to avoid leaks
-		FixPointerQualifiers(tdesc, argValue);
+		FixPointerQualifiers(p, tdesc, argValue);
 
 		bool isRef = tdesc.IsReference();
 
@@ -1335,7 +1360,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			argtype.RemoveReference();
 
 			// FIX leaks in ellipsis
-			FixPointerQualifiers(argtype, argValue);
+			FixPointerQualifiers(p, argtype, argValue);
 		}
 
 		if (Endian::IsBig() && !isEllipsis && !argtype.IsReference() && argtype.IsSmallNumber())

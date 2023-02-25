@@ -17,6 +17,7 @@
 #include "Constants/AstEnumItem.h"
 
 #include "Function/AstFunc.h"
+#include "Function/AstCall.h"
 #include "CodeGenTables.h"
 
 #include "NamedScope.h"
@@ -1106,10 +1107,31 @@ AstNode *AstNode::ResolveTemplateScope(AstNode *&) const
 	return nullptr;
 }
 
-void AstNode::FixPointerQualifiers(QDataType &ntype, const AstNode *nnode)
+void AstNode::FixPointerQualifiers(const CompiledProgram &p, QDataType &ntype, const AstNode *nnode)
 {
-	if (ntype.IsPointer() && !ntype.IsReference() && (nnode->type == AST_CALL || nnode->type == AST_NEW))
+	if (!ntype.IsPointer())
+		return;
+
+	if (nnode->type == AST_NEW)
+	{
 		ntype.qualifiers &= ~AST_Q_SKIP_DTOR;
+		return;
+	}
+
+	if (nnode->type == AST_CALL)
+	{
+		auto *fn = AstStaticCast<const AstCall *>(nnode)->GetFuncBase();
+
+		if (!fn)
+			return;
+
+		auto *rn = fn->GetResult();
+
+		auto qt = rn->GetTypeDesc(p);
+
+		if (!qt.IsReference())
+			ntype.qualifiers &= ~AST_Q_SKIP_DTOR;
+	}
 }
 
 DataTypeEnum AstNode::TypeEnumFromNode(const AstNode *n)

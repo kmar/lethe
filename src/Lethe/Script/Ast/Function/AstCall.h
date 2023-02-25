@@ -5,6 +5,8 @@
 namespace lethe
 {
 
+class AstFuncBase;
+
 class LETHE_API AstCall : public AstNode
 {
 	LETHE_BUCKET_ALLOC(AstCall)
@@ -36,6 +38,9 @@ public:
 
 	// arity must be 1 for unary, 2 for binary
 	static bool CallOperator(Int arity, CompiledProgram &p, AstNode *n, AstNode *op, bool isRef = false);
+
+	// get function base node or null on error
+	const AstFuncBase *GetFuncBase() const;
 
 	AstNode *forceFunc;
 

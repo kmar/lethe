@@ -488,7 +488,7 @@ public:
 	Array<AdlResolveData> GetAdlResolveNodes();
 
 	// remove AST_Q_SKIP_DTOR in the case of AST_CALL or AST_NEW
-	static void FixPointerQualifiers(QDataType &ntype, const AstNode *nnode);
+	static void FixPointerQualifiers(const CompiledProgram &p, QDataType &ntype, const AstNode *nnode);
 
 protected:
 	AstNode() {}

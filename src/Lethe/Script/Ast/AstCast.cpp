@@ -40,7 +40,7 @@ QDataType AstCast::GetTypeDesc(const CompiledProgram &p) const
 {
 	auto res = nodes[0]->GetTypeDesc(p);
 	// avoid leaks in cast ... new/call
-	FixPointerQualifiers(res, nodes[1]);
+	FixPointerQualifiers(p, res, nodes[1]);
 	return res;
 }
 
@@ -61,7 +61,7 @@ bool AstCast::CodeGen(CompiledProgram &p)
 		return p.Error(this, "cannot cast to array type");
 
 	// avoid leaks in cast ... new/call
-	FixPointerQualifiers(src, nodes[1]);
+	FixPointerQualifiers(p, src, nodes[1]);
 
 	LETHE_RET_FALSE(p.EmitConv(this, src, dst, false));
 
