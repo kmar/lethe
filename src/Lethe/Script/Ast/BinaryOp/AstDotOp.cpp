@@ -270,6 +270,10 @@ bool AstDotOp::CodeGenInternal(CompiledProgram &p)
 		if (m->offset)
 			p.EmitI24(OPC_AADD_ICONST, m->offset);
 
+		// dereference here
+		if (m->type.IsReference())
+			p.Emit(OPC_PLOADPTR_IMM);
+
 		p.PopStackType(1);
 		return EmitPtrLoad(right->GetTypeDesc(p), p);
 	}

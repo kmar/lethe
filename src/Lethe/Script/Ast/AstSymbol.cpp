@@ -592,6 +592,12 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 
 			if (frameOfs)
 				p.EmitI24(OPC_AADD_ICONST, frameOfs);
+
+			if (dt.IsStruct() && dt.IsReference())
+			{
+				// must dereference member struct
+				p.Emit(OPC_PLOADPTR_IMM);
+			}
 		}
 
 		if (dt.IsArray())
