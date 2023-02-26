@@ -25,7 +25,7 @@ bool AstBinaryAssign::CodeGenMaybeConst(CompiledProgram &p, bool allowConst)
 	QDataType dt = nodes[1]->GetTypeDesc(p);
 
 	// prefer refs if possible for structs
-	if (dt.IsStruct() && !dt.IsReference() && !dt.IsPointer() && nodes[1]->CanPassByReference(p))
+	if (dt.IsStruct() && (dt.IsReference() || (!dt.IsReference() && nodes[1]->CanPassByReference(p))))
 		LETHE_RET_FALSE(nodes[1]->CodeGenRef(p, true));
 	else
 		LETHE_RET_FALSE(nodes[1]->CodeGen(p));
