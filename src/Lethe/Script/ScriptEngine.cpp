@@ -180,6 +180,11 @@ nodiscard native name class_name_from_delegate(void delegate() dg);
 // note: doesn't work for struct delegates, also: the name is not fully qualified!
 nodiscard native string func_name_from_delegate(void delegate() dg);
 
+// class name helpers
+// returns true if class name test is derived from n
+nodiscard native static bool class_name_is(name test, name n);
+nodiscard native static bool class_name_is_anyof(name test, const name[] n);
+
 namespace __int
 {
 	nodiscard inline noinit int abs(int x) {return x < 0 ? -x : x;}

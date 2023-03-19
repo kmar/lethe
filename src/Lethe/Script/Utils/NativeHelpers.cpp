@@ -1587,6 +1587,39 @@ static void natIsNullStruct(Stack &stk)
 	ap.Get<bool>() = stk.GetProgram().nullStructTypeHash.FindIndex(tname) >= 0;
 }
 
+static void natClassNameIs(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto tname = ap.Get<Name>();
+	auto basename = ap.Get<Name>();
+	auto *cls = stk.GetProgram().FindClass(tname);
+	ap.Get<bool>() = cls && cls->IsA(basename);
+}
+
+static void natClassNameIsAnyOf(Stack &stk)
+{
+	ArgParser ap(stk);
+	auto tname = ap.Get<Name>();
+	const auto &basename = ap.Get<ArrayRef<Name>>();
+	auto &res = ap.Get<bool>();
+
+	res = false;
+
+	auto *cls = stk.GetProgram().FindClass(tname);
+
+	if (!cls)
+		return;
+
+	for (auto it : basename)
+	{
+		if (cls->IsA(it))
+		{
+			res = true;
+			break;
+		}
+	}
+}
+
 void NativeHelpers::Init(CompiledProgram &p)
 {
 	p.cpool.BindNativeFunc("decode_utf8", native_decodeUtf8);
@@ -1642,6 +1675,10 @@ void NativeHelpers::Init(CompiledProgram &p)
 	// state helpers:
 	p.cpool.BindNativeFunc("class_name_from_delegate", native_classNameFromDelegate);
 	p.cpool.BindNativeFunc("func_name_from_delegate", native_funcNameFromDelegate);
+
+	// class name helpers:
+	p.cpool.BindNativeFunc("class_name_is", natClassNameIs);
+	p.cpool.BindNativeFunc("class_name_is_anyof", natClassNameIsAnyOf);
 
 	// callstack:
 	p.cpool.BindNativeFunc("callstack", natCallstack);
