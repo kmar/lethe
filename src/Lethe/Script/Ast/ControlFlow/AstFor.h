@@ -21,7 +21,7 @@ public:
 	static bool CodeGenCommon(NamedScope *nscopeRef, CompiledProgram &p, ArrayRef<AstNode *> nnodes);
 
 private:
-	bool ConvertRangeBasedFor(const ErrorHandler &p, bool isStruct);
+	bool ConvertRangeBasedFor(const ErrorHandler &p, AstNodeType itertype);
 };
 
 

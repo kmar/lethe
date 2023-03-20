@@ -20,8 +20,11 @@ namespace lethe
 
 // AstFor
 
-bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, bool isStruct)
+bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, AstNodeType itertype)
 {
+	const bool isStruct = itertype == AST_STRUCT;
+	const bool isString = itertype == AST_TYPE_STRING;
+
 	// optional nobreak node
 	LETHE_ASSERT(nodes.GetSize() == 4 || nodes.GetSize() == 5);
 
@@ -121,10 +124,33 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, bool isStruct)
 	ocond->nodes[1] = oprhs;
 	oprhs->parent = ocond;
 
-	const StringRef size = "size";
-	auto *sizeSym = new AstSymbol(p.AddString(size), ocond->location);
-	oprhs->Add(sizeSym);
-	sizeSym->scopeRef = arr->scopeRef;
+	if (isString)
+	{
+		const StringRef length = "length";
+
+		auto *sizeCall = new AstCall(ocond->location);
+
+		auto *sizeSym = new AstSymbol(p.AddString(length), ocond->location);
+
+		oprhs->Add(sizeSym);
+
+		sizeSym->scopeRef = arr->scopeRef;
+
+		sizeCall->scopeRef = oprhs->scopeRef;
+
+		ocond->UnbindNode(1);
+		sizeCall->Add(oprhs);
+
+		ocond->nodes[1] = sizeCall;
+		sizeCall->parent = ocond;
+	}
+	else
+	{
+		const StringRef size = "size";
+		auto *sizeSym = new AstSymbol(p.AddString(size), ocond->location);
+		oprhs->Add(sizeSym);
+		sizeSym->scopeRef = arr->scopeRef;
+	}
 
 	// last thing we need to do: replace body with new block and define a reference
 	// this will be tricky, but...
@@ -280,8 +306,9 @@ bool AstFor::ResolveNode(const ErrorHandler &e)
 			case AST_TYPE_ARRAY_REF:
 			case AST_TYPE_ARRAY:
 			case AST_STRUCT:
+			case AST_TYPE_STRING:
 				// turn this into iteration...
-				LETHE_RET_FALSE(ConvertRangeBasedFor(e, tnode->type == AST_STRUCT));
+				LETHE_RET_FALSE(ConvertRangeBasedFor(e, tnode->type));
 				break;
 
 			default:;
