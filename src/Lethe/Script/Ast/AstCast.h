@@ -18,6 +18,8 @@ public:
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 	bool CodeGen(CompiledProgram &p) override;
 	const AstNode *GetTypeNode() const override;
+
+	AstNode *GetResolveTarget() const override;
 };
 
 }

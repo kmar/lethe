@@ -44,6 +44,11 @@ QDataType AstCast::GetTypeDesc(const CompiledProgram &p) const
 	return res;
 }
 
+AstNode *AstCast::GetResolveTarget() const
+{
+	return nodes[0]->GetResolveTarget();
+}
+
 bool AstCast::CodeGen(CompiledProgram &p)
 {
 	if (nodes.GetSize() != 2)
