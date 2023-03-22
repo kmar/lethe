@@ -639,9 +639,14 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 			UniquePtr<AstNode> typedefRoot = NewAstNode<AstNode>(AST_BLOCK, res->location);
 			typedefRoot->flags |= AST_F_RESOLVED;
 
+			// give a sane error message here rather than failing later with a cryptic resolve error
+			// we don't support this and won't - for simplicity
+			LETHE_RET_FALSE(ExpectPrev(res->nodes[0]->type != AST_TYPE_AUTO, "auto not allowed for state vars"));
+
 			for (Int i=1; i<res->nodes.GetSize(); i++)
 			{
 				auto *vd = AstStaticCast<AstVarDecl *>(res->nodes[i]);
+
 				// initializer must be injected as assignment for state vars to behave a bit more like locals
 				auto *ini = vd->nodes.GetSize() > 1 ? vd->nodes[1] : nullptr;
 				vd->qualifiers &= ~AST_Q_LOCAL_INT;

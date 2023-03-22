@@ -282,14 +282,19 @@ AstNode *Compiler::ParseStatement(Int depth)
 			//		(actually, no support for iterating custom containers like maps/sets!)
 			// x? doesn't work for enums (actually, this may be desired as we don't know where to start, enum-init works though)
 
-			if (initExpr->type == AST_IDENT || initExpr->type == AST_OP_ASSIGN)
+			// note: AST_BLOCK is hacky because of state vars
+			if (initExpr->type == AST_IDENT || initExpr->type == AST_OP_ASSIGN || initExpr->type == AST_BLOCK)
 			{
 				const bool initialized = initExpr->type == AST_OP_ASSIGN;
+				const bool state_var_block = initExpr->type == AST_BLOCK;
 
 				if (initialized)
 					LETHE_RET_FALSE(ExpectPrev(initExpr->nodes[0]->type == AST_IDENT, "invalid range based for"));
 
-				AstNode *sym = initialized ? initExpr->nodes[0] : initExpr.Get();
+				if (state_var_block)
+					LETHE_RET_FALSE(ExpectPrev(!initExpr->nodes.IsEmpty() && initExpr->nodes.Back()->type == AST_TYPEDEF, "invalid range based for"));
+
+				AstNode *sym = initialized ? initExpr->nodes[0] : state_var_block ? initExpr->nodes.Back()->nodes[1] : initExpr.Get();
 
 				cond = NewAstNode<AstBinaryOp>(AST_OP_LT, initExpr->location);
 				auto *cmpop = cond.Get();
@@ -312,12 +317,30 @@ AstNode *Compiler::ParseStatement(Int depth)
 					auto *tmp = initExpr.Get();
 
 					auto *asgn = NewAstNode<AstBinaryAssign>(initExpr->location);
-					asgn->parent = initExpr->parent;
-					initExpr->parent = nullptr;
-					asgn->Add(initExpr.Detach());
-					asgn->Add(NewAstNode<AstConstInt>(tmp->location));
 
-					initExpr = asgn;
+					if (state_var_block)
+					{
+						if (initExpr->nodes.GetSize() < 2)
+						{
+							// note: cloning sym here won't work
+							auto *csym = initExpr->nodes[0]->nodes[0]->Clone();
+
+							asgn->scopeRef = initExpr->scopeRef;
+							asgn->Add(csym);
+							asgn->Add(NewAstNode<AstConstInt>(tmp->location));
+							initExpr->Add(asgn);
+						}
+						else
+							delete asgn;
+					}
+					else
+					{
+						asgn->parent = initExpr->parent;
+						initExpr->parent = nullptr;
+						asgn->Add(initExpr.Detach());
+						asgn->Add(NewAstNode<AstConstInt>(tmp->location));
+						initExpr = asgn;
+					}
 				}
 			}
 			else
