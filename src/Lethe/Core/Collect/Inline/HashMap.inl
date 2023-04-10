@@ -250,7 +250,7 @@ inline typename HashMap<K,V,S,A>::Iterator HashMap<K,V,S,A>::Find(const KT &key)
 
 template<typename K, typename V, typename S, typename A>
 template< typename KT >
-S HashMap<K,V,S,A>::FindKey(const KT &key) const
+LETHE_NOINLINE S HashMap<K,V,S,A>::FindKey(const KT &key) const
 {
 	S sz = this->table.GetSize();
 

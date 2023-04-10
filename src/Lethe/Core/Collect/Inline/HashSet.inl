@@ -393,7 +393,7 @@ S HashSet<K, S, A>::GetNumCollisions() const
 
 template<typename K, typename S, typename A>
 template< typename KT >
-typename HashSet<K, S, A>::ConstIterator HashSet<K, S, A>::Find(const KT &key) const
+LETHE_NOINLINE typename HashSet<K, S, A>::ConstIterator HashSet<K, S, A>::Find(const KT &key) const
 {
 	S sz = table.GetSize();
 
@@ -423,7 +423,7 @@ typename HashSet<K, S, A>::ConstIterator HashSet<K, S, A>::Find(const KT &key) c
 
 template<typename K, typename S, typename A>
 template< typename KT >
-typename HashSet<K, S, A>::Iterator HashSet<K, S, A>::Find(const KT &key)
+LETHE_NOINLINE typename HashSet<K, S, A>::Iterator HashSet<K, S, A>::Find(const KT &key)
 {
 	S sz = table.GetSize();
 
