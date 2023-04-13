@@ -120,12 +120,15 @@ bool AstTernaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr
 	// true branch
 	LETHE_RET_FALSE(nodes[1]->CodeGenRef(p, allowConst, derefPtr));
 
+	QDataType firstType;
+
 	if (!voidExpr)
 	{
 		if (p.exprStack.IsEmpty())
 			return p.Error(nodes[1], "true expression must return a value");
 
 		p.EmitConv(this, dt0, QDataType::MakeQType(dst, dstq));
+		firstType = p.exprStack.Back();
 		p.PopStackType(1);
 	}
 
@@ -146,7 +149,7 @@ bool AstTernaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr
 	LETHE_RET_FALSE(p.FixupForwardTarget(fwd2));
 
 	if (!voidExpr)
-		p.PushStackType(QDataType::MakeType(dst));
+		p.PushStackType(QDataType::MakeQType(dst, dstq | (firstType.qualifiers & AST_Q_REFERENCE)));
 
 	return true;
 }
