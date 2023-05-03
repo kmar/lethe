@@ -8,10 +8,10 @@
 namespace lethe
 {
 
-extern const Float FLOAT_INFINITY;
-extern const Float FLOAT_NAN;
-extern const Double DOUBLE_INFINITY;
-extern const Double DOUBLE_NAN;
+extern const Float  LETHE_API FLOAT_INFINITY;
+extern const Float  LETHE_API FLOAT_NAN;
+extern const Double LETHE_API DOUBLE_INFINITY;
+extern const Double LETHE_API DOUBLE_NAN;
 
 static inline void Limits_Dummy_Twos_Complement_Validator___()
 {
