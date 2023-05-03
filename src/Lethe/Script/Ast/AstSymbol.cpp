@@ -556,7 +556,7 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 
 	const auto dte = dt.GetTypeEnum();
 
-	LETHE_ASSERT(dt.GetType().type > DT_NONE && dt.GetType().type <= DT_STRING || dte == DT_DELEGATE ||
+	LETHE_ASSERT((dt.GetType().type > DT_NONE && dt.GetType().type <= DT_STRING) || dte == DT_DELEGATE ||
 				dt.GetType().IsArray() || dt.GetType().IsStruct() || dt.GetType().IsPointer());
 
 	bool isStatic = (qualifiers & AST_Q_STATIC) != 0;
