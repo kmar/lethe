@@ -1035,7 +1035,7 @@ int String::FindOneOf(const String &str, int pos) const
 
 int String::ReverseFind(wchar_t ch) const
 {
-	LETHE_ASSERT(ch >= 0 && ch <= 127);
+	LETHE_ASSERT((UInt)ch <= 127);
 
 	const char *c = Ansi();
 	const char *ce = c + GetLength();
@@ -1235,7 +1235,7 @@ int String::Remove(wchar_t ch)
 	if (!l)
 		return 0;
 
-	LETHE_ASSERT(ch >= 0 && ch <= 127);
+	LETHE_ASSERT((UInt)ch <= 127);
 
 	CloneData();
 
