@@ -43,7 +43,7 @@ inline bool String::CharIterator::operator !=(const CharIterator &o) const
 	return ptr != o.ptr;
 }
 
-inline String::CharIterator &String::CharIterator::operator ++(int)
+inline String::CharIterator String::CharIterator::operator ++(int)
 {
 	CharIterator tmp(*this);
 	return ++tmp;

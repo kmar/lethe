@@ -114,7 +114,7 @@ public:
 	}
 
 	// stable version, to be used for serialization
-	friend UInt StableHash(const Name &n);
+	friend UInt LETHE_API StableHash(const Name &n);
 
 	inline Name &Clear()
 	{

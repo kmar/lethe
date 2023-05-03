@@ -55,7 +55,7 @@ public:
 	~String();
 
 	// char iterator
-	struct CharIterator
+	struct LETHE_API CharIterator
 	{
 		const Byte *ptr;
 		const Byte *top;
@@ -75,7 +75,7 @@ public:
 		}
 
 		CharIterator &operator ++();
-		inline CharIterator &operator ++(int);
+		inline CharIterator operator ++(int);
 	};
 
 	CharIterator Begin() const;
@@ -191,9 +191,9 @@ public:
 	String operator +(const String &str) const;
 
 	// add character and string
-	friend String operator +(wchar_t w, const String &str1);
+	friend String LETHE_API operator +(wchar_t w, const String &str1);
 	// add C string and string
-	friend String operator +(const char *str0, const String &str1);
+	friend String LETHE_API operator +(const char *str0, const String &str1);
 
 	// methods
 
