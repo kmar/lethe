@@ -859,6 +859,8 @@ bool AstBinaryOp::CodeGen(CompiledProgram &p)
 
 bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 {
+	// FIXME: this optimization is dangerous if sideeffects are involved => disabled for now
+#if 0
 	auto comm = IsCommutative(p);
 
 	if (comm)
@@ -869,6 +871,7 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 			Swap(nodes[0], nodes[1]);
 		}
 	}
+#endif
 
 	// apply binary op on top of program exprStack
 	// FIXME: very crude for testing; note that we must convert both to compatible types;
