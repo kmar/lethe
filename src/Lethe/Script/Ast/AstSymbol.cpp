@@ -108,7 +108,7 @@ bool AstSymbol::ResolveAutoStructLiteral()
 		}
 	}
 
-	const auto *fn = call->nodes[0]->target;
+	const auto *fn = call->nodes[0]->GetResolveTarget();
 
 	LETHE_RET_FALSE(fn && argIdx >= 0);
 
