@@ -88,10 +88,65 @@ Int AstSymbol::ToBoolConstant(const CompiledProgram &p)
 	return cnode->ToBoolConstant(p);
 }
 
+bool AstSymbol::ResolveAutoStructLiteral()
+{
+	auto *slit = parent;
+	// it's struct literal passed to a function call!
+	auto *call = parent->parent ? parent->parent : nullptr;
+
+	LETHE_RET_FALSE(call->type == AST_CALL);
+
+	// find arg index
+	Int argIdx = -1;
+
+	for (Int i=1; i<call->nodes.GetSize(); i++)
+	{
+		if (call->nodes[i] == slit)
+		{
+			argIdx = i-1;
+			break;
+		}
+	}
+
+	const auto *fn = call->nodes[0]->target;
+
+	LETHE_RET_FALSE(fn && argIdx >= 0);
+
+	if (fn->type != AST_FUNC)
+		fn = fn->GetTypeNode();
+
+	LETHE_RET_FALSE(fn->type == AST_FUNC || fn->type == AST_TYPE_DELEGATE || fn->type == AST_TYPE_FUNC_PTR);
+
+	auto *func = AstStaticCast<const AstFuncBase *>(fn);
+	auto *args = func->GetArgs();
+
+	LETHE_RET_FALSE(args && IsValidArrayIndex(argIdx, args->nodes.GetSize()));
+
+	auto *arg = args->nodes[argIdx];
+
+	LETHE_RET_FALSE(arg->nodes.GetSize() > 0 && arg->nodes[0]);
+
+	auto *targType = arg->nodes[0]->target;
+
+	LETHE_RET_FALSE(targType);
+
+	flags |= AST_F_RESOLVED;
+	target = targType;
+
+	return true;
+}
+
 bool AstSymbol::ResolveNode(const ErrorHandler &e)
 {
 	if (target)
 		return true;
+
+	if (parent && parent->type == AST_STRUCT_LITERAL && text.IsEmpty())
+	{
+		// auto struct literal
+		ResolveAutoStructLiteral();
+		return true;
+	}
 
 	// look up scope!
 	LETHE_ASSERT(scopeRef);

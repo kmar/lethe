@@ -47,6 +47,8 @@ public:
 private:
 	bool Validate(const CompiledProgram &) const;
 	bool CodeGenInternal(CompiledProgram &p);
+
+	bool ResolveAutoStructLiteral();
 };
 
 
