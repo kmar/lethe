@@ -76,6 +76,24 @@ AstNode *Compiler::ParseNoBreakStatement(Int depth)
 	return ParseStatement(depth);
 }
 
+AstNode *Compiler::ParseAnonStructLiteral(Int depth)
+{
+	auto loc = ts->PeekToken().location;
+	auto il = ParseInitializerList(depth+1);
+	LETHE_RET_FALSE(il);
+	AstNode *tmp = NewAstNode<AstStructLiteral>(loc);
+
+	if (il->nodes.IsEmpty())
+		il->flags |= AST_F_RESOLVED;
+
+	// the tricky part is how to resolve this
+	auto *sname = NewAstText<AstSymbol>("", loc);
+
+	tmp->Add(sname);
+	tmp->Add(il);
+	return tmp;
+}
+
 AstNode *Compiler::ParseStatement(Int depth)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
@@ -120,7 +138,11 @@ AstNode *Compiler::ParseStatement(Int depth)
 			break;
 		}
 
-		UniquePtr<AstNode> tmp = ParseExpression(depth+1);
+		// try anonymous struct literal
+		UniquePtr<AstNode> tmp = ts->PeekToken().type == TOK_LBLOCK ?
+			ParseAnonStructLiteral(depth+1) :
+			ParseExpression(depth+1);
+
 		LETHE_RET_FALSE(tmp);
 
 		NamedScope *s = currentScope;

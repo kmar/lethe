@@ -116,30 +116,12 @@ AstNode *Compiler::ParsePriority2Operators(Int depth, UniquePtr<AstNode> &first)
 					}
 				}
 
-				AstNode *tmp;
-
 				// try anonymous struct literal
-				if (ts->PeekToken().type == TOK_LBLOCK)
-				{
-					auto loc = ts->PeekToken().location;
-					auto il = ParseInitializerList(depth+1);
-					LETHE_RET_FALSE(il);
-					tmp = NewAstNode<AstStructLiteral>(loc);
+				AstNode *tmp = ts->PeekToken().type == TOK_LBLOCK ?
+					ParseAnonStructLiteral(depth+1) :
+					ParseAssignExpression(depth+1);
 
-					if (il->nodes.IsEmpty())
-						il->flags |= AST_F_RESOLVED;
-
-					// the tricky part is how to resolve this
-					auto *sname = NewAstText<AstSymbol>("", loc);
-
-					tmp->Add(sname);
-					tmp->Add(il);
-				}
-				else
-				{
-					tmp = ParseAssignExpression(depth+1);
-					LETHE_RET_FALSE(tmp);
-				}
+				LETHE_RET_FALSE(tmp);
 
 				fcall->Add(tmp);
 				tt = ts->PeekToken().type;

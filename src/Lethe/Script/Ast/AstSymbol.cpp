@@ -94,6 +94,21 @@ bool AstSymbol::ResolveAutoStructLiteral()
 	// it's struct literal passed to a function call!
 	auto *call = parent->parent ? parent->parent : nullptr;
 
+	if (call->type == AST_RETURN)
+	{
+		LETHE_RET_FALSE(call->scopeRef);
+		auto *fn = call->scopeRef->node;
+		LETHE_RET_FALSE(fn && fn->type == AST_FUNC);
+		auto *func = AstStaticCast<AstFuncBase *>(fn);
+		const auto *res = func->GetResult();
+		LETHE_ASSERT(res);
+
+		flags |= AST_F_RESOLVED;
+		target = const_cast<AstNode *>(res);
+
+		return true;
+	}
+
 	LETHE_RET_FALSE(call->type == AST_CALL);
 
 	// find arg index

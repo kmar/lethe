@@ -271,6 +271,8 @@ private:
 
 	AstNode *ParseStaticAssert(Int depth = 0);
 
+	AstNode *ParseAnonStructLiteral(Int depth);
+
 	AstNode *NewAstType(TokenType tt, const TokenLocation &nloc) const;
 
 	// echoes false
