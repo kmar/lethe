@@ -761,10 +761,25 @@ AstNode *Compiler::ParseInitializerList(Int depth)
 		// we can have either nested initializer or assign expr
 		TokenType tt = ts->PeekToken().type;
 
-		if (tt == TOK_DOT)
+		// note: we support both C-style designators and direct assignment-based designators (sexier!);
+		// for assignment expressions you have to use parentheses if you must
+
+		bool isDesignator = tt == TOK_DOT;
+
+		if (isDesignator)
+		{
+			ts->ConsumeToken();
+		}
+		else if (tt == TOK_IDENT)
+		{
+			ts->GetToken();
+			isDesignator = ts->PeekToken().type == TOK_EQ;
+			ts->UngetToken(1);
+		}
+
+		if (isDesignator)
 		{
 			// designator
-			ts->ConsumeToken();
 			const auto &dname = ts->GetToken();
 			LETHE_RET_FALSE(ExpectPrev(dname.type == TOK_IDENT, "expected identifier"));
 			const auto &dstr = AddString(dname.text);
@@ -772,6 +787,7 @@ AstNode *Compiler::ParseInitializerList(Int depth)
 			if (ts->PeekToken().type != TOK_EQ)
 			{
 				// not a designator - could be context-dependent enum class symbol
+				// note: at this point we know it's a C-style designator, so unget(2) is fine
 				ts->UngetToken(2);
 			}
 			else
