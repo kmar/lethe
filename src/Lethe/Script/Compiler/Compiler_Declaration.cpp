@@ -134,8 +134,11 @@ AstNode *Compiler::ParseFuncArgsDecl(Int depth)
 		if (ts->PeekToken().type == TOK_EQ)
 		{
 			ts->ConsumeToken();
+
 			// FIXME: really assign expr?!
-			argInit = ParseAssignExpression(depth+1);
+			argInit = ts->PeekToken().type == TOK_LBLOCK ?
+				ParseAnonStructLiteral(depth+1) : ParseAssignExpression(depth+1);
+
 			LETHE_RET_FALSE(argInit);
 		}
 

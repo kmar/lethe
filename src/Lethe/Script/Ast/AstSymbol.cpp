@@ -107,12 +107,14 @@ bool AstSymbol::ResolveAutoStructLiteral()
 	case AST_OP_AND_ASSIGN:
 	case AST_OP_XOR_ASSIGN:
 	case AST_OP_OR_ASSIGN:
+	case AST_ARG:
 		target = const_cast<AstNode *>(maybeCall->nodes[0]->GetTypeNode());
 
 		if (target)
 			flags |= AST_F_RESOLVED;
 
 		return true;
+
 	default:;
 	}
 
