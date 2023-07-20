@@ -4,6 +4,7 @@
 #include "../AstExpr.h"
 #include <Lethe/Script/Ast/ControlFlow/AstReturn.h>
 #include <Lethe/Script/Ast/AstSymbol.h>
+#include <Lethe/Script/Ast/AstStructLiteral.h>
 #include <Lethe/Script/Ast/BinaryOp/AstBinaryAssignAllowConst.h>
 #include <Lethe/Script/Program/CompiledProgram.h>
 #include <Lethe/Script/Vm/Stack.h>
@@ -338,6 +339,28 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 
 			asgn->Add(resIdent);
 			expr->parent = nullptr;
+
+			if (expr->type == AST_INITIALIZER_LIST)
+			{
+				// check for anonymous struct
+				auto *tn = resIdent->GetTypeNode();
+				if (tn && tn->type == AST_STRUCT)
+				{
+					// synthesize anonymous struct literal
+
+					AstNode *slit = new AstStructLiteral(expr->location);
+
+					// the tricky part is how to resolve this
+					auto *sname = new AstSymbol("", expr->location);
+					sname->target = const_cast<AstNode *>(tn);
+
+					slit->Add(sname);
+					slit->Add(expr);
+
+					expr = slit;
+				}
+			}
+
 			asgn->Add(expr);
 			n->nodes.Resize(ofs+1);
 
