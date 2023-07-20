@@ -1124,15 +1124,15 @@ AstNode *Compiler::ParseAssignExpression(Int depth)
 			break;
 
 		default:
-			;
 			return res.Detach();
 		}
 
 		TokenLocation nloc = t.location;
 		ts->ConsumeToken();
-		UniquePtr<AstNode> tmp = ntype == AST_OP_TERNARY ? ParseExpression(depth+1) : ParseLOrExpression(depth+1);
+		UniquePtr<AstNode> tmp = ntype == AST_OP_TERNARY ? ParseExpression(depth+1) :
+			ts->PeekToken().type == TOK_LBLOCK ? ParseAnonStructLiteral(depth+1) :  ParseLOrExpression(depth+1);
 		LETHE_RET_FALSE(tmp);
-		AstNode *tmp2 = 0;
+		AstNode *tmp2 = nullptr;
 
 		if (ntype == AST_OP_TERNARY)
 		{

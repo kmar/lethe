@@ -91,13 +91,35 @@ Int AstSymbol::ToBoolConstant(const CompiledProgram &p)
 bool AstSymbol::ResolveAutoStructLiteral()
 {
 	auto *slit = parent;
-	// it's struct literal passed to a function call!
-	auto *call = parent->parent ? parent->parent : nullptr;
+	// it's struct literal passed to a function call (or something else, actually)!
+	auto *maybeCall = parent->parent ? parent->parent : nullptr;
 
-	if (call->type == AST_RETURN)
+	switch(maybeCall->type)
 	{
-		LETHE_RET_FALSE(call->scopeRef);
-		auto *fn = call->scopeRef->node;
+	case AST_OP_ASSIGN:
+	case AST_OP_ADD_ASSIGN:
+	case AST_OP_SUB_ASSIGN:
+	case AST_OP_MUL_ASSIGN:
+	case AST_OP_DIV_ASSIGN:
+	case AST_OP_MOD_ASSIGN:
+	case AST_OP_SHL_ASSIGN:
+	case AST_OP_SHR_ASSIGN:
+	case AST_OP_AND_ASSIGN:
+	case AST_OP_XOR_ASSIGN:
+	case AST_OP_OR_ASSIGN:
+		target = const_cast<AstNode *>(maybeCall->nodes[0]->GetTypeNode());
+
+		if (target)
+			flags |= AST_F_RESOLVED;
+
+		return true;
+	default:;
+	}
+
+	if (maybeCall->type == AST_RETURN)
+	{
+		LETHE_RET_FALSE(maybeCall->scopeRef);
+		auto *fn = maybeCall->scopeRef->node;
 		LETHE_RET_FALSE(fn && fn->type == AST_FUNC);
 		auto *func = AstStaticCast<AstFuncBase *>(fn);
 		const auto *res = func->GetResult();
@@ -109,21 +131,21 @@ bool AstSymbol::ResolveAutoStructLiteral()
 		return true;
 	}
 
-	LETHE_RET_FALSE(call->type == AST_CALL);
+	LETHE_RET_FALSE(maybeCall->type == AST_CALL);
 
 	// find arg index
 	Int argIdx = -1;
 
-	for (Int i=1; i<call->nodes.GetSize(); i++)
+	for (Int i=1; i<maybeCall->nodes.GetSize(); i++)
 	{
-		if (call->nodes[i] == slit)
+		if (maybeCall->nodes[i] == slit)
 		{
 			argIdx = i-1;
 			break;
 		}
 	}
 
-	const auto *fn = call->nodes[0]->GetResolveTarget();
+	const auto *fn = maybeCall->nodes[0]->GetResolveTarget();
 
 	LETHE_RET_FALSE(fn && argIdx >= 0);
 
