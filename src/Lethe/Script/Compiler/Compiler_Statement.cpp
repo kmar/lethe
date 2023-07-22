@@ -94,6 +94,57 @@ AstNode *Compiler::ParseAnonStructLiteral(Int depth)
 	return tmp;
 }
 
+bool Compiler::ParseReturn(Int depth, UniquePtr<AstNode> &res)
+{
+	if (ts->PeekToken().type == TOK_SEMICOLON)
+	{
+		ts->ConsumeToken();
+		res->flags |= AST_F_RESOLVED;
+		return true;
+	}
+
+	// try anonymous struct literal
+	UniquePtr<AstNode> tmp = ts->PeekToken().type == TOK_LBLOCK ?
+		ParseAnonStructLiteral(depth+1) :
+		ParseExpression(depth+1);
+
+	LETHE_RET_FALSE(tmp);
+
+	NamedScope *s = currentScope;
+
+	while (s->type != NSCOPE_ARGS)
+	{
+		s = s->parent;
+		LETHE_ASSERT(s);
+	}
+
+	if (tmp->type == AST_STRUCT_LITERAL)
+	{
+		tmp->flags |= AST_F_NRVO;
+		tmp->target = s->resultPtr;
+	}
+	else
+	{
+		AstNode *asgn = NewAstNode<AstBinaryAssign>(res->location);
+		asgn->qualifiers |= AST_Q_CAN_MODIFY_CONSTANT;
+		AstNode *resIdent = NewAstText<AstSymbol>("", res->location);
+		resIdent->flags |= AST_F_RESOLVED;
+		resIdent->qualifiers |= AST_Q_CAN_MODIFY_CONSTANT;
+
+		resIdent->target = s->resultPtr;
+		resIdent->qualifiers |= AST_Q_LOCAL_INT;
+		asgn->Add(resIdent);
+		asgn->Add(tmp.Detach());
+		// add virtual expr node, helps peephole optimizer
+		tmp = NewAstNode<AstExpr>(res->location);
+		tmp->Add(asgn);
+	}
+
+	ts->ConsumeTokenIf(TOK_SEMICOLON);
+	res->Add(tmp.Detach());
+	return true;
+}
+
 AstNode *Compiler::ParseStatement(Int depth)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
@@ -131,52 +182,7 @@ AstNode *Compiler::ParseStatement(Int depth)
 		res = NewAstNode<AstReturn>(nt.location);
 		ts->ConsumeToken();
 
-		if (ts->PeekToken().type == TOK_SEMICOLON)
-		{
-			ts->ConsumeToken();
-			res->flags |= AST_F_RESOLVED;
-			break;
-		}
-
-		// try anonymous struct literal
-		UniquePtr<AstNode> tmp = ts->PeekToken().type == TOK_LBLOCK ?
-			ParseAnonStructLiteral(depth+1) :
-			ParseExpression(depth+1);
-
-		LETHE_RET_FALSE(tmp);
-
-		NamedScope *s = currentScope;
-
-		while (s->type != NSCOPE_ARGS)
-		{
-			s = s->parent;
-			LETHE_ASSERT(s);
-		}
-
-		if (tmp->type == AST_STRUCT_LITERAL)
-		{
-			tmp->flags |= AST_F_NRVO;
-			tmp->target = s->resultPtr;
-		}
-		else
-		{
-			AstNode *asgn = NewAstNode<AstBinaryAssign>(res->location);
-			asgn->qualifiers |= AST_Q_CAN_MODIFY_CONSTANT;
-			AstNode *resIdent = NewAstText<AstSymbol>("", res->location);
-			resIdent->flags |= AST_F_RESOLVED;
-			resIdent->qualifiers |= AST_Q_CAN_MODIFY_CONSTANT;
-
-			resIdent->target = s->resultPtr;
-			resIdent->qualifiers |= AST_Q_LOCAL_INT;
-			asgn->Add(resIdent);
-			asgn->Add(tmp.Detach());
-			// add virtual expr node, helps peephole optimizer
-			tmp = NewAstNode<AstExpr>(res->location);
-			tmp->Add(asgn);
-		}
-
-		ts->ConsumeTokenIf(TOK_SEMICOLON);
-		res->Add(tmp.Detach());
+		LETHE_RET_FALSE(ParseReturn(depth+1, res));
 	}
 	break;
 
@@ -600,7 +606,7 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 	LETHE_RET_FALSE(CheckDepth(depth));
 
 	NamedScopeGuard nsg(this, currentScope->Add(new NamedScope(isFunc ? NSCOPE_FUNCTION : NSCOPE_LOCAL)));
-	currentScope->needExtraScope = 0;
+	currentScope->needExtraScope = false;
 
 	if (fname)
 		currentScope->name = *fname;
@@ -729,7 +735,7 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 		case TOK_KEY_SWITCH:
 		case TOK_LBLOCK:
 		{
-			currentScope->needExtraScope = 1;
+			currentScope->needExtraScope = true;
 			AstNode *tmp = ParseStatement(depth+1);
 			LETHE_RET_FALSE(tmp);
 			res->Add(tmp);
@@ -766,7 +772,7 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			AstNode *tmp2 = NewAstNode<AstExpr>(tmp->location);
 			tmp2->Add(tmp);
 			tmp = tmp2;
-			currentScope->needExtraScope = 1;
+			currentScope->needExtraScope = true;
 		}
 
 		res->Add(tmp);

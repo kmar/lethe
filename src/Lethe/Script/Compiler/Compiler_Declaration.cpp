@@ -176,6 +176,46 @@ AstNode *Compiler::ParseFuncArgsDecl(Int depth)
 	return res.Detach();
 }
 
+AstNode *Compiler::ParseShorthandFunction(Int depth, AstNode *ntype, const String &fname)
+{
+	LETHE_RET_FALSE(CheckDepth(depth));
+
+	const auto &tok = ts->GetToken();
+	// parse shorthand creating a fake block and return if needed
+
+	UniquePtr<AstNode> fbody;
+
+	fbody = NewAstNode<AstBlock>(AST_BLOCK, tok.location);
+
+	NamedScopeGuard nsg(this, currentScope->Add(new NamedScope(NSCOPE_FUNCTION)));
+	currentScope->needExtraScope = false;
+	currentScope->node = fbody;
+	currentScope->name = fname;
+
+	fbody->scopeRef = currentScope;
+
+	if (ntype->type == AST_TYPE_VOID)
+	{
+		// just inject a statement
+		auto *stmt = ParseStatement(depth+1);
+		LETHE_RET_FALSE(stmt);
+		stmt->scopeRef = currentScope;
+		fbody->Add(stmt);
+		ts->ConsumeTokenIf(TOK_SEMICOLON);
+	}
+	else
+	{
+		// synthesize a return
+		UniquePtr<AstNode> ret = NewAstNode<AstReturn>(fbody->location);
+
+		LETHE_RET_FALSE(ParseReturn(depth+1, ret));
+
+		fbody->Add(ret.Detach());
+	}
+
+	return fbody.Detach();
+}
+
 AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &nname, Int depth)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
@@ -228,7 +268,10 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 			skipBody = true;
 		}
 		else
-			LETHE_RET_FALSE(Expect(ts->PeekToken().type == TOK_LBLOCK, "expected `{'"));
+		{
+			auto tt = ts->PeekToken().type;
+			LETHE_RET_FALSE(Expect(tt == TOK_LBLOCK || tt == TOK_EQ_GT, "expected `{' or `=>'"));
+		}
 
 		// add args (members)
 		for (Int i=0; i<args->nodes.GetSize(); i++)
@@ -290,7 +333,11 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 
 			ts->SetFuncName(fname);
 
-			fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0, &fname);
+			if (ts->PeekToken().type == TOK_EQ_GT)
+				fbody = ParseShorthandFunction(depth+1, ntype, fname);
+			else
+				fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0, &fname);
+
 			ts->SetFuncName(String());
 
 			LETHE_RET_FALSE(fbody);

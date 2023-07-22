@@ -273,6 +273,10 @@ private:
 
 	AstNode *ParseAnonStructLiteral(Int depth);
 
+	AstNode *ParseShorthandFunction(Int depth, AstNode *ntype, const String &fname);
+
+	bool ParseReturn(Int depth, UniquePtr<AstNode> &res);
+
 	AstNode *NewAstType(TokenType tt, const TokenLocation &nloc) const;
 
 	// echoes false
