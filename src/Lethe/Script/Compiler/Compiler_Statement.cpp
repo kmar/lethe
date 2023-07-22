@@ -11,10 +11,27 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 	UniquePtr<AstNode> res = NewAstNode<AstSwitchBody>(ts->PeekToken().location);
 	AstNode *defCase = nullptr;
 	AstNode *curCase = nullptr;
+	AstNode *lastAutoBreak = nullptr;
+
+	auto testFallthrough = [&]()
+	{
+		const auto &nxt = ts->PeekToken();
+		// if we get "case fallthrough expr:" or "default fallthrough:",
+		// disable auto break
+		if (nxt.type == TOK_IDENT && StringRef(nxt.text) == "fallthrough")
+		{
+			ts->ConsumeToken();
+
+			if (lastAutoBreak)
+				lastAutoBreak->flags |= AST_F_SKIP_CGEN;
+		}
+
+		lastAutoBreak = nullptr;
+	};
 
 	for (;;)
 	{
-		const Token &nt = ts->PeekToken();
+		const auto &nt = ts->PeekToken();
 
 		if (nt.type == TOK_RBLOCK)
 		{
@@ -30,6 +47,9 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 		{
 			UniquePtr<AstNode> thisCase = NewAstNode<AstCase>(nt.location);
 			ts->ConsumeToken();
+
+			testFallthrough();
+
 			UniquePtr<AstNode> expr = ParseExpression(depth+1);
 			LETHE_RET_FALSE(expr);
 			thisCase->Add(expr.Detach());
@@ -42,6 +62,9 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 		{
 			LETHE_RET_FALSE(Expect(!defCase, "default case already specified"));
 			ts->ConsumeToken();
+
+			testFallthrough();
+
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_COLON, "expected `:`"));
 			defCase = NewAstNode<AstCaseDefault>(nt.location);
 			curCase = res->Add(defCase);
@@ -56,7 +79,9 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 			LETHE_RET_FALSE(blk);
 
 			const auto &nxt = ts->PeekToken();
-			blk->Add(NewAstNode<AstBreak>(nxt.location));
+
+			if (nxt.type == TOK_KEY_CASE || nxt.type == TOK_KEY_DEFAULT)
+				lastAutoBreak = blk->Add(NewAstNode<AstBreak>(nxt.location));
 
 			curCase->Add(blk);
 			continue;

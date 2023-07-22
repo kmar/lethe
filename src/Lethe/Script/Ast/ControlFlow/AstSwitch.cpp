@@ -62,6 +62,9 @@ bool AstSwitch::Fallsthrough(AstNode *node, Int nodeIdx, bool removeBreak)
 	if (nodeIdx+1 == node->parent->nodes.GetSize())
 		return false;
 
+	if (node->nodes.IsEmpty())
+		return true;
+
 	auto *last = node->nodes.Back();
 
 	// if it ends with a break, not a fallthrough
