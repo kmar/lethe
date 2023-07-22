@@ -183,11 +183,10 @@ AstNode *Compiler::ParseShorthandFunction(Int depth, AstNode *ntype, const Strin
 	const auto &tok = ts->GetToken();
 	// parse shorthand creating a fake block and return if needed
 
-	UniquePtr<AstNode> fbody;
-
-	fbody = NewAstNode<AstBlock>(AST_BLOCK, tok.location);
-
 	NamedScopeGuard nsg(this, currentScope->Add(new NamedScope(NSCOPE_FUNCTION)));
+
+	UniquePtr<AstNode> fbody = NewAstNode<AstFuncBody>(tok.location);
+
 	currentScope->needExtraScope = false;
 	currentScope->node = fbody;
 	currentScope->name = fname;
@@ -199,7 +198,6 @@ AstNode *Compiler::ParseShorthandFunction(Int depth, AstNode *ntype, const Strin
 		// just inject a statement
 		auto *stmt = ParseStatement(depth+1);
 		LETHE_RET_FALSE(stmt);
-		stmt->scopeRef = currentScope;
 		fbody->Add(stmt);
 		ts->ConsumeTokenIf(TOK_SEMICOLON);
 	}
