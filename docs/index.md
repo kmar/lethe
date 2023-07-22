@@ -15,6 +15,7 @@
 	* [enum](#enum_type)
 	* [string](#string_type)
 	* [name](#name_type)
+	* [functions](#functions)
 	* [virtual properties](#virtual_props)
 	* [bit fields](#bitfields)
 	* [struct](#struct_type)
@@ -94,6 +95,25 @@ internally they are used for class names but are exposed to the scripting langua
 ```cpp
 'this is a name literal'
 ```
+
+<a id="functions"></a>
+#### functions
+functions work just like C or C++
+
+```cpp
+type myfunc(arg_type arg1, arg_type arg2)
+{
+	return value;
+}
+```
+
+shorthand function declaration as in C# is also allowed:
+
+```cpp
+int my_func() => expr;
+void my_func() => statement;
+```
+
 <a id="virtual_props"></a>
 #### virtual properties
 virtual properties are disguised as member/global variables with custom logic implemented in getters/setters
@@ -118,24 +138,6 @@ struct S
 		}
 	}
 }
-```
-
-<a id="functions"></a>
-#### functions
-functions work just like C or C++
-
-```cpp
-type myfunc(arg_type arg1, arg_type arg2)
-{
-	return value;
-}
-```
-
-shorthand function declaration as in C# is also allowed:
-
-```cpp
-int my_func() => expr;
-void my_func() => statement;
 ```
 
 <a id="bitfields"></a>
