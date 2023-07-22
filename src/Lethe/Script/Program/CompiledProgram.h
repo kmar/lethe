@@ -10,6 +10,7 @@
 #include <Lethe/Core/Collect/BitSet.h>
 #include <Lethe/Core/Thread/Lock.h>
 #include <Lethe/Script/TypeInfo/DataTypes.h>
+#include <Lethe/Script/Compiler/Warnings.h>
 #include "ConstPool.h"
 
 #include <Lethe/Script/ScriptBaseObject.h>
@@ -42,8 +43,10 @@ public:
 
 	// error/warning
 	// note: Error always returns false
-	bool Error(const AstNode *n, const String &msg) const;
-	void Warning(const AstNode *n, const String &msg, Int warnid = 0) const;
+	LETHE_NOINLINE bool Error(const AstNode *n, const String &msg) const;
+	LETHE_NOINLINE bool Error(const AstNode *n, const char *msg) const;
+	LETHE_NOINLINE void Warning(const AstNode *n, const String &msg, Int warnid = WARN_GENERIC) const;
+	LETHE_NOINLINE void Warning(const AstNode *n, const char *msg, Int warnid = WARN_GENERIC) const;
 
 	// temporary string table (fully qualified symbols)
 	mutable Mutex stringTableMutex;

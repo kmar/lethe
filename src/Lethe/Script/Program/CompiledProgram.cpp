@@ -7,7 +7,6 @@
 #include <Lethe/Script/Ast/ControlFlow/AstLabel.h>
 #include <Lethe/Script/Vm/Stack.h>
 #include <Lethe/Script/Vm/Builtin.h>
-#include <Lethe/Script/Compiler/Warnings.h>
 #include "../ScriptEngine.h"
 
 namespace lethe
@@ -42,12 +41,22 @@ void ErrorHandler::CheckShadowing(const NamedScope *cscope, const String &nname,
 bool ErrorHandler::Error(const AstNode *n, const String &msg) const
 {
 	onError(msg, n ? n->location : TokenLocation());
-	return 0;
+	return false;
+}
+
+bool ErrorHandler::Error(const AstNode *n, const char *msg) const
+{
+	return Error(n, String(msg));
 }
 
 void ErrorHandler::Warning(const AstNode *n, const String &msg, Int warnid) const
 {
 	onWarning(msg, n->location, warnid);
+}
+
+void ErrorHandler::Warning(const AstNode *n, const char *msg, Int warnid) const
+{
+	Warning(n, String(msg), warnid);
 }
 
 const String &ErrorHandler::AddString(const String &str) const
