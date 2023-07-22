@@ -119,6 +119,25 @@ struct S
 	}
 }
 ```
+
+<a id="functions"></a>
+#### functions
+functions work just like C or C++
+
+```cpp
+type myfunc(arg_type arg1, arg_type arg2)
+{
+	return value;
+}
+```
+
+shorthand function declaration as in C# is also allowed:
+
+```cpp
+int my_func() => expr;
+void my_func() => statement;
+```
+
 <a id="bitfields"></a>
 #### bit fields
 bit fields are practically identical to C, with some additional limitations
@@ -506,7 +525,7 @@ switch break example:
 		"default\n";
 	}
 ```
-this will set foo to 7 and print hi! and default afterwards
+this will set foo to 7 and print hi! and default afterwards if expr is 1. if it's 0 the foo will be set to 6
 
 can't skip over variable declarations
 * variable declarations, pretty much standard:
