@@ -5,7 +5,7 @@
 namespace lethe
 {
 
-AstNode *Compiler::ParseSwitchBody(Int depth)
+AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 	UniquePtr<AstNode> res = NewAstNode<AstSwitchBody>(ts->PeekToken().location);
@@ -48,10 +48,23 @@ AstNode *Compiler::ParseSwitchBody(Int depth)
 			continue;
 		}
 
-		LETHE_RET_FALSE(Expect(curCase != 0, "no case specified"));
-		UniquePtr<AstNode> stmt = ParseStatement(depth+1);
-		LETHE_RET_FALSE(curCase && stmt);
-		curCase->Add(stmt.Detach());
+		LETHE_RET_FALSE(Expect(curCase != nullptr, "no case specified"));
+
+		if (switchBreak)
+		{
+			auto *blk = ParseBlock(depth+1, false, true, false, nullptr, true);
+			LETHE_RET_FALSE(blk);
+
+			const auto &nxt = ts->PeekToken();
+			blk->Add(NewAstNode<AstBreak>(nxt.location));
+
+			curCase->Add(blk);
+			continue;
+		}
+
+		auto *stmt = ParseStatement(depth+1);
+		LETHE_RET_FALSE(stmt);
+		curCase->Add(stmt);
 	}
 }
 
@@ -513,6 +526,14 @@ AstNode *Compiler::ParseStatement(Int depth)
 
 		res = NewAstNode<AstSwitch>(nt.location);
 		ts->ConsumeToken();
+
+		// a new sane form of switch: switch break(x) with automatic implied break
+		// and local scope after each case
+		bool switchBreak = ts->PeekToken().type == TOK_KEY_BREAK;
+
+		if (switchBreak)
+			ts->ConsumeToken();
+
 		bool extra = ts->PeekToken().type == TOK_LBR;
 		ts->ConsumeTokenIf(TOK_LBR);
 		UniquePtr<AstNode> tmp = ParseVarDeclOrExpr(depth+1, 1);
@@ -522,7 +543,7 @@ AstNode *Compiler::ParseStatement(Int depth)
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)`"));
 
 		LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_LBLOCK, "expected `{`"));
-		UniquePtr<AstNode> body = ParseSwitchBody(depth+1);
+		UniquePtr<AstNode> body = ParseSwitchBody(depth+1, switchBreak);
 		// note: ParseSwitchBody consumes final `}`
 		LETHE_RET_FALSE(body);
 		// note: not consuming potential semicolon here!, already consumed by ParseStatement
@@ -601,7 +622,8 @@ AstNode *Compiler::ParseStatement(Int depth)
 	return res.Detach();
 }
 
-AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isStateFunc, const String *fname)
+AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isStateFunc,
+	const String *fname, bool isSwitchBreak)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 
@@ -656,12 +678,19 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 		if (nt.type == TOK_RBLOCK)
 		{
 			AstStaticCast<AstBlock *>(res.Get())->endOfBlockLocation = nt.location;
-			ts->ConsumeToken();
+
+			if (!isSwitchBreak)
+				ts->ConsumeToken();
 			break;
 		}
 
 		switch(nt.type)
 		{
+		case TOK_KEY_CASE:
+		case TOK_KEY_DEFAULT:
+			AstStaticCast<AstBlock *>(res.Get())->endOfBlockLocation = nt.location;
+			return res.Detach();
+
 		case TOK_SHARP:
 		{
 			auto tokLine = nt.location.line;

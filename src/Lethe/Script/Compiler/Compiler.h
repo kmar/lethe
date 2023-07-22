@@ -239,10 +239,11 @@ private:
 	bool ParseMacroInternal(bool conditionalOnly);
 	bool ParseMacroArgs(Array<Token> &nargs);
 
-	AstNode *ParseSwitchBody(Int depth);
+	AstNode *ParseSwitchBody(Int depth, bool switchBreak);
 	AstNode *ParseStatement(Int depth);
 	AstNode *ParseNoBreakStatement(Int depth);
-	AstNode *ParseBlock(Int depth, bool isFunc = false, bool noCheck = false, bool isStateFunc = false, const String *fname = nullptr);
+	AstNode *ParseBlock(Int depth, bool isFunc = false, bool noCheck = false, bool isStateFunc = false,
+		const String *fname = nullptr, bool isSwitchBreak = false);
 
 	AstNode *ParseVarDeclOrExpr(Int depth, bool refFirstInit = 0, bool initOnly = 1);
 
