@@ -199,7 +199,6 @@ AstNode *Compiler::ParseShorthandFunction(Int depth, AstNode *ntype, const Strin
 		auto *stmt = ParseStatement(depth+1);
 		LETHE_RET_FALSE(stmt);
 		fbody->Add(stmt);
-		ts->ConsumeTokenIf(TOK_SEMICOLON);
 	}
 	else
 	{
