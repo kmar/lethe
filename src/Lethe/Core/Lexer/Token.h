@@ -85,6 +85,8 @@ enum TokenTypeBase
 
 	TOK_COLON_EQ,		// :=
 
+	TOK_EQ_GT,			// >=
+
 	// keywords
 	TOK_KEYWORD,		// this just marks keyword base indices
 

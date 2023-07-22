@@ -789,6 +789,8 @@ TokenType Lexer::PeekEq(Token &tok)
 		str->UngetByte(ch);
 		return FinishPeek(TOK_EQ_EQ, tok);
 	}
+	else if (ch == '>')
+			return FinishPeek(TOK_EQ_GT, tok);
 
 	str->UngetByte(ch);
 	return FinishPeek(TOK_EQ, tok);
