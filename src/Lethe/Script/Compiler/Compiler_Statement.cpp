@@ -23,7 +23,10 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 			ts->ConsumeToken();
 
 			if (lastAutoBreak)
-				lastAutoBreak->flags |= AST_F_SKIP_CGEN;
+			{
+				lastAutoBreak->parent->ReplaceChild(lastAutoBreak, nullptr);
+				delete lastAutoBreak;
+			}
 		}
 
 		lastAutoBreak = nullptr;
