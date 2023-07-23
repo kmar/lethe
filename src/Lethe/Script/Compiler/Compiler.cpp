@@ -1187,9 +1187,21 @@ AstNode *Compiler::AddNativeProp(const char *nname, AstNodeType ntype)
 	return n;
 }
 
+static LETHE_NOINLINE void Compiler_AddMemberToScope(NamedScope *scope, const char *name, AstNode *n)
+{
+	scope->members[name] = n;
+}
+
 void Compiler::InitNativeTypeScopes()
 {
 	// FIXME: this asks for tables!
+
+	struct SimpleMethodTable
+	{
+		const char *member;
+		const char *prop;
+		ULong qualifiers;
+	};
 
 	TokenLocation loc;
 	loc.column = loc.line = 0;
@@ -1202,61 +1214,33 @@ void Compiler::InitNativeTypeScopes()
 
 	AstNode *n;
 
-	// TODO: table-based init to reduce code bloat
-	n = AddNativeProp("__strlen", AST_NPROP_METHOD);
-	n->qualifiers |= AST_Q_CONST;
+	// table-based init to reduce code bloat a bit
+	static const SimpleMethodTable simple_string[] =
+	{
+		{"length", "__strlen", AST_Q_CONST},
+		{"trim", "__str_trim", 0},
+		{"insert", "__str_insert", 0},
+		{"find", "__str_find", AST_Q_CONST},
+		{"starts_with", "__str_starts_with", AST_Q_CONST},
+		{"ends_with", "__str_ends_with", AST_Q_CONST},
+		{"replace", "__str_replace", 0},
+		{"erase", "__str_erase", 0},
+		{"slice", "__str_slice", AST_Q_CONST},
+		{"split", "__str_split", AST_Q_CONST},
+		{"toupper", "__str_toupper", 0},
+		{"tolower", "__str_tolower", 0},
+		{"scan_int", "__strscan_int", 0},
+		{"scan_float", "__strscan_float", 0},
+		{"scan_double", "__strscan_double", 0},
+		{"scan_string", "__strscan_string", 0},
+	};
 
-	stringScope->members["length"] = n;
-
-	n = AddNativeProp("__str_trim", AST_NPROP_METHOD);
-	stringScope->members["trim"] = n;
-
-	n = AddNativeProp("__str_insert", AST_NPROP_METHOD);
-	stringScope->members["insert"] = n;
-
-	n = AddNativeProp("__str_find", AST_NPROP_METHOD);
-	n->qualifiers |= AST_Q_CONST;
-	stringScope->members["find"] = n;
-
-	n = AddNativeProp("__str_starts_with", AST_NPROP_METHOD);
-	n->qualifiers |= AST_Q_CONST;
-	stringScope->members["starts_with"] = n;
-
-	n = AddNativeProp("__str_ends_with", AST_NPROP_METHOD);
-	n->qualifiers |= AST_Q_CONST;
-	stringScope->members["ends_with"] = n;
-
-	n = AddNativeProp("__str_replace", AST_NPROP_METHOD);
-	stringScope->members["replace"] = n;
-
-	n = AddNativeProp("__str_erase", AST_NPROP_METHOD);
-	stringScope->members["erase"] = n;
-
-	n = AddNativeProp("__str_slice", AST_NPROP_METHOD);
-	n->qualifiers |= AST_Q_CONST;
-	stringScope->members["slice"] = n;
-
-	n = AddNativeProp("__str_split", AST_NPROP_METHOD);
-	n->qualifiers |= AST_Q_CONST;
-	stringScope->members["split"] = n;
-
-	n = AddNativeProp("__str_toupper", AST_NPROP_METHOD);
-	stringScope->members["toupper"] = n;
-
-	n = AddNativeProp("__str_tolower", AST_NPROP_METHOD);
-	stringScope->members["tolower"] = n;
-
-	n = AddNativeProp("__strscan_int", AST_NPROP_METHOD);
-	stringScope->members["scan_int"] = n;
-
-	n = AddNativeProp("__strscan_float", AST_NPROP_METHOD);
-	stringScope->members["scan_float"] = n;
-
-	n = AddNativeProp("__strscan_double", AST_NPROP_METHOD);
-	stringScope->members["scan_double"] = n;
-
-	n = AddNativeProp("__strscan_string", AST_NPROP_METHOD);
-	stringScope->members["scan_string"] = n;
+	for (auto &&it : simple_string)
+	{
+		n = AddNativeProp(it.prop, AST_NPROP_METHOD);
+		n->qualifiers |= it.qualifiers;
+		Compiler_AddMemberToScope(stringScope, it.member, n);
+	}
 
 	// note: __da_reverse will also work for array refs!
 	auto nreverse = AddNativeProp("__da_reverse", AST_NPROP_METHOD);
@@ -1272,11 +1256,11 @@ void Compiler::InitNativeTypeScopes()
 	ncap->qualifiers |= AST_Q_CONST;
 	ncap->offset = sizeof(void *) + sizeof(Int);
 
-	arrayRefScope->members["size"] = n;
+	Compiler_AddMemberToScope(arrayRefScope, "size", n);
 	// aliases:
-	arrayRefScope->members["length"] = n;
+	Compiler_AddMemberToScope(arrayRefScope, "length", n);
 
-	arrayRefScope->members["reverse"] = nreverse;
+	Compiler_AddMemberToScope(arrayRefScope, "reverse", nreverse);
 
 	arrayScope = globalScope->Add(new NamedScope(NSCOPE_STRUCT));
 
@@ -1284,136 +1268,136 @@ void Compiler::InitNativeTypeScopes()
 	an->qualifiers |= AST_Q_CONST;
 	an->offset = -1;
 
-	arrayScope->members["size"] = an;
+	Compiler_AddMemberToScope(arrayScope, "size", an);
 	// aliases
-	arrayScope->members["length"] = an;
+	Compiler_AddMemberToScope(arrayScope, "length", an);
 
 	dynamicArrayScope = globalScope->Add(new NamedScope(NSCOPE_STRUCT));
 
-	dynamicArrayScope->members["size"] = n;
+	Compiler_AddMemberToScope(dynamicArrayScope, "size", n);
 	// aliases
-	dynamicArrayScope->members["length"] = n;
+	Compiler_AddMemberToScope(dynamicArrayScope, "length", n);
 
-	dynamicArrayScope->members["capacity"] = ncap;
+	Compiler_AddMemberToScope(dynamicArrayScope, "capacity", ncap);
 
 	auto nresize = AddNativeProp("__da_resize", AST_NPROP_METHOD);
 	nresize->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["resize"] = nresize;
+	Compiler_AddMemberToScope(dynamicArrayScope, "resize", nresize);
 
 	auto nreserve = AddNativeProp("__da_reserve", AST_NPROP_METHOD);
 	nreserve->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["reserve"] = nreserve;
+	Compiler_AddMemberToScope(dynamicArrayScope, "reserve", nreserve);
 
 	auto nclear = AddNativeProp("__da_clear", AST_NPROP_METHOD);
 	nclear->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["clear"] = nclear;
+	Compiler_AddMemberToScope(dynamicArrayScope, "clear", nclear);
 
 	auto nreset = AddNativeProp("__da_reset", AST_NPROP_METHOD);
 	nreset->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["reset"] = nreset;
+	Compiler_AddMemberToScope(dynamicArrayScope, "reset", nreset);
 
 	auto npop = AddNativeProp("__da_pop", AST_NPROP_METHOD);
 	npop->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["pop"] = npop;
+	Compiler_AddMemberToScope(dynamicArrayScope, "pop", npop);
 
 	auto nshrink = AddNativeProp("__da_shrink", AST_NPROP_METHOD);
 	nshrink->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["shrink"] = nshrink;
+	Compiler_AddMemberToScope(dynamicArrayScope, "shrink", nshrink);
 
 	auto nerase = AddNativeProp("__da_erase", AST_NPROP_METHOD);
 	nerase->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["erase"] = nerase;
+	Compiler_AddMemberToScope(dynamicArrayScope, "erase", nerase);
 
 	auto neraseu = AddNativeProp("__da_erase_unordered", AST_NPROP_METHOD);
 	neraseu->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["erase_unordered"] = neraseu;
+	Compiler_AddMemberToScope(dynamicArrayScope, "erase_unordered", neraseu);
 
 	auto npred = AddNativeProp("__da_pred", AST_NPROP_METHOD);
 	npred->qualifiers |= AST_Q_CONST;
 	npred->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["pred"] = npred;
+	Compiler_AddMemberToScope(dynamicArrayScope, "pred", npred);
 
 	auto nsucc = AddNativeProp("__da_succ", AST_NPROP_METHOD);
 	nsucc->qualifiers |= AST_Q_CONST;
 	nsucc->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["succ"] = nsucc;
+	Compiler_AddMemberToScope(dynamicArrayScope, "succ", nsucc);
 
 	auto nbegin = AddNativeProp("__da_begin", AST_NPROP_METHOD);
 	nbegin->qualifiers |= AST_Q_CONST;
 	nbegin->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["begin"] = nbegin;
+	Compiler_AddMemberToScope(dynamicArrayScope, "begin", nbegin);
 
-	dynamicArrayScope->members["reverse"] = nreverse;
+	Compiler_AddMemberToScope(dynamicArrayScope, "reverse", nreverse);
 
 	// special propmethods:
 	auto npush = AddNativeProp("__da_push", AST_NPROP_METHOD);
 	npush->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["push"] = npush;
+	Compiler_AddMemberToScope(dynamicArrayScope, "push", npush);
 	// alias:
-	dynamicArrayScope->members["add"] = npush;
-	dynamicArrayScope->members["push_back"] = npush;
+	Compiler_AddMemberToScope(dynamicArrayScope, "add", npush);
+	Compiler_AddMemberToScope(dynamicArrayScope, "push_back", npush);
 
 	auto npushu = AddNativeProp("__da_push_unique", AST_NPROP_METHOD);
 	npushu->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["push_unique"] = npushu;
+	Compiler_AddMemberToScope(dynamicArrayScope, "push_unique", npushu);
 	// alias:
-	dynamicArrayScope->members["add_unique"] = npushu;
-	dynamicArrayScope->members["push_back_unique"] = npushu;
+	Compiler_AddMemberToScope(dynamicArrayScope, "add_unique", npushu);
+	Compiler_AddMemberToScope(dynamicArrayScope, "push_back_unique", npushu);
 
 	auto ninsert = AddNativeProp("__da_insert", AST_NPROP_METHOD);
 	ninsert->flags |= AST_F_PUSH_TYPE | AST_F_ARG2_ELEM;
-	dynamicArrayScope->members["insert"] = ninsert;
+	Compiler_AddMemberToScope(dynamicArrayScope, "insert", ninsert);
 
 	auto nfind = AddNativeProp("__da_find", AST_NPROP_METHOD);
 	nfind->qualifiers |= AST_Q_CONST;
 	nfind->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["find"] = nfind;
-	dynamicArrayScope->members["indexof"] = nfind;
-	dynamicArrayScope->members["index_of"] = nfind;
+	Compiler_AddMemberToScope(dynamicArrayScope, "find", nfind);
+	Compiler_AddMemberToScope(dynamicArrayScope, "indexof", nfind);
+	Compiler_AddMemberToScope(dynamicArrayScope, "index_of", nfind);
 
-	arrayRefScope->members["find"] = nfind;
-	arrayRefScope->members["indexof"] = nfind;
-	arrayRefScope->members["index_of"] = nfind;
+	Compiler_AddMemberToScope(arrayRefScope, "find", nfind);
+	Compiler_AddMemberToScope(arrayRefScope, "indexof", nfind);
+	Compiler_AddMemberToScope(arrayRefScope, "index_of", nfind);
 
 	auto nsort = AddNativeProp("__da_sort", AST_NPROP_METHOD);
 	nsort->flags |= AST_F_PUSH_TYPE;
-	dynamicArrayScope->members["sort"] = nsort;
-	arrayRefScope->members["sort"] = nsort;
+	Compiler_AddMemberToScope(dynamicArrayScope, "sort", nsort);
+	Compiler_AddMemberToScope(arrayRefScope, "sort", nsort);
 
 	auto nlower = AddNativeProp("__da_lower_bound", AST_NPROP_METHOD);
 	nlower->qualifiers |= AST_Q_CONST;
 	nlower->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["lower_bound"] = nlower;
-	dynamicArrayScope->members["lowerbound"] = nlower;
-	arrayRefScope->members["lower_bound"] = nlower;
-	arrayRefScope->members["lowerbound"] = nlower;
+	Compiler_AddMemberToScope(dynamicArrayScope, "lower_bound", nlower);
+	Compiler_AddMemberToScope(dynamicArrayScope, "lowerbound", nlower);
+	Compiler_AddMemberToScope(arrayRefScope, "lower_bound", nlower);
+	Compiler_AddMemberToScope(arrayRefScope, "lowerbound", nlower);
 
 	auto nupper = AddNativeProp("__da_upper_bound", AST_NPROP_METHOD);
 	nupper->qualifiers |= AST_Q_CONST;
 	nupper->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["upper_bound"] = nupper;
-	dynamicArrayScope->members["upperbound"] = nupper;
-	arrayRefScope->members["upper_bound"] = nupper;
-	arrayRefScope->members["upperbound"] = nupper;
+	Compiler_AddMemberToScope(dynamicArrayScope, "upper_bound", nupper);
+	Compiler_AddMemberToScope(dynamicArrayScope, "upperbound", nupper);
+	Compiler_AddMemberToScope(arrayRefScope, "upper_bound", nupper);
+	Compiler_AddMemberToScope(arrayRefScope, "upperbound", nupper);
 
 	auto nfsorted = AddNativeProp("__da_find_sorted", AST_NPROP_METHOD);
 	nfsorted->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["find_sorted"] = nfsorted;
-	arrayRefScope->members["find_sorted"] = nfsorted;
+	Compiler_AddMemberToScope(dynamicArrayScope, "find_sorted", nfsorted);
+	Compiler_AddMemberToScope(arrayRefScope, "find_sorted", nfsorted);
 
 	auto nisorted = AddNativeProp("__da_insert_sorted", AST_NPROP_METHOD);
 	nisorted->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["insert_sorted"] = nisorted;
+	Compiler_AddMemberToScope(dynamicArrayScope, "insert_sorted", nisorted);
 
 	auto nisortedu = AddNativeProp("__da_insert_sorted_unique", AST_NPROP_METHOD);
 	nisortedu->flags |= AST_F_PUSH_TYPE | AST_F_ARG1_ELEM;
-	dynamicArrayScope->members["insert_sorted_unique"] = nisortedu;
+	Compiler_AddMemberToScope(dynamicArrayScope, "insert_sorted_unique", nisortedu);
 
 	auto nslice = AddNativeProp("__da_slice", AST_NPROP_METHOD);
 	nslice->qualifiers |= AST_Q_CONST;
 	nslice->flags |= AST_F_PUSH_TYPE_SIZE | AST_F_RES_SLICE;
-	dynamicArrayScope->members["slice"] = nslice;
-	arrayRefScope->members["slice"] = nslice;
+	Compiler_AddMemberToScope(dynamicArrayScope, "slice", nslice);
+	Compiler_AddMemberToScope(arrayRefScope, "slice", nslice);
 }
 
 }

@@ -101,9 +101,11 @@ public:
 	Array<NativeClass> nClass;
 
 	// bind native static functions
-	Int BindNativeFunc(const String &fname, const NativeCallback &cbk);
+	LETHE_NOINLINE Int BindNativeFunc(const String &fname, const NativeCallback &cbk);
+	LETHE_NOINLINE Int BindNativeFunc(const char *fname, const NativeCallback &cbk);
 	// find native func
 	Int FindNativeFunc(const String &fname) const;
+	Int FindNativeFunc(const char *fname) const;
 	// debug: get native func name
 	const String &GetNativeFuncName(Int idx) const;
 

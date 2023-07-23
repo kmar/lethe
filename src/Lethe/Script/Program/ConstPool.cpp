@@ -149,6 +149,11 @@ Int ConstPool::Add(Name val)
 	return AddElem(val, nPool, nPoolMap);
 }
 
+Int ConstPool::BindNativeFunc(const char *fname, const NativeCallback &cbk)
+{
+	return BindNativeFunc(String(fname), cbk);
+}
+
 Int ConstPool::BindNativeFunc(const String &fname, const NativeCallback &cbk)
 {
 	Int idx = nFunPoolMap.FindIndex(fname);
@@ -163,6 +168,12 @@ Int ConstPool::BindNativeFunc(const String &fname, const NativeCallback &cbk)
 Int ConstPool::FindNativeFunc(const String &fname) const
 {
 	Int idx = nFunPoolMap.FindIndex(fname);
+	return idx >= 0 ? nFunPoolMap.GetValue(idx) : idx;
+}
+
+Int ConstPool::FindNativeFunc(const char *fname) const
+{
+	Int idx = nFunPoolMap.FindIndex(StringRef(fname));
 	return idx >= 0 ? nFunPoolMap.GetValue(idx) : idx;
 }
 
