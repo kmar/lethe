@@ -48,16 +48,22 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 
 		if (nt.type == TOK_KEY_CASE)
 		{
-			UniquePtr<AstNode> thisCase = NewAstNode<AstCase>(nt.location);
+			auto loc = nt.location;
 			ts->ConsumeToken();
 
 			testFallthrough();
 
-			UniquePtr<AstNode> expr = ParseExpression(depth+1);
-			LETHE_RET_FALSE(expr);
-			thisCase->Add(expr.Detach());
+			do
+			{
+				auto *expr = ParseAssignExpression(depth+1);
+				LETHE_RET_FALSE(expr);
+				auto *thisCase = NewAstNode<AstCase>(loc);
+				thisCase->Add(expr);
+				curCase = res->Add(thisCase);
+			}
+			while (ts->PeekToken().type == TOK_COMMA && ts->ConsumeToken());
+
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_COLON, "expected `:`"));
-			curCase = res->Add(thisCase.Detach());
 			continue;
 		}
 
