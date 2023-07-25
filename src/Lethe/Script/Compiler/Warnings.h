@@ -31,7 +31,9 @@ enum Warnings
 	// signed-unsigned comparison
 	WARN_SIGNED_UNSIGNED_COMPARISON,
 	// out-of-order designated initializer
-	WARN_OUT_OF_ORDER_DESIGNATED_INITIALIZER
+	WARN_OUT_OF_ORDER_DESIGNATED_INITIALIZER,
+	// comparing boolean and number
+	WARN_COMPARE_BOOL_AND_NUMBER
 };
 
 }

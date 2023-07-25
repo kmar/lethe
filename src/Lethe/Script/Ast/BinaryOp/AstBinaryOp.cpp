@@ -889,6 +889,15 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	if (leftType.IsStruct() || rightType.IsStruct())
 		return CodeGenOperator(p);
 
+	if (leftType.IsNumber() && rightType.IsNumber())
+	{
+		auto lte = leftType.GetTypeEnum() == DT_BOOL;
+		auto rte = rightType.GetTypeEnum() == DT_BOOL;
+
+		if (lte != rte && IsCompare())
+			p.Warning(nodes[rte], "bool and number comparison", WARN_COMPARE_BOOL_AND_NUMBER);
+	}
+
 	const DataType &dtdst = asRef ? leftType.GetType() : p.Coerce(leftType.GetType(), rightType.GetType());
 	const auto *dtdstr = &dtdst;
 	DataTypeEnum dt = dtdst.type;
