@@ -108,19 +108,13 @@ AstFunc::ResolveResult AstFunc::MoveBody(const ErrorHandler &e, AstNode *targ)
 	targ->nodes.Add(nodes[IDX_BODY]);
 	targ->flags &= ~AST_F_RESOLVED;
 	nodes.EraseIndex(IDX_BODY);
-	flags |= AST_F_SKIP_CGEN | AST_F_RESOLVED;
 
 	AstNode *dummy = new AstNode(AST_NONE, location);
 	dummy->flags |= AST_F_RESOLVED;
 	parent->ReplaceChild(this, dummy);
 
-	auto res = RES_MORE;
-
-	if (targ->Resolve(e) == RES_ERROR)
-		res = RES_ERROR;
-
 	delete this;
-	return res;
+	return RES_MORE;
 }
 
 AstNode::ResolveResult AstFunc::Resolve(const ErrorHandler &e)

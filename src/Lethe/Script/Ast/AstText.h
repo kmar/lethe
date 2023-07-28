@@ -30,6 +30,9 @@ public:
 	AstNode *ResolveTemplateScope(AstNode *&ntext) const override;
 
 	void CopyTo(AstNode *n) const override;
+
+private:
+	void GetQTextBuilder(StringBuilder &sb) const;
 };
 
 }

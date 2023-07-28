@@ -27,11 +27,10 @@ AstNode *AstText::ResolveTemplateScope(AstNode *&ntext) const
 	return scopeRef->FindSymbolFull(text, nscope);
 }
 
-String AstText::GetQTextSlow() const
+void AstText::GetQTextBuilder(StringBuilder &sb) const
 {
 	const auto *nscope = scopeRef;
 
-	StringBuilder sb;
 	sb += text;
 
 	while (nscope)
@@ -48,6 +47,12 @@ String AstText::GetQTextSlow() const
 
 		nscope = nscope->parent;
 	}
+}
+
+String AstText::GetQTextSlow() const
+{
+	StringBuilder sb;
+	GetQTextBuilder(sb);
 
 	if (text == sb.Get())
 		return text;
@@ -57,25 +62,8 @@ String AstText::GetQTextSlow() const
 
 String AstText::GetQText(CompiledProgram &p) const
 {
-	const auto *nscope = scopeRef;
-
 	StringBuilder sb;
-	sb += text;
-
-	while (nscope)
-	{
-		if (!nscope->name.IsEmpty())
-		{
-			sb.Prepend("::");
-			sb.Prepend(nscope->name);
-
-			// note: this is necessary for instantiated templates because they are fully resolved
-			if (nscope->name.Find("::") >= 0)
-				break;
-		}
-
-		nscope = nscope->parent;
-	}
+	GetQTextBuilder(sb);
 
 	if (text == sb.Get())
 		return text;
@@ -100,9 +88,15 @@ bool AstText::GetTemplateTypeText(StringBuilder &sb) const
 	if (symTarget && symTarget != parent)
 		return symTarget->GetTemplateTypeText(sb);
 
-	sb.AppendFormat("%s", text.Ansi());
+	LETHE_RET_FALSE(!text.IsEmpty());
 
-	return !text.IsEmpty();
+	nscope = scopeRef;
+
+	StringBuilder sbqt;
+	GetQTextBuilder(sbqt);
+	sb += sbqt.Get();
+
+	return true;
 }
 
 void AstText::CopyTo(AstNode *n) const

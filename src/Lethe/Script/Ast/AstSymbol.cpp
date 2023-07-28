@@ -566,7 +566,7 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 
 	p.SetLocation(location);
 
-	LETHE_ASSERT(nodes.IsEmpty() && target);
+	LETHE_ASSERT(target);
 
 	const NamedScope *lscopeRef = target->scopeRef;
 
