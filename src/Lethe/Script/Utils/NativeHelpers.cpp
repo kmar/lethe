@@ -585,7 +585,9 @@ bool DynamicArray::Insert(ScriptContext &ctx, const DataType &dt, const void *va
 	ConstructObjectRange(ctx, dt, dptr, 1);
 	LETHE_ASSERT(data);
 
-	CopyObjectRange(ctx, dt, dptr, static_cast<const Byte *>(valuePtr), 1);
+	if (valuePtr)
+		CopyObjectRange(ctx, dt, dptr, static_cast<const Byte *>(valuePtr), 1);
+
 	size++;
 	return true;
 }
