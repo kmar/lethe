@@ -94,6 +94,8 @@ bool AstSymbol::ResolveAutoStructLiteral()
 	// it's struct literal passed to a function call (or something else, actually)!
 	auto *maybeCall = parent->parent ? parent->parent : nullptr;
 
+	LETHE_RET_FALSE(maybeCall);
+
 	switch(maybeCall->type)
 	{
 	case AST_OP_ASSIGN:
@@ -215,6 +217,9 @@ bool AstSymbol::ResolveNode(const ErrorHandler &e)
 		}
 
 		target = sym;
+
+		LETHE_RET_FALSE(target);
+
 		target->flags |= AST_F_REFERENCED;
 
 		// copy property/bitfield flags from target

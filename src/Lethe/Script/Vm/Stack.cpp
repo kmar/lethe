@@ -34,7 +34,7 @@ void Stack::PushStruct(Int align, Int sizeBytes)
 void Stack::PushRawZero(Int words)
 {
 	PushRaw(words);
-	MemSet(top, 0, words*WORD_SIZE);
+	MemSet(top, 0, (size_t)words*WORD_SIZE);
 }
 
 void Stack::PushEmptyString()

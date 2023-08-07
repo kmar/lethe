@@ -712,7 +712,7 @@ void Opcode_PLOAD64(Stack &stk)
 	stk.Pop(1);
 	auto ptr = (UIntPtr)stk.GetPtr(1);
 	LETHE_ASSERT(ptr);
-	auto val = ptr ? *reinterpret_cast<const ULong *>(ptr + stk.GetInt(0)*iconst) : (ULong)0;
+	auto val = ptr ? *reinterpret_cast<const ULong *>(ptr + (size_t)stk.GetInt(0)*iconst) : (ULong)0;
 	stk.Pop(2);
 	stk.PushLong(val);
 }

@@ -1221,7 +1221,7 @@ void AstBinaryOp::CheckWarn(const DataType &ldt, const CompiledProgram &p, const
 	if (IsShift())
 	{
 		// shift: make sure we're in range
-		if (rv >= 8u*ldt.size)
+		if (rv >= (ULong)8*ldt.size)
 			p.Warning(this, "shift operand out of range", WARN_OVERFLOW);
 
 		return;

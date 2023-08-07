@@ -58,7 +58,7 @@ Int ConstPool::AllocGlobal(const QDataType &dt)
 	Int toAlign = (align - res%align) % align;
 	res += toAlign;
 	data.Resize(res + size);
-	MemSet(data.GetData() + fillFrom, 0, data.GetSize() - fillFrom);
+	MemSet(data.GetData() + fillFrom, 0, (size_t)data.GetSize() - fillFrom);
 	return res;
 }
 

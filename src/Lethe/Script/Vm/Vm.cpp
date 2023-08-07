@@ -778,7 +778,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 
 		case OPC_AADDH_ICONST:
 			VM_DEBUG_CHECK_PTR(0);
-			stk.SetPtr(0, static_cast<const Byte *>(stk.GetPtr(0)) + ((UInt)DecodeImm24(ins) << 16));
+			stk.SetPtr(0, static_cast<const Byte *>(stk.GetPtr(0)) + ((size_t)(UInt)DecodeImm24(ins) << 16));
 			break;
 
 		case OPC_IADD:

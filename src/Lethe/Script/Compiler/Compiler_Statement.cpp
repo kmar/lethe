@@ -689,7 +689,7 @@ AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isState
 			auto *beg = fname->Ansi();
 
 			if (rbeg >= 0)
-				beg += rbeg+1;
+				beg += (size_t)rbeg+1;
 
 			auto *argNode = NewAstText<AstSymbol>(beg, t.location);
 

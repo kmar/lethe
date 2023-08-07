@@ -188,10 +188,12 @@ void DynamicArray::Resize(ScriptContext &ctx, const DataType &dt, Int newSize)
 			EnsureCapacity(ctx, dt, newSize);
 	}
 
+	size_t sz = dt.size;
+
 	if (size > newSize)
-		DestroyObjectRange(ctx, dt, data + (size_t)dt.size*newSize, size - newSize);
+		DestroyObjectRange(ctx, dt, data + sz*newSize, size - newSize);
 	else
-		ConstructObjectRange(ctx, dt, data + (size_t)dt.size*size, newSize - size);
+		ConstructObjectRange(ctx, dt, data + sz*size, newSize - size);
 
 	size = newSize;
 }
@@ -201,8 +203,10 @@ void DynamicArray::Reallocate(ScriptContext &ctx, const DataType &dt, Int newRes
 	if (newReserve == GetCapacity())
 		return;
 
+	size_t sz = dt.size;
+
 	Byte *newData = newReserve ?
-		static_cast<Byte *>(AlignedAlloc::Realloc(reserve < 0 ? nullptr : data, (size_t)(newReserve) * dt.size, dt.align)) : nullptr;
+		static_cast<Byte *>(AlignedAlloc::Realloc(reserve < 0 ? nullptr : data, newReserve * sz, dt.align)) : nullptr;
 	Int newSize = Min(size, newReserve);
 
 	if (newData != data)
@@ -259,8 +263,10 @@ void DynamicArray::ConstructObjectRange(ScriptContext &ctx, const DataType &dt, 
 	if (elemCount <= 0)
 		return;
 
+	size_t sz = dt.size;
+
 	LETHE_ASSERT(ptr);
-	MemSet(ptr, 0, (size_t)elemCount * dt.size);
+	MemSet(ptr, 0, elemCount * sz);
 
 	if (dt.funCtor < 0)
 		return;
@@ -373,7 +379,7 @@ Int DynamicArray::Push(ScriptContext &ctx, const DataType &dt, const void *value
 	if (LETHE_UNLIKELY(size >= GetCapacity()))
 		EnsureCapacity(ctx, dt, size + 1);
 
-	auto dptr = data + size*dt.size;
+	auto dptr = data + size*(size_t)dt.size;
 	ConstructObjectRange(ctx, dt, dptr, 1);
 	LETHE_ASSERT(data);
 	CopyObjectRange(ctx, dt, dptr, static_cast<const Byte *>(valuePtr), 1);
@@ -432,7 +438,7 @@ Int DynamicArray::LowerBound(ScriptContext &ctx, const DataType &dt, const void 
 	Int count = size;
 	Int ci;
 
-	Int sz = dt.size;
+	size_t sz = dt.size;
 
 	while (count > 0)
 	{
@@ -468,7 +474,7 @@ Int DynamicArray::UpperBound(ScriptContext &ctx, const DataType &dt, const void 
 	Int count = size;
 	Int ci;
 
-	Int sz = dt.size;
+	size_t sz = dt.size;
 
 	while (count > 0)
 	{
@@ -505,7 +511,7 @@ Int DynamicArray::FindSorted(ScriptContext &ctx, const DataType &dt, const void 
 	Int count = size;
 	Int ci;
 
-	Int sz = dt.size;
+	size_t sz = dt.size;
 
 	while (count > 0)
 	{
@@ -575,13 +581,15 @@ bool DynamicArray::Insert(ScriptContext &ctx, const DataType &dt, const void *va
 	if ((UInt)index > (UInt)size)
 		return false;
 
+	size_t sz = dt.size;
+
 	if (LETHE_UNLIKELY(size >= GetCapacity()))
 		EnsureCapacity(ctx, dt, size + 1);
 
 	// okay, now make space using memmove
-	MemMove(data + (index+1)*dt.size, data + index*dt.size, (size - index)*dt.size);
+	MemMove(data + ((size_t)index+1)*sz, data + index*sz, ((size_t)size - index)*sz);
 
-	auto dptr = data + index*dt.size;
+	auto *dptr = data + index*sz;
 	ConstructObjectRange(ctx, dt, dptr, 1);
 	LETHE_ASSERT(data);
 
@@ -600,11 +608,13 @@ bool DynamicArray::Erase(ScriptContext &ctx, const DataType &dt, Int index)
 
 	LETHE_ASSERT(data);
 
-	auto dptr = data + index*dt.size;
+	size_t sz = dt.size;
+
+	auto dptr = data + index*sz;
 	DestroyObjectRange(ctx, dt, dptr, 1);
 
 	// okay, now move
-	MemMove(data + index*dt.size, data + (index + 1)*dt.size, (size - index - 1)*dt.size);
+	MemMove(data + index*sz, data + ((size_t)index + 1)*sz, ((size_t)size - index - 1)*sz);
 
 	size--;
 	return true;
@@ -618,11 +628,13 @@ bool DynamicArray::EraseUnordered(ScriptContext &ctx, const DataType &dt, Int in
 
 	LETHE_ASSERT(data);
 
-	auto dptr = data + index*dt.size;
+	size_t sz = dt.size;
+
+	auto dptr = data + index*sz;
 	DestroyObjectRange(ctx, dt, dptr, 1);
 
 	// okay, now copy last element
-	MemCpy(data + index*dt.size, data + (size_t)(size-1)*dt.size, dt.size);
+	MemCpy(data + index*sz, data + ((size_t)size-1)*sz, sz);
 
 	size--;
 	return true;
@@ -630,10 +642,10 @@ bool DynamicArray::EraseUnordered(ScriptContext &ctx, const DataType &dt, Int in
 
 void DynamicArray::Reverse(const DataType &dt)
 {
-	auto sz = dt.size;
+	size_t sz = dt.size;
 
 	for (Int i=0; i<size/2; i++)
-		MemSwap(data + i*sz, data + (size-i-1)*sz, sz);
+		MemSwap(data + i*sz, data + ((size_t)size-i-1)*sz, sz);
 }
 
 void DynamicArray::Assign(ScriptContext &ctx, const DataType &dt, const ArrayRef<Byte> *aref)
@@ -778,7 +790,7 @@ void daSlice(Stack &stk)
 	if (from >= to)
 		from = to = 0;
 
-	res->Init(data + from*elemSize, to - from);
+	res->Init(data + (size_t)from*elemSize, to - from);
 }
 
 void daFind(Stack &stk)

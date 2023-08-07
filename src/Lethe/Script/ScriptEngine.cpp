@@ -900,7 +900,7 @@ const void *ScriptEngine::MethodIndexToPointer(Int idx) const
 	if (idx < 0)
 	{
 		// virtual; simply store special vtbl index
-		res = (const void *)(UIntPtr)(-idx*4 + 1);
+		res = (const void *)(UIntPtr)((UIntPtr)-idx*4 + 1);
 	}
 	else
 	{

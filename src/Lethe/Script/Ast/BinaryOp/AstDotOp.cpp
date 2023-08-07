@@ -302,7 +302,7 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 			return p.Error(right, "cannot generate reference to a virtual property");
 		}
 
-		auto targ = right->target;
+		auto *targ = right->target;
 
 		// handle native method props
 		if (targ && targ->type == AST_NPROP_METHOD)
@@ -324,6 +324,7 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 		AstSymbol *text = AstStaticCast<AstSymbol *>(right);
 
 		LETHE_ASSERT(right->target);
+		LETHE_RET_FALSE(right->target);
 		const NamedScope *nscope = right->target->scopeRef;
 
 		// handle native props

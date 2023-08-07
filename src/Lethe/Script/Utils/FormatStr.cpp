@@ -152,7 +152,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			auto *src = reinterpret_cast<const Byte *>(stk.GetTop() + ofs);
 
 			if (Endian::IsBig() && type->IsSmallNumber())
-				src += 4-type->size;
+				src += (size_t)4-type->size;
 
 			type->GetVariableText(res, src);
 
