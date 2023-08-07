@@ -771,7 +771,7 @@ String &String::Insert(const char *str, const char *strEnd, int pos)
 
 		MemCpy(nd->data, data->data, epos * sizeof(char));
 		MemCpy(nd->data + epos, str, sl * sizeof(char));
-		MemCpy(nd->data + epos + sl, data->data + epos, (data->length - epos) * sizeof(char));
+		MemCpy(nd->data + epos + sl, data->data + epos, ((size_t)data->length - epos) * sizeof(char));
 		StringData *dt = data;
 		data = nd;
 		dt->Release();

@@ -165,7 +165,7 @@ void NameTableNum::ToCharBuffer(Int idx, Array<char> &nbuf) const
 	{
 		const auto &str = strings.GetString(cname.name);
 		nbuf.Resize(str.GetLength()+1);
-		MemCpy(nbuf.GetData(), str.Ansi(), str.GetLength()+1);
+		MemCpy(nbuf.GetData(), str.Ansi(), (size_t)str.GetLength()+1);
 		return;
 	}
 
