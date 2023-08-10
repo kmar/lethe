@@ -225,7 +225,7 @@ int CharConv::AnsiToWide(const char *srcch, int srcSizeBytes, wchar_t *dst, int 
 		{
 			while (src < se)
 			{
-				DecodeUTF8(src, se);
+				src += DecodeUTF8(src, se) <= 0;
 				res++;
 			}
 
@@ -240,6 +240,7 @@ int CharConv::AnsiToWide(const char *srcch, int srcSizeBytes, wchar_t *dst, int 
 			if (--dstMaxChars < 0)
 				break;
 
+			src += uni <= 0;
 			*dst++ = (unsigned)uni >= 65536 ? (wchar_t)'?' : (wchar_t)uni;
 		}
 	}
