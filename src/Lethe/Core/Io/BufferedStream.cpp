@@ -100,7 +100,7 @@ UInt BufferedStream::GetFlags() const
 
 bool BufferedStream::Read(void *buf, Int size, Int &nread)
 {
-	LETHE_ASSERT(stream && buf && size >= 0);
+	LETHE_ASSERT(stream && size >= 0 && (buf || size==0));
 
 	// flush if necessary
 	if (LETHE_UNLIKELY((flags & DIRTY_WRITE) && !Flush()))
