@@ -149,9 +149,31 @@ bool AstSymbol::ResolveAutoStructLiteral()
 		}
 	}
 
-	const auto *fn = maybeCall->nodes[0]->GetResolveTarget();
+	auto *calltarg = maybeCall->nodes[0];
+
+	const auto *fn = calltarg->GetResolveTarget();
 
 	LETHE_RET_FALSE(fn && argIdx >= 0);
+
+	if (fn->type == AST_NPROP_METHOD && calltarg->type == AST_OP_DOT)
+	{
+		// we need special handling here!
+		bool argok = (argIdx == 0 && (fn->flags & AST_F_ARG1_ELEM) != 0) ||
+					(argIdx == 1 && (fn->flags & AST_F_ARG2_ELEM) != 0);
+
+		LETHE_RET_FALSE(argok);
+
+		auto *tn = calltarg->nodes[0]->GetTypeNode();
+
+		LETHE_RET_FALSE(tn && tn->type == AST_TYPE_DYNAMIC_ARRAY);
+		auto *targ = tn->nodes[0];
+
+		LETHE_RET_FALSE(targ);
+
+		flags |= AST_F_RESOLVED;
+		target = targ;
+		return true;
+	}
 
 	if (fn->type != AST_FUNC)
 	{
