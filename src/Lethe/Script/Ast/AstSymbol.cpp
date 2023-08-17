@@ -154,7 +154,10 @@ bool AstSymbol::ResolveAutoStructLiteral()
 	LETHE_RET_FALSE(fn && argIdx >= 0);
 
 	if (fn->type != AST_FUNC)
+	{
 		fn = fn->GetTypeNode();
+		LETHE_RET_FALSE(fn);
+	}
 
 	LETHE_RET_FALSE(fn->type == AST_FUNC || fn->type == AST_TYPE_DELEGATE || fn->type == AST_TYPE_FUNC_PTR);
 
