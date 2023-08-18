@@ -78,6 +78,8 @@ struct DynamicArray
 	static void DestroyObjectRange(ScriptContext &ctx, const DataType &dt, Byte *ptr, Int elemCount);
 	static void CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte *dst, const Byte *src, Int elemCount);
 
+	static void CallOffsetZeroThis(ScriptContext &ctx, Int ofs);
+
 	compareFunc GetCompareFunc(ScriptContext &ctx, const DataType &dt, CompareHandle &ch) const;
 	compareFunc GetCompareFuncInternal(ScriptContext &ctx, const DataType &dt, CompareHandle &ch) const;
 };
@@ -87,6 +89,15 @@ DynamicArray::compareFunc DynamicArray::GetCompareFunc(ScriptContext &ctx, const
 	auto res = GetCompareFuncInternal(ctx, dt, ch);
 	ch.cfun = res;
 	return res;
+}
+
+void DynamicArray::CallOffsetZeroThis(ScriptContext &ctx, Int ofs)
+{
+	auto &stk = ctx.GetStack();
+	auto *othis = stk.GetThis();
+	stk.SetThis(nullptr);
+	ctx.CallOffset(ofs);
+	stk.SetThis(othis);
 }
 
 DynamicArray::compareFunc DynamicArray::GetCompareFuncInternal(ScriptContext &ctx, const DataType &dt, CompareHandle &ch) const
@@ -158,7 +169,7 @@ DynamicArray::compareFunc DynamicArray::GetCompareFuncInternal(ScriptContext &ct
 			stk.PushInt(0);
 			stk.PushPtr(b);
 			stk.PushPtr(a);
-			ctx.CallOffset(h.funCmp);
+			CallOffsetZeroThis(ctx, h.funCmp);
 			auto res = stk.GetSignedInt(2);
 			stk.Pop(3);
 			return res;
@@ -277,14 +288,14 @@ void DynamicArray::ConstructObjectRange(ScriptContext &ctx, const DataType &dt, 
 	if (elemCount == 1)
 	{
 		ctx.GetStack().PushPtr(ptr);
-		ctx.CallOffset(dt.funCtor);
+		CallOffsetZeroThis(ctx, dt.funCtor);
 		ctx.GetStack().Pop(1);
 	}
 	else
 	{
 		ctx.GetStack().PushPtr(ptr);
 		ctx.GetStack().PushInt(elemCount);
-		ctx.CallOffset(dt.funVCtor);
+		CallOffsetZeroThis(ctx, dt.funVCtor);
 		ctx.GetStack().Pop(2);
 	}
 }
@@ -312,14 +323,14 @@ void DynamicArray::DestroyObjectRange(ScriptContext &ctx, const DataType &dt, By
 	if (elemCount == 1)
 	{
 		ctx.GetStack().PushPtr(ptr);
-		ctx.CallOffset(dt.funDtor);
+		CallOffsetZeroThis(ctx, dt.funDtor);
 		ctx.GetStack().Pop(1);
 	}
 	else
 	{
 		ctx.GetStack().PushPtr(ptr);
 		ctx.GetStack().PushInt(elemCount);
-		ctx.CallOffset(dt.funVDtor);
+		CallOffsetZeroThis(ctx, dt.funVDtor);
 		ctx.GetStack().Pop(2);
 	}
 }
@@ -361,7 +372,7 @@ void DynamicArray::CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte 
 
 		ctx.GetStack().PushPtr(src);
 		ctx.GetStack().PushPtr(dst);
-		ctx.CallOffset(dt.funAssign);
+		CallOffsetZeroThis(ctx, dt.funAssign);
 		ctx.GetStack().Pop(2);
 	}
 	else
@@ -369,7 +380,7 @@ void DynamicArray::CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte 
 		ctx.GetStack().PushPtr(src);
 		ctx.GetStack().PushPtr(dst);
 		ctx.GetStack().PushInt(elemCount);
-		ctx.CallOffset(dt.funVAssign);
+		CallOffsetZeroThis(ctx, dt.funVAssign);
 		ctx.GetStack().Pop(3);
 	}
 }
