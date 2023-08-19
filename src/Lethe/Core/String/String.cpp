@@ -884,6 +884,9 @@ bool String::operator ==(const StringRef &sr) const
 
 bool String::operator ==(const String &str) const
 {
+	if (data == str.data)
+		return true;
+
 	const auto len = GetLength();
 
 	if (len != str.GetLength())
