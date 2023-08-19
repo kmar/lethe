@@ -135,7 +135,6 @@ Int CompiledProgram::EmitForwardJump(UInt ins)
 	// grab fixup handle
 	Int handle = flist.Alloc();
 	Int nsize = handle+1;
-	fixupTargets.EnsureCapacity(nsize);
 
 	if (handle >= fixupTargets.GetSize())
 		fixupTargets.Resize(nsize);

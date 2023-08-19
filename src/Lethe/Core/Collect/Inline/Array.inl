@@ -114,20 +114,13 @@ Array<T,S,A> &Array<T,S,A>::Resize(S newSize)
 	LETHE_ASSERT(newSize >= 0);
 	newSize = MaxZero(newSize);
 
-	Int cap = GetCapacity();
-
-	if (LETHE_UNLIKELY(newSize > cap))
-	{
-		if (!cap)
-			Reserve(newSize);
-		else
-			EnsureCapacity(newSize);
-	}
-
 	if (this->size > newSize)
 		DestroyObjectRange(this->data+newSize, this->size - newSize);
 	else
+	{
+		Reserve(newSize);
 		ConstructObjectRange(this->data+this->size, newSize - this->size);
+	}
 
 	this->size = newSize;
 	return *this;
@@ -139,20 +132,13 @@ Array<T,S,A> &Array<T,S,A>::Resize(S newSize, const T &ini)
 	LETHE_ASSERT(newSize >= 0);
 	newSize = MaxZero(newSize);
 
-	Int cap = GetCapacity();
-
-	if (LETHE_UNLIKELY(newSize > cap))
-	{
-		if (!cap)
-			Reserve(newSize);
-		else
-			EnsureCapacity(newSize);
-	}
-
 	if (this->size > newSize)
 		DestroyObjectRange(this->data+newSize, this->size - newSize);
 	else
+	{
+		Reserve(newSize);
 		ConstructObjectRange(this->data+this->size, newSize - this->size);
+	}
 
 	for (S i=this->size; i<newSize; i++)
 		this->data[i] = ini;
@@ -165,12 +151,21 @@ template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::Reserve(S newReserve)
 {
 	LETHE_ASSERT(newReserve >= 0);
-	newReserve = MaxZero(newReserve);
 
-	if (GetCapacity() >= newReserve)
+	S cap = GetCapacity();
+
+	if (cap >= newReserve)
 		return *this;
 
-	return Reallocate(newReserve, &Array::ReallocateInternal);
+	cap = GrowCapacity(cap);
+
+	if (cap < newReserve)
+		cap = newReserve;
+
+	while (newReserve > cap)
+		cap = GrowCapacity(cap);
+
+	return Reallocate(cap, &Array::ReallocateInternal);
 }
 
 template< typename T, typename S, typename A >
@@ -262,23 +257,10 @@ Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve, void (Array::*p)(T *, S))
 }
 
 template< typename T, typename S, typename A >
-Array<T,S,A> LETHE_NOINLINE &Array<T,S,A>::EnsureCapacity(S newCapacity)
-{
-	LETHE_ASSERT(newCapacity >= 0);
-
-	S newReserve = GetCapacity();
-
-	while (newCapacity > newReserve)
-		newReserve = newReserve < 2 ? newReserve + 1 : newReserve * 3 / 2;
-
-	return Reserve(newReserve);
-}
-
-template< typename T, typename S, typename A >
 S Array<T,S,A>::Add(const T &elem)
 {
 	if (LETHE_UNLIKELY(this->size >= GetCapacity()))
-		EnsureCapacity(this->size + 1);
+		Reserve(this->size + 1);
 
 	ConstructObjectRange<T,S>(this->data + this->size);
 	LETHE_ASSERT(this->data);
@@ -320,7 +302,7 @@ template< typename T, typename S, typename A >
 T *Array<T,S,A>::Alloc(S count)
 {
 	if (LETHE_UNLIKELY(this->size + count > GetCapacity()))
-		EnsureCapacity(this->size + count);
+		Reserve(this->size + count);
 
 	ConstructObjectRange<T,S>(this->data + this->size, count);
 	T *res = this->data + this->size;
@@ -385,7 +367,7 @@ S Array<T,S,A>::Append(const T *nbuf, S sz)
 	LETHE_ASSERT(sz >= 0);
 
 	if (LETHE_UNLIKELY(this->size + sz > GetCapacity()))
-		EnsureCapacity(this->size + sz);
+		Reserve(this->size + sz);
 
 	ConstructObjectRange<T,S>(this->data + this->size, sz);
 
@@ -420,7 +402,7 @@ S Array<T, S, A>::AppendSwap(T *nbuf, S sz)
 	LETHE_ASSERT(sz >= 0);
 
 	if (LETHE_UNLIKELY(this->size + sz > GetCapacity()))
-		EnsureCapacity(this->size + sz);
+		Reserve(this->size + sz);
 
 	ConstructObjectRange<T, S>(this->data + this->size, sz);
 
@@ -830,7 +812,7 @@ Array<T,S,A> &Array<T,S,A>::Insert(S index, const T &elem)
 	LETHE_ASSERT(index >= 0 && index <= this->size);
 
 	if (LETHE_UNLIKELY(this->size + 1 > GetCapacity()))
-		EnsureCapacity(this->size + 1);
+		Reserve(this->size + 1);
 
 	ConstructObjectRange<T,S>(this->data + this->size);
 
@@ -860,7 +842,7 @@ Array<T,S,A> &Array<T,S,A>::Insert(S index, const T *elem, S count)
 	LETHE_ASSERT(count > 0 && index >= 0 && index <= this->size);
 
 	if (LETHE_UNLIKELY(this->size + count > GetCapacity()))
-		EnsureCapacity(this->size + count);
+		Reserve(this->size + count);
 
 	ConstructObjectRange<T,S>(this->data + this->size, count);
 

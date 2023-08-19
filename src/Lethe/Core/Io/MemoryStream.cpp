@@ -139,10 +139,7 @@ bool MemoryStream::Write(const void *buf, Int size, Int &nwritten)
 	Int potNewSize = cpos + size;
 
 	if (data.GetSize() < potNewSize)
-	{
-		data.EnsureCapacity(potNewSize);
 		data.Resize(potNewSize);
-	}
 
 	if (size)
 		MemCpy(data.GetData() + cpos, buf, (size_t)size);

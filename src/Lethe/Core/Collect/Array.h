@@ -64,9 +64,8 @@ public:
 	inline Array &ResizeToFit(S index);
 	inline Array &ResizeToFit(S index, const T &ini);
 	// this doesn't do any shrinking
+	// grows exponentially by a factor of 1.5x unless capacity was previously zero (or small buffer)
 	LETHE_NOINLINE Array &Reserve(S newReserve);
-	// ensure capacity, going in 1.5x increments (made public)
-	Array &EnsureCapacity(S newCapacity);
 	// clear
 	Array &Clear();
 	// shrink reserve to fit size
@@ -288,6 +287,11 @@ protected:
 	// force reserve reallocation
 	LETHE_NOINLINE Array &Reallocate(S newReserve, void (Array::*p)(T *, S));
 	LETHE_NOINLINE void ReallocateInternal(T *newData, S newSize);
+
+	inline S GrowCapacity(S cap)
+	{
+		return cap<2 ? cap+1 : cap*3/2;
+	}
 };
 
 #if LETHE_COMPILER_MSC
