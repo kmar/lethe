@@ -53,7 +53,6 @@ struct DynamicArray
 	void Shrink(ScriptContext &ctx, const DataType &dt);
 	void Resize(ScriptContext &ctx, const DataType &dt, Int newSize);
 	void Reserve(ScriptContext &ctx, const DataType &dt, Int newSize);
-	void EnsureCapacity(ScriptContext &ctx, const DataType &dt, Int newSize);
 	void Reallocate(ScriptContext &ctx, const DataType &dt, Int newReserve);
 	Int Push(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
 	Int PushUnique(ScriptContext &ctx, const DataType &dt, const void *valuePtr);
@@ -82,6 +81,11 @@ struct DynamicArray
 
 	compareFunc GetCompareFunc(ScriptContext &ctx, const DataType &dt, CompareHandle &ch) const;
 	compareFunc GetCompareFuncInternal(ScriptContext &ctx, const DataType &dt, CompareHandle &ch) const;
+
+	static inline Int GrowCapacity(Int cap)
+	{
+		return cap<2 ? cap+1 : cap*3/2;
+	}
 };
 
 DynamicArray::compareFunc DynamicArray::GetCompareFunc(ScriptContext &ctx, const DataType &dt, CompareHandle &ch) const
@@ -189,22 +193,15 @@ void DynamicArray::Resize(ScriptContext &ctx, const DataType &dt, Int newSize)
 	LETHE_ASSERT(newSize >= 0);
 	newSize = MaxZero(newSize);
 
-	Int cap = GetCapacity();
-
-	if (newSize > cap)
-	{
-		if (!cap)
-			Reserve(ctx, dt, newSize);
-		else
-			EnsureCapacity(ctx, dt, newSize);
-	}
-
 	size_t sz = dt.size;
 
 	if (size > newSize)
 		DestroyObjectRange(ctx, dt, data + sz*newSize, size - newSize);
 	else
+	{
+		Reserve(ctx, dt, newSize);
 		ConstructObjectRange(ctx, dt, data + sz*size, newSize - size);
+	}
 
 	size = newSize;
 }
@@ -251,22 +248,21 @@ void DynamicArray::Reallocate(ScriptContext &ctx, const DataType &dt, Int newRes
 void DynamicArray::Reserve(ScriptContext &ctx, const DataType &dt, Int newReserve)
 {
 	LETHE_ASSERT(newReserve >= 0);
-	newReserve = MaxZero(newReserve);
 
-	if (GetCapacity() < newReserve)
-		Reallocate(ctx, dt, newReserve);
-}
+	Int cap = GetCapacity();
 
-void DynamicArray::EnsureCapacity(ScriptContext &ctx, const DataType &dt, Int newCapacity)
-{
-	LETHE_ASSERT(newCapacity >= 0);
+	if (cap >= newReserve)
+		return;
 
-	Int newReserve = GetCapacity();
+	cap = GrowCapacity(cap);
 
-	while (newCapacity > newReserve)
-		newReserve = newReserve < 2 ? newReserve + 1 : newReserve * 3 / 2;
+	if (cap < newReserve)
+		cap = newReserve;
 
-	Reserve(ctx, dt, newReserve);
+	while (newReserve > cap)
+		cap = GrowCapacity(cap);
+
+	Reallocate(ctx, dt, cap);
 }
 
 void DynamicArray::ConstructObjectRange(ScriptContext &ctx, const DataType &dt, Byte *ptr, Int elemCount)
@@ -388,7 +384,7 @@ void DynamicArray::CopyObjectRange(ScriptContext &ctx, const DataType &dt, Byte 
 Int DynamicArray::Push(ScriptContext &ctx, const DataType &dt, const void *valuePtr)
 {
 	if (LETHE_UNLIKELY(size >= GetCapacity()))
-		EnsureCapacity(ctx, dt, size + 1);
+		Reserve(ctx, dt, size + 1);
 
 	auto dptr = data + size*(size_t)dt.size;
 	ConstructObjectRange(ctx, dt, dptr, 1);
@@ -595,7 +591,7 @@ bool DynamicArray::Insert(ScriptContext &ctx, const DataType &dt, const void *va
 	size_t sz = dt.size;
 
 	if (LETHE_UNLIKELY(size >= GetCapacity()))
-		EnsureCapacity(ctx, dt, size + 1);
+		Reserve(ctx, dt, size + 1);
 
 	// okay, now make space using memmove
 	MemMove(data + ((size_t)index+1)*sz, data + index*sz, ((size_t)size - index)*sz);

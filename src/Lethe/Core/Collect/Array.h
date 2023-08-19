@@ -288,7 +288,7 @@ protected:
 	LETHE_NOINLINE Array &Reallocate(S newReserve, void (Array::*p)(T *, S));
 	LETHE_NOINLINE void ReallocateInternal(T *newData, S newSize);
 
-	inline S GrowCapacity(S cap)
+	static inline S GrowCapacity(S cap)
 	{
 		return cap<2 ? cap+1 : cap*3/2;
 	}
