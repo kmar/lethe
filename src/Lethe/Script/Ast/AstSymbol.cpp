@@ -123,7 +123,9 @@ bool AstSymbol::ResolveAutoStructLiteral()
 	if (maybeCall->type == AST_RETURN)
 	{
 		LETHE_RET_FALSE(maybeCall->scopeRef);
-		auto *fn = maybeCall->scopeRef->node;
+		auto *scope = maybeCall->scopeRef->FindFunctionScope();
+		LETHE_RET_FALSE(scope);
+		auto *fn = scope->node;
 		LETHE_RET_FALSE(fn && fn->type == AST_FUNC);
 		auto *func = AstStaticCast<AstFuncBase *>(fn);
 		const auto *res = func->GetResult();
