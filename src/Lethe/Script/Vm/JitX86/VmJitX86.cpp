@@ -2556,25 +2556,10 @@ void VmJitX86::PopThis()
 	Pop(1);
 }
 
-void VmJitX86::PCopy(Int count, bool reverse)
+void VmJitX86::PCopyCommon(Int count)
 {
-	if (!count)
-		return;
-
-	// we have to flush here because of regs
-	FlushStackOpt();
-	////DontFlush _(*this);
-
-	// okay: get ptrs...
-	// free regs: eax, ebx, ecx, edx
-
 	Int scount = count / Stack::WORD_SIZE;
 	count &= (Stack::WORD_SIZE-1);
-
-	// load dst
-	Mov(Edx.ToRegPtr(), MemPtr(Edi + (stackOpt + reverse)*Stack::WORD_SIZE));
-	// load src
-	Mov(Ecx.ToRegPtr(), MemPtr(Edi + (stackOpt + 1 - reverse)*Stack::WORD_SIZE));
 
 	if (scount <= 4)
 	{
@@ -2624,6 +2609,44 @@ void VmJitX86::PCopy(Int count, bool reverse)
 		Mov(Al, Mem8(Ecx + ofs));
 		Mov(Mem8(Edx + ofs), Al);
 	}
+}
+
+void VmJitX86::PCopyLocal(Int ofs0, Int ofs1, Int count)
+{
+	if (!count)
+		return;
+
+	// we have to flush here because of regs
+	FlushStackOpt();
+
+	// okay: get ptrs...
+	// free regs: eax, ebx, ecx, edx
+
+	// load dst
+	Lea(Edx.ToRegPtr(), MemPtr(Edi + (stackOpt + ofs1)*Stack::WORD_SIZE));
+	// load src
+	Lea(Ecx.ToRegPtr(), MemPtr(Edi + (stackOpt + ofs0)*Stack::WORD_SIZE));
+
+	PCopyCommon(count);
+}
+
+void VmJitX86::PCopy(Int count, bool reverse)
+{
+	if (!count)
+		return;
+
+	// we have to flush here because of regs
+	FlushStackOpt();
+
+	// okay: get ptrs...
+	// free regs: eax, ebx, ecx, edx
+
+	// load dst
+	Mov(Edx.ToRegPtr(), MemPtr(Edi + (stackOpt + reverse)*Stack::WORD_SIZE));
+	// load src
+	Mov(Ecx.ToRegPtr(), MemPtr(Edi + (stackOpt + 1 - reverse)*Stack::WORD_SIZE));
+
+	PCopyCommon(count);
 }
 
 void VmJitX86::PSwap(Int count)

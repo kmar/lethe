@@ -696,6 +696,14 @@ bool VmJitX86::CodeGenPass(CompiledProgram &prog, Int pass)
 
 		case OPC_LPUSHADR:
 		{
+			if (i+2 < Min(nextBarrier, nextFunc) && (prog.instructions[i+1] & 255) == OPC_LPUSHADR && (prog.instructions[i+2] & 255) == OPC_PCOPY)
+			{
+				// special local pcopy...
+				PCopyLocal(DecodeUImm24(ins), DecodeUImm24(prog.instructions[i+1])-1, DecodeUImm24(prog.instructions[i+2]));
+				i += 2;
+				continue;
+			}
+
 			// note: flushing here seems necessary (related to delegates) if we do pushthis/lpushadr 0
 			FlushLastAdr();
 			Int tofs = DecodeUImm24(ins);

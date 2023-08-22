@@ -406,7 +406,9 @@ private:
 	void PushThis();
 	void PopThis();
 
-	void PCopy(Int size, bool reverse = 0);
+	void PCopyLocal(Int ofs0, Int ofs1, Int size);
+	void PCopyCommon(Int count);
+	void PCopy(Int size, bool reverse = false);
 	void PSwap(Int size);
 
 	void RangeCheck();
