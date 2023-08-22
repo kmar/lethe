@@ -421,7 +421,28 @@ void CompiledProgram::Emit(UInt ins)
 
 	EmitIns(ins);
 
-	if (instructions.GetSize() <= oldInsSize && !codeToLine.IsEmpty())
+	auto isz = instructions.GetSize();
+
+	if (isz > 0 && emitOptBase <= isz-2 && (instructions.Back() & 255) == OPC_AADD_ICONST && (instructions[isz-2] & 255) == OPC_LPUSHADR)
+	{
+		// fold lpushadr + AADD_ICONST to lpushadr if possible
+		auto value = (Int)instructions.Back() >> 8;
+
+		if (value >= 0 && !((UInt)value % (UInt)Stack::WORD_SIZE))
+		{
+			value /= Stack::WORD_SIZE;
+			value += (Int)instructions[isz-2] >> 8;
+
+			if (CanEncodeI24(value))
+			{
+				instructions[isz-2] = OPC_LPUSHADR + (value << 8);
+				instructions.Pop();
+				--isz;
+			}
+		}
+	}
+
+	if (isz <= oldInsSize && !codeToLine.IsEmpty())
 	{
 		// we may need to fixup codeToLine!
 		auto &cl = codeToLine.Back();
