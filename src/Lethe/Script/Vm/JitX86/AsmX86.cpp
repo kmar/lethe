@@ -542,7 +542,14 @@ void AsmX86::Movd(const RegExpr &dst, const RegExpr &src)
 
 void AsmX86::Movq(const RegExpr &dst, const RegExpr &src)
 {
-	MovxCommon(dst, src, 0xf3, 0x66, 0x7e, 0xd6);
+	bool regs = dst.IsRegister() && src.IsRegister();
+	bool sse0 = src.GetSize() == MEM_XMM;
+	bool sse1 = dst.GetSize() == MEM_XMM;
+
+	if (regs && sse0 != sse1)
+		Movd(dst, src);
+	else
+		MovxCommon(dst, src, 0xf3, 0x66, 0x7e, 0xd6);
 }
 
 void AsmX86::MovxCommon(const RegExpr &dst, const RegExpr &src, Byte prefix0, Byte prefix1, Byte opc0, Byte opc1)

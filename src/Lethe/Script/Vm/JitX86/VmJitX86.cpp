@@ -50,10 +50,15 @@ RegExpr VmJitX86::AllocGpr(Int offset, bool load, bool write, bool pointer)
 
 		// disabled this assert because I copy pointers for temp => const ref calls...
 		//LETHE_ASSERT(!pointer);
-		RegExpr res = gprCache.Alloc(offset, *this, RA_WRITE*write);
+		RegExpr res = gprCache.Alloc(offset, *this, RA_WRITE*write + RA_PTR*pointer);
 
 		if (load)
-			Movd(res, sse);
+		{
+			if (res.GetSize() == MEM_QWORD)
+				Movq(res, sse);
+			else
+				Movd(res, sse);
+		}
 
 		// must move tracked vars!
 		sseCache.MoveTracked(gprCache, offset);
@@ -96,13 +101,17 @@ RegExpr VmJitX86::AllocSse(Int offset, bool load, bool write, bool isDouble)
 
 	if (gpr.IsRegister())
 	{
-		LETHE_ASSERT(!load || !isDouble);
 		// already cached in gpr => transfer or throw away...
 
 		RegExpr res = sseCache.Alloc(offset, *this, write*RA_WRITE + isDouble*RA_DOUBLE);
 
 		if (load)
-			Movd(res, gpr.ToReg32());
+		{
+			if (isDouble)
+				Movq(res, gpr);
+			else
+				Movd(res, gpr.ToReg32());
+		}
 
 		// must move tracked vars!
 		gprCache.MoveTracked(sseCache, offset);
