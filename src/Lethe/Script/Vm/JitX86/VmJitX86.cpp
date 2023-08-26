@@ -2568,7 +2568,7 @@ void VmJitX86::PopThis()
 void VmJitX86::PCopyCommon(Int count)
 {
 	Int scount = count / Stack::WORD_SIZE;
-	count &= (Stack::WORD_SIZE-1);
+	count &= Stack::WORD_SIZE-1;
 
 	if (scount <= 4)
 	{
@@ -2630,6 +2630,54 @@ void VmJitX86::PCopyLocal(Int ofs0, Int ofs1, Int count)
 
 	// okay: get ptrs...
 	// free regs: eax, ebx, ecx, edx
+
+	Int scount = count / Stack::WORD_SIZE;
+
+	if (scount <= 4)
+	{
+		count &= Stack::WORD_SIZE-1;
+
+		Int srcOfs = (ofs0 + stackOpt) * Stack::WORD_SIZE;
+		Int dstOfs = (ofs1 + stackOpt) * Stack::WORD_SIZE;
+
+		// unroll
+		for (Int i=0; i<scount; i++)
+		{
+			Mov(Eax.ToRegPtr(), MemPtr(Edi + Stack::WORD_SIZE*i+srcOfs));
+			Mov(MemPtr(Edi + Stack::WORD_SIZE*i+dstOfs), Eax.ToRegPtr());
+		}
+
+		srcOfs += scount*Stack::WORD_SIZE;
+		dstOfs += scount*Stack::WORD_SIZE;
+
+		if (count >= 4)
+		{
+			LETHE_ASSERT(IsX64);
+			Mov(Eax, Mem32(Edi + srcOfs));
+			Mov(Mem32(Edi + dstOfs), Eax);
+			count -= 4;
+			srcOfs += 4;
+			dstOfs += 4;
+		}
+
+		if (count >= 2)
+		{
+			Mov(Ax, Mem16(Edi + srcOfs));
+			Mov(Mem16(Edi + dstOfs), Ax);
+			count -= 2;
+			srcOfs += 2;
+			dstOfs += 2;
+		}
+
+		if (count)
+		{
+			Mov(Al, Mem8(Edi + srcOfs));
+			Mov(Mem8(Edi + dstOfs), Al);
+		}
+
+		return;
+	}
+
 
 	// load dst
 	Lea(Edx.ToRegPtr(), MemPtr(Edi + (stackOpt + ofs1)*Stack::WORD_SIZE));
