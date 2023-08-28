@@ -122,6 +122,7 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 	if (base && base->type == AST_CLASS)
 	{
 		baseClass = AstStaticCast<AstTypeClass *>(base);
+		baseClass->qualifiers |= AST_Q_BASE_CLASS;
 
 		if (baseClass->typeRef.GetTypeEnum() == DT_NONE)
 			LETHE_RET_FALSE(baseClass->TypeGen(p));
@@ -190,7 +191,8 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 		if (vidx < 0 && type == AST_CLASS && (qualifiers & AST_Q_STATE) != 0)
 			return p.Error(n, "state classes cannot add new virtual methods (did you mean final?)");
 
-		AstStaticCast<AstFunc *>(n)->vtblIndex = vidx < 0 ? vtblIndex++ : vidx;
+		if (!(n->qualifiers & AST_Q_DTOR))
+			AstStaticCast<AstFunc *>(n)->vtblIndex = vidx < 0 ? vtblIndex++ : vidx;
 	}
 
 	for (auto *it : postponeTypeGen)
@@ -219,11 +221,15 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 	if (qualifiers & AST_Q_TEMPLATE)
 		return true;
 
+	// mark classes nobody derived from as final so that we can devirtualize some methods later
+	if (!(qualifiers & (AST_Q_BASE_CLASS | AST_Q_FINAL)))
+		qualifiers |= AST_Q_FINAL;
+
 	// note: no need to call Super::VtblGen here because we don't support nested classes anyway
 	QDataType qdtJit = QDataType::MakeConstType(p.elemTypes[DT_STRONG_PTR]);
 
 	AstNode *base = nodes[1]->target;
-	AstTypeClass *baseClass = 0;
+	AstTypeClass *baseClass = nullptr;
 
 	if (base && base->type == AST_CLASS)
 		baseClass = AstStaticCast<AstTypeClass *>(base);
@@ -284,12 +290,23 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 		if (n->type != AST_FUNC || !(n->qualifiers & AST_Q_METHOD))
 			continue;
 
-		if (n->qualifiers & (AST_Q_FINAL | AST_Q_STATIC | AST_Q_CTOR))
+		if (n->qualifiers & (AST_Q_FINAL | AST_Q_STATIC | AST_Q_CTOR | AST_Q_DTOR))
 			continue;
 
-		const auto *func = AstStaticCast<const AstFunc *>(n);
+		auto *func = AstStaticCast<AstFunc *>(n);
 
 		const auto &mname = AstStaticCast<AstText *>(func->nodes[AstFunc::IDX_NAME])->text;
+
+		// try to devirtualize some methods
+		if (baseClass && (qualifiers & AST_Q_FINAL) &&
+			!(n->qualifiers & (AST_Q_DTOR | AST_Q_NATIVE)) && func->vtblIndex >= baseClass->vtblIndex)
+		{
+			func->qualifiers &= ~AST_Q_VIRTUAL;
+			func->qualifiers |= AST_Q_FINAL;
+			func->vtblIndex = -1;
+			//p.Error(func, String::Printf("devirtualized function %s", mname.Ansi()));
+			continue;
+		}
 
 		Int pc = n->offset;
 

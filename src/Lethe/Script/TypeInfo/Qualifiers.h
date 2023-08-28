@@ -85,7 +85,9 @@ enum AstQualifier : ULong
 	AST_Q_NOTEMP = (ULong)1 << 50,
 	// need to tag operators for func overload name gen
 	AST_Q_OPERATOR = (ULong)1 << 51,
-	// note: 12 left
+	// base class flag; classes without this can be marked final
+	AST_Q_BASE_CLASS = (ULong)1 << 52,
+	// note: 11 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |
