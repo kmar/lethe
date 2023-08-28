@@ -10,6 +10,8 @@ namespace lethe
 
 bool AstContinue::CodeGen(CompiledProgram &p)
 {
+	p.SetLocation(location);
+
 	LETHE_ASSERT(scopeRef);
 	// note: must be separate because of eval order!
 	NamedScope *bscope = p.BreakScope(1);

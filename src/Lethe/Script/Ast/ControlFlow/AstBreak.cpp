@@ -13,6 +13,8 @@ bool AstBreak::CodeGen(CompiledProgram &p)
 	if (flags & AST_F_SKIP_CGEN)
 		return true;
 
+	p.SetLocation(location);
+
 	LETHE_ASSERT(scopeRef);
 	// note: must be separate because of eval order!
 	NamedScope *bscope = p.BreakScope();

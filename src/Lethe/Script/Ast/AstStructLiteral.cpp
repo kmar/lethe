@@ -23,6 +23,8 @@ QDataType AstStructLiteral::GetTypeDesc(const CompiledProgram &p) const
 
 bool AstStructLiteral::CodeGen(CompiledProgram &p)
 {
+	p.SetLocation(location);
+
 	auto qdt = nodes[0]->GetTypeDesc(p);
 
 	if (qdt.qualifiers & AST_Q_NOCOPY)

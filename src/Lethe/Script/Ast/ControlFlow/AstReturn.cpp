@@ -13,6 +13,8 @@ namespace lethe
 
 bool AstReturn::CodeGen(CompiledProgram &p)
 {
+	p.SetLocation(location);
+
 	if (!nodes.IsEmpty())
 	{
 		const AstNode *n = this;

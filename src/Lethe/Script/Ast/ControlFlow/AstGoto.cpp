@@ -29,6 +29,8 @@ bool AstGoto::ResolveNode(const ErrorHandler &eh)
 
 bool AstGoto::CodeGen(CompiledProgram &p)
 {
+	p.SetLocation(location);
+
 	auto *label = AstStaticCast<AstLabel *>(target);
 
 	LETHE_RET_FALSE(p.GotoScope(label));
