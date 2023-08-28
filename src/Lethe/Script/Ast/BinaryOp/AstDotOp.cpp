@@ -239,6 +239,8 @@ bool AstDotOp::CodeGenInternal(CompiledProgram &p)
 	LETHE_RET_FALSE(left->CodeGenRef(p, 1, 1));
 	// ok, we have pointer on top of stack...
 
+	p.SetLocation(right->location);
+
 	if (right->type == AST_IDENT)
 	{
 		AstSymbol *text = AstStaticCast<AstSymbol *>(right);
@@ -288,6 +290,8 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 
 	LETHE_RET_FALSE(left->CodeGenRef(p, allowConst, 1));
 	// ok, we have pointer on top of stack...
+
+	p.SetLocation(right->location);
 
 	if (right->type == AST_IDENT)
 	{

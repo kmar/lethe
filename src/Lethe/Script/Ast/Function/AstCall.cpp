@@ -809,6 +809,8 @@ const AstNode *AstCall::FindEnclosingFunction() const
 
 bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 {
+	p.SetLocation(location);
+
 	/*
 		problem to solve: we should ideally have retval as first arg pushed (assuming args pushed in reverse order)
 		BUT this means no ellipsis! OR with ellipsis but without retval (yes, this seems fine since ellipsis is only useful for printf)
