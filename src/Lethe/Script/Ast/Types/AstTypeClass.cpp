@@ -200,6 +200,18 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 			AstStaticCast<AstFunc *>(n)->vtblIndex = vidx < 0 ? vtblIndex++ : vidx;
 	}
 
+	// don't allow to devirtualize ignored methods
+	for (auto &&it : ignores)
+	{
+		if (!baseClass)
+			continue;
+
+		auto *mnode = baseClass->scopeRef->FindSymbol(it, true);
+
+		if (mnode && mnode->type == AST_FUNC)
+			mnode->qualifiers |= AST_Q_OVERRIDE;
+	}
+
 	for (auto *it : postponeTypeGen)
 		if (!(it->flags & AST_F_LOCK))
 			LETHE_RET_FALSE(it->TypeGen(p));
@@ -303,7 +315,7 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 		// so it should be quite straightforward
 		// the only problem that remains is to purge vtbl indices of devirtualized methods; maybe later
 		if (baseClass &&
-			!(n->qualifiers & (AST_Q_DTOR | AST_Q_NATIVE | AST_Q_OVERRIDE)))
+			!(n->qualifiers & (AST_Q_DTOR | AST_Q_OVERRIDE)))
 		{
 			func->qualifiers &= ~AST_Q_VIRTUAL;
 			func->qualifiers |= AST_Q_FINAL;
