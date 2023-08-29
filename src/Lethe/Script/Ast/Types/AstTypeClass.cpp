@@ -122,7 +122,6 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 	if (base && base->type == AST_CLASS)
 	{
 		baseClass = AstStaticCast<AstTypeClass *>(base);
-		baseClass->qualifiers |= AST_Q_BASE_CLASS;
 
 		if (baseClass->typeRef.GetTypeEnum() == DT_NONE)
 			LETHE_RET_FALSE(baseClass->TypeGen(p));
@@ -145,13 +144,13 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 		// search for method with same name
 		const String &mname = AstStaticCast<AstText *>(n->nodes[1])->text;
 
-		AstNode *mnode = 0;
+		AstNode *mnode = nullptr;
 
 		if (baseClass)
 			mnode = baseClass->scopeRef->FindSymbol(mname, true);
 
 		if (mnode && mnode->type != AST_FUNC)
-			mnode = 0;
+			mnode = nullptr;
 
 		Int vidx = -1;
 
@@ -179,7 +178,13 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 			vidx = AstStaticCast<AstFunc *>(mnode)->vtblIndex;
 
 			if ((n->qualifiers & (AST_Q_VIRTUAL | AST_Q_OVERRIDE)) == AST_Q_VIRTUAL)
+			{
 				p.Warning(n, "missing override specifier", WARN_MISSING_OVERRIDE);
+				n->qualifiers |= AST_Q_OVERRIDE;
+			}
+
+			// reuse AST_Q_OVERRIDE to mark overridden methods
+			mnode->qualifiers |= AST_Q_OVERRIDE;
 		}
 
 		if (n->qualifiers & AST_Q_OVERRIDE)
@@ -220,10 +225,6 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 {
 	if (qualifiers & AST_Q_TEMPLATE)
 		return true;
-
-	// mark classes nobody derived from as final so that we can devirtualize some methods later
-	if (!(qualifiers & (AST_Q_BASE_CLASS | AST_Q_FINAL)))
-		qualifiers |= AST_Q_FINAL;
 
 	// note: no need to call Super::VtblGen here because we don't support nested classes anyway
 	QDataType qdtJit = QDataType::MakeConstType(p.elemTypes[DT_STRONG_PTR]);
@@ -298,8 +299,11 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 		const auto &mname = AstStaticCast<AstText *>(func->nodes[AstFunc::IDX_NAME])->text;
 
 		// try to devirtualize some methods
-		if (baseClass && (qualifiers & AST_Q_FINAL) &&
-			!(n->qualifiers & (AST_Q_DTOR | AST_Q_NATIVE)) && func->vtblIndex >= baseClass->vtblIndex)
+		// we already marked all (base and overrides) virtual methods with AST_Q_OVERRIDE qualifier
+		// so it should be quite straightforward
+		// the only problem that remains is to purge vtbl indices of devirtualized methods; maybe later
+		if (baseClass &&
+			!(n->qualifiers & (AST_Q_DTOR | AST_Q_NATIVE | AST_Q_OVERRIDE)))
 		{
 			func->qualifiers &= ~AST_Q_VIRTUAL;
 			func->qualifiers |= AST_Q_FINAL;
