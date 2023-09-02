@@ -239,7 +239,9 @@ void test_script_spawn(lethe::ScriptContext *ctx)
 
 int main()
 {
-	lethe::Init();
+	// we're using init scope guard here, otherwise call lethe::Init() and lethe::Done()
+	// for static init/done
+	lethe::InitGuard init;
 
 	lethe::ScriptEngine engine(test_debug_server ? lethe::ENGINE_DEBUG : lethe::ENGINE_JIT);
 
@@ -627,8 +629,6 @@ int main()
 	ctx->RunDestructors();
 
 	xprintf("exec took " LETHE_FORMAT_ULONG " usec\n", pw.Stop());
-
-	lethe::Done();
 
 	return 0;
 }

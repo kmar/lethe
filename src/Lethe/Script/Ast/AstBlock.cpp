@@ -8,7 +8,7 @@ namespace lethe
 
 // AstBlock
 
-LETHE_BUCKET_ALLOC_DEF(AstBlock)
+LETHE_AST_BUCKET_ALLOC_DEF(AstBlock)
 
 bool AstBlock::ResolveNode(const ErrorHandler &)
 {

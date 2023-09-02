@@ -14,7 +14,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstFunc)
+LETHE_AST_BUCKET_ALLOC_DEF(AstFunc)
 
 // AstFunc
 

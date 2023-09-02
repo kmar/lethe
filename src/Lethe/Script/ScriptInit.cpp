@@ -6,6 +6,7 @@
 #include <Lethe/Core/String/Name.h>
 #include <Lethe/Core/String/CharConv.h>
 #include <Lethe/Core/Classes/ObjectHeap.h>
+#include <Lethe/Core/Memory/BucketAlloc.h>
 
 namespace lethe
 {
@@ -27,6 +28,7 @@ void Init(const InitOptions *opts)
 
 	Platform::Init();
 	Mutex::Init();
+	BucketAlloc::StaticInit();
 	Timer::Init();
 	CharConv::Init();
 	NameTable::Init();
@@ -42,6 +44,7 @@ void Done()
 	NameTable::Done();
 	CharConv::Done();
 	Timer::Done();
+	BucketAlloc::StaticDone();
 	Mutex::Done();
 	Platform::Done();
 }

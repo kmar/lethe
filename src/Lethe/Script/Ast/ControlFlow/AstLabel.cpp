@@ -7,7 +7,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstLabel)
+LETHE_AST_BUCKET_ALLOC_DEF(AstLabel)
 
 // AstLabel
 

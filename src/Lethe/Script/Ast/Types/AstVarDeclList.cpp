@@ -6,7 +6,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstVarDeclList)
+LETHE_AST_BUCKET_ALLOC_DEF(AstVarDeclList)
 
 // AstVarDeclList
 

@@ -266,6 +266,8 @@ private:
 
 class AstSymbol;
 
+#define LETHE_AST_BUCKET_ALLOC_DEF(cls) LETHE_BUCKET_ALLOC_DEF_SIZE(cls, 256)
+
 class LETHE_API AstNode : public NoCopy
 {
 	LETHE_BUCKET_ALLOC(AstNode)

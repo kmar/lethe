@@ -12,7 +12,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstVarDecl)
+LETHE_AST_BUCKET_ALLOC_DEF(AstVarDecl)
 
 // AstVarDecl
 

@@ -6,7 +6,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstText)
+LETHE_AST_BUCKET_ALLOC_DEF(AstText)
 
 // AstText
 

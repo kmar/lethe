@@ -11,6 +11,7 @@
 #include "Core/Lexer/Token.cpp"
 #include "Core/Math/Math.cpp"
 #include "Core/Memory/AlignedAlloc.cpp"
+#include "Core/Memory/BucketAlloc.cpp"
 #include "Core/Memory/Heap.cpp"
 #include "Core/Memory/Memory.cpp"
 #include "Core/Ptr/RefCounted.cpp"

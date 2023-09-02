@@ -10,7 +10,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstTypeStruct)
+LETHE_AST_BUCKET_ALLOC_DEF(AstTypeStruct)
 
 // AstTypeStruct
 

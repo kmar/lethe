@@ -5,7 +5,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstEnumItem)
+LETHE_AST_BUCKET_ALLOC_DEF(AstEnumItem)
 
 // AstEnumItem
 

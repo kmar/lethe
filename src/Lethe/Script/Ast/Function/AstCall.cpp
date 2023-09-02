@@ -21,7 +21,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstCall)
+LETHE_AST_BUCKET_ALLOC_DEF(AstCall)
 
 // AstCall
 

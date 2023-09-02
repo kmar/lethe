@@ -20,4 +20,17 @@ struct InitOptions
 void LETHE_API Init(const InitOptions *opts = nullptr);
 void LETHE_API Done();
 
+struct InitGuard
+{
+	InitGuard()
+	{
+		Init();
+	}
+
+	~InitGuard()
+	{
+		Done();
+	}
+};
+
 }

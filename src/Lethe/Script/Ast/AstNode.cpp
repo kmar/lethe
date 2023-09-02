@@ -30,7 +30,7 @@ namespace lethe
 {
 
 // allocators
-LETHE_BUCKET_ALLOC_DEF(AstNode)
+LETHE_AST_BUCKET_ALLOC_DEF(AstNode)
 
 // must be in sync with enum!
 static const char *AST_TYPE_NAMES[] =

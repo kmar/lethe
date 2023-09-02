@@ -6,7 +6,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstUnaryRef)
+LETHE_AST_BUCKET_ALLOC_DEF(AstUnaryRef)
 
 // AstUnaryRef
 

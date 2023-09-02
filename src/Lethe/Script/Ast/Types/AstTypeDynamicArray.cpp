@@ -3,7 +3,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstTypeDynamicArray)
+LETHE_AST_BUCKET_ALLOC_DEF(AstTypeDynamicArray)
 
 // AstTypeDynamicArray
 

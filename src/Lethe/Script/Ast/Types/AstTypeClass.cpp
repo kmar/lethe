@@ -8,7 +8,7 @@
 namespace lethe
 {
 
-LETHE_BUCKET_ALLOC_DEF(AstTypeClass)
+LETHE_AST_BUCKET_ALLOC_DEF(AstTypeClass)
 
 // AstTypeClass
 
