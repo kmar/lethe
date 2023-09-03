@@ -71,8 +71,12 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 			auto *sym = AstStaticCast<AstText *>(nodes[0]);
 			const auto &fname = sym->text;
 
+			// we ultimately don't support ADL with scope res op, I had an idea to combine this with special scopes
+			// but that was broken anyway, so let's just not allow it at all
+			bool tryADL = e.tryADL && sym->type != AST_OP_SCOPE_RES;
+
 			// here we should be able to do ADL to find the function based on ADL
-			for (Int i=1; e.tryADL && i<nodes.GetSize(); i++)
+			for (Int i=1; tryADL && i<nodes.GetSize(); i++)
 			{
 				if (nodes[i]->type == AST_ARG_ELLIPSIS)
 					continue;
@@ -117,11 +121,6 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 				}
 
 				const auto *lookupScope = scopeRef;
-
-				if (nodes[0]->type == AST_OP_SCOPE_RES)
-				{
-					lookupScope = nodes[0]->nodes[0]->symScopeRef;
-				}
 
 				NamedScope *specialScope = specialScopeName.IsEmpty() ? nullptr : FindSpecialADLScope(lookupScope, specialScopeName);
 
