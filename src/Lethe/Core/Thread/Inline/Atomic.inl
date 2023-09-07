@@ -11,7 +11,7 @@ inline T *AtomicPointer<T>::Load() const
 	return (T *)_InterlockedCompareExchangePointer((void * volatile *)&data, (void *)data, (void *)data);
 #	endif
 #else
-	return (T *)__atomic_load_n((volatile void **)&data, __ATOMIC_SEQ_CST);
+	return (T *)__atomic_load_n((void **)&data, __ATOMIC_SEQ_CST);
 #endif
 }
 
@@ -21,7 +21,17 @@ inline void AtomicPointer<T>::Store(T *value)
 #if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
 	_InterlockedExchangePointer((void * volatile *)&data, (void *)value);
 #else
-	__atomic_store_n((volatile void **)&data, (void *)value, __ATOMIC_SEQ_CST);
+	__atomic_store_n((void **)&data, (void *)value, __ATOMIC_SEQ_CST);
+#endif
+}
+
+template<typename T>
+inline T *AtomicPointer<T>::Exchange(T *value)
+{
+#if LETHE_OS_WINDOWS && LETHE_COMPILER_MSC_ONLY
+	return static_cast<T *>(_InterlockedExchangePointer((void * volatile *)&data, (void *)value));
+#else
+	return static_cast<T *>(__atomic_exchange_n((void **)&data, (void *)value, __ATOMIC_SEQ_CST));
 #endif
 }
 

@@ -11,6 +11,8 @@
 
 #include <Lethe/Core/Sys/Bits.h>
 
+#include <Lethe/Core/Thread/Atomic.h>
+
 namespace lethe
 {
 
@@ -576,16 +578,15 @@ void Opcode_FixWeak(Stack &stk)
 
 void Opcode_FixWeakRef(Stack &stk)
 {
-	auto pobj = static_cast<BaseObject **>(stk.GetPtr(0));
-	auto obj = *pobj;
+	auto pobj = static_cast<AtomicPointer<BaseObject>*>(stk.GetPtr(0));
+	auto *obj = pobj->Load();
 
-	if (obj && !Atomic::Load(obj->strongRefCount))
-	{
-		if (!Atomic::Decrement(obj->weakRefCount))
-			ObjectHeap::Get().Dealloc(obj);
+	if (!obj || Atomic::Load(obj->strongRefCount) != 0)
+		return;
 
-		*pobj = nullptr;
-	}
+	if (auto *tmp = pobj->Exchange(nullptr))
+		if (!Atomic::Decrement(tmp->weakRefCount))
+			ObjectHeap::Get().Dealloc(tmp);
 }
 
 void Opcode_FixAddWeak(Stack &stk)

@@ -22,12 +22,18 @@ struct AtomicPointer
 
 	inline void Store(T *value);
 
-private:
-	AtomicPointer &operator =(const AtomicPointer &)
+	inline T *Exchange(T *value);
+
+	// note: not thread-safe!
+	void SwapWith(AtomicPointer &o)
 	{
-		return *this;
+		auto *tmp = data;
+		data = o.data;
+		o.data = tmp;
 	}
 
+private:
+	// copy at your own risk
 	volatile T *data;
 };
 
