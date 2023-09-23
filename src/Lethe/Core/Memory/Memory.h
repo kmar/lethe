@@ -3,6 +3,7 @@
 #include "../Sys/Types.h"
 #include "../Sys/Assert.h"
 #include <memory.h>
+#include <string.h>
 
 namespace lethe
 {
