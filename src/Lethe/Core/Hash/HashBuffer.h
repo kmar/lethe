@@ -23,11 +23,6 @@ UInt LETHE_API HashMerge(UInt h1, UInt h2);
 UInt LETHE_API HashUInt(UInt v);
 UInt LETHE_API HashULong(ULong v);
 
-#if LETHE_CPP11
-#	include "Inline/HashString.inl"
-#else
-// hashes ansi string
-UInt LETHE_API HashAnsiString(const char *str);
-#endif
+#include "Inline/HashString.inl"
 
 }

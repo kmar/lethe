@@ -128,11 +128,4 @@ UInt HashMerge(UInt h1, UInt h2)
 	return (Rotate(h1, 9) * 7) ^ h2;
 }
 
-#if !LETHE_CPP11
-UInt HashAnsiString(const char *str)
-{
-	return HashBufferUnaligned(str, (int)StrLen(str));
-}
-#endif
-
 }

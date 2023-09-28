@@ -58,9 +58,13 @@ typedef intptr_t IntPtr;
 typedef uintptr_t UIntPtr;
 
 // use atomic int types, this should be useful when switching to C++11
+typedef volatile SByte AtomicSByte;
+typedef volatile Byte AtomicByte;
 typedef volatile Int AtomicInt;
 typedef volatile UInt AtomicUInt;
 typedef volatile Short AtomicShort;
 typedef volatile UShort AtomicUShort;
+typedef volatile Long AtomicLong;
+typedef volatile ULong AtomicULong;
 
 }

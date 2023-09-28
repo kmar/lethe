@@ -46,6 +46,10 @@ static const int BITS = 32;
 #	define LETHE_CPU					"unknown"
 #endif
 
+#if defined(__ARM_NEON__) || defined(__ARM_NEON)
+#	define LETHE_CPU_ARM_NEON		1
+#endif
+
 #if defined(_MSC_VER)
 #	define LETHE_COMPILER_MSC		1
 #	if defined(__INTEL_COMPILER)
@@ -70,6 +74,12 @@ static const int BITS = 32;
 #	define LETHE_COMPILER_CLANG		1
 #	undef LETHE_COMPILER
 #	define LETHE_COMPILER			"clang"
+#endif
+
+#if defined(__circle_build__)
+#	define LETHE_COMPILER_CIRCLE 1
+#	undef LETHE_COMPILER
+#	define LETHE_COMPILER            "circle"
 #endif
 
 #if defined(_WIN32)
@@ -116,16 +126,6 @@ static const int BITS = 32;
 
 #if defined(__EMSCRIPTEN__)
 #	define LETHE_PLATFORM_EMSCRIPTEN	1
-#endif
-
-// require C++98
-#if __cplusplus < 199711L && __cplusplus != 1L
-#	error need at least C++98 compiler
-#endif
-
-// C++11 compliant?
-#if __cplusplus >= 201103L
-#	define LETHE_CPP11				1
 #endif
 
 // platform-dependent macros for 64-bit long integer constants (assuming 32+-bit compiler so no need for 32-bit version)
@@ -211,28 +211,24 @@ static const int BITS = 32;
 #define LETHE_CONCAT_MACROS__(x, y) x##y
 #define LETHE_CONCAT_MACROS(x, y) LETHE_CONCAT_MACROS__(x, y)
 
-// fake pre-C++11 stuff for pre-vs2012
-#if LETHE_COMPILER_MSC_ONLY
-#	if _MSC_VER < 1900 && !defined(_ALLOW_KEYWORD_MACROS)
-#		define _ALLOW_KEYWORD_MACROS	1
-#	endif
-#	if _MSC_VER < 1700 && !defined(override)
-#		define override
-#	endif
-#	if _MSC_VER < 1700 && !defined(nullptr)
-#		define nullptr ((void *)0)
-#	endif
-#	if _MSC_VER < 1900 && !defined(noexcept)
-#		define noexcept throw()
-#	endif
-#	if _MSC_VER >= 1900 && !defined(LETHE_CPP11)
-#		define LETHE_CPP11	1
-#	endif
-#elif !defined(LETHE_CPP11)
-#	define LETHE_CPP11	1
-#endif
-
 #define LETHE_COMPILER_NOT_MSC (LETHE_COMPILER_GCC || LETHE_COMPILER_CLANG || LETHE_COMPILER_MINGW)
+
+// reference: http://the-witness.net/news/2012/11/scopeexit-in-c11/
+
+template<typename F>
+struct ScopeGuard
+{
+	inline ScopeGuard(F nfunc) : func(nfunc) {}
+	inline ~ScopeGuard() { func(); }
+
+private:
+	F func;
+};
+
+template<typename F>
+ScopeGuard<F> MakeScopeGuard(F nfunc) { return ScopeGuard<F>(nfunc); }
+
+#define LETHE_DEFER(x) auto LETHE_CONCAT_MACROS(_defer_, __COUNTER__) = lethe::MakeScopeGuard([&](){x;})
 
 struct LETHE_API Platform
 {
@@ -250,12 +246,10 @@ struct LETHE_API Platform
 	// returns true if this is a 32-bit app running 64-bit OS, only works on Windows
 	static bool Is32BitProcessOn64BitOS();
 
-	// one time static init
 	static void Init();
 	static void Done();
 
 private:
-	friend class CoreModule;
 	static void AdjustForHyperthreading();
 
 	static int physCores;
@@ -267,5 +261,33 @@ private:
 
 // note: put this after ptr or ref
 #define LETHE_RESTRICT __restrict
+
+// if we compile with thread sanitizer
+#if __SANITIZE_THREAD__
+#	define LETHE_HAS_THREAD_SANITIZER 1
+#elif defined(__has_feature)
+#	if __has_feature(thread_sanitizer)
+#		define LETHE_HAS_THREAD_SANITIZER 1
+#	endif
+#endif
+
+#if LETHE_HAS_THREAD_SANITIZER && LETHE_COMPILER_GCC
+#	define LETHE_NO_TSAN __attribute__((no_sanitize_thread))
+#else
+#	define LETHE_NO_TSAN
+#endif
+
+// help the compiler to auto-vectorize selected loops, clang only at the moment (gcc/msvc don't seem to have anything like this)
+#if !LETHE_DEBUG
+#	if LETHE_COMPILER_CLANG
+#		define LETHE_VECTORIZE_LOOP _Pragma("clang loop vectorize(enable)")
+#	else
+#		define LETHE_VECTORIZE_LOOP
+#	endif
+#else
+#	define LETHE_VECTORIZE_LOOP
+#endif
+
+#define LETHE_NODISCARD
 
 }

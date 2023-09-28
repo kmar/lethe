@@ -273,7 +273,6 @@ template< typename T > UInt Hash(const T &x)
 
 // overloads to support literal string hashing
 // potentially dangerous IF we want to actually hash a char pointer (shouldn't be common though)
-#if LETHE_CPP11
 template<typename T, size_t len>
 inline UInt Hash(const T (&str)[len])
 {
@@ -299,13 +298,6 @@ inline UInt Hash(ULong v)
 {
 	return HashULong(v);
 }
-
-#else
-inline UInt Hash(const char *str)
-{
-	return HashAnsiString(str);
-}
-#endif
 
 template < bool cond, typename T = void >
 struct EnableIf

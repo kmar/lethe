@@ -2,7 +2,7 @@
 #include "../Collect/Array.h"
 
 #if LETHE_OS_WINDOWS
-#	include <windows.h>
+#	include "Windows_Include.h"
 #	include <intrin.h>
 
 #	if LETHE_CPU_AMD64 && LETHE_COMPILER_CLANG
@@ -98,7 +98,7 @@ void Platform::Init()
 	if (!kmodule)
 		return;
 
-	LPFN_GLPI glpi = (LPFN_GLPI)GetProcAddress(kmodule, "GetLogicalProcessorInformation");
+	LPFN_GLPI glpi = (LPFN_GLPI)(void *)GetProcAddress(kmodule, "GetLogicalProcessorInformation");
 
 	if (!glpi)
 		return;
@@ -174,7 +174,7 @@ bool Platform::Is32BitProcessOn64BitOS()
 #if LETHE_32BIT && LETHE_OS_WINDOWS
 	BOOL pwow = FALSE;
 	typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
-	auto fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
+	auto fnIsWow64Process = (LPFN_ISWOW64PROCESS)(void *)GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
 	return fnIsWow64Process && fnIsWow64Process(GetCurrentProcess(), &pwow) ? pwow != FALSE : false;
 #else
 	return false;

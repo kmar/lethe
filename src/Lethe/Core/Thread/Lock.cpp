@@ -1,11 +1,9 @@
 #include "Lock.h"
 #include "../Sys/Platform.h"
-#include <stdlib.h>
+#include "Atomic.h"
 
 #if defined(LETHE_OS_WINDOWS)
-#	include <windows.h>
-#	undef min
-#	undef max
+#	include "../Sys/Windows_Include.h"
 #else
 #	include <pthread.h>
 #endif
@@ -39,6 +37,25 @@ void SpinMutex::Unlock(AtomicInt &value)
 	Atomic::Store(value, 0);
 }
 
+bool SpinMutex::TryLock(AtomicSByte &value)
+{
+	return Atomic::CompareAndSwap(value, (SByte)0, (SByte)1);
+}
+
+void SpinMutex::Lock(AtomicSByte &value)
+{
+	while (!Atomic::CompareAndSwap(value, (SByte)0, (SByte)1))
+	{
+		while (Atomic::Load(value))
+			Atomic::Pause();
+	}
+}
+
+void SpinMutex::Unlock(AtomicSByte &value)
+{
+	Atomic::Store(value, (SByte)0);
+}
+
 bool SpinMutex::TryLock()
 {
 	return TryLock(lockFlag);
@@ -58,101 +75,186 @@ void SpinMutex::Unlock()
 
 LETHE_SINGLETON_INSTANCE(Mutex)
 
-Mutex::Mutex()
+Mutex::Mutex(Recursive, int enabled)
 {
-#if LETHE_OS_WINDOWS
-	handle = malloc(sizeof(CRITICAL_SECTION));
-	InitializeCriticalSection((LPCRITICAL_SECTION)handle);
-#else
-	handle = malloc(sizeof(pthread_mutex_t));
-	pthread_mutex_init((pthread_mutex_t *)handle, 0);
-#endif
-}
+	enabledFlag = enabled;
 
-Mutex::Mutex(Recursive)
-{
+	if (!enabled)
+		return;
+
 #if LETHE_OS_WINDOWS
-	handle = malloc(sizeof(CRITICAL_SECTION));
-	InitializeCriticalSection((LPCRITICAL_SECTION)handle);
+	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(CRITICAL_SECTION));
+	InitializeCriticalSection((LPCRITICAL_SECTION)internal);
 #else
-	handle = malloc(sizeof(pthread_mutex_t));
+	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(pthread_mutex_t));
+
 	pthread_mutexattr_t attr;
 	pthread_mutexattr_init(&attr);
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
 
-	pthread_mutex_init((pthread_mutex_t *)handle, &attr);
+	pthread_mutex_init((pthread_mutex_t *)internal, &attr);
+#endif
+}
+
+Mutex::Mutex(int enabled)
+{
+	enabledFlag = enabled;
+
+	if (!enabled)
+		return;
+
+#if LETHE_OS_WINDOWS
+	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(CRITICAL_SECTION));
+	InitializeCriticalSection((LPCRITICAL_SECTION)internal);
+#else
+	LETHE_COMPILE_ASSERT(LOCK_INTERNAL_SIZE == sizeof(pthread_mutex_t));
+	pthread_mutex_init((pthread_mutex_t *)internal, 0);
 #endif
 }
 
 Mutex::~Mutex()
 {
 #if defined(LETHE_OS_WINDOWS)
-	DeleteCriticalSection((LPCRITICAL_SECTION)handle);
-#else
-	pthread_mutex_destroy((pthread_mutex_t *)handle);
-#endif
 
-	free(handle);
+	if (enabledFlag)
+		DeleteCriticalSection((LPCRITICAL_SECTION)internal);
+
+#else
+
+	if (enabledFlag)
+		pthread_mutex_destroy((pthread_mutex_t *)internal);
+
+#endif
 }
 
 bool Mutex::TryLock()
 {
 #if defined(LETHE_OS_WINDOWS)
-	return TryEnterCriticalSection((LPCRITICAL_SECTION)handle) != FALSE;
+	return !enabledFlag || TryEnterCriticalSection((LPCRITICAL_SECTION)internal) != FALSE;
 #else
-	return pthread_mutex_trylock((pthread_mutex_t *)handle) == 0;
+	return !enabledFlag || pthread_mutex_trylock((pthread_mutex_t *)internal) == 0;
 #endif
 }
 
 void Mutex::Lock()
 {
 #if defined(LETHE_OS_WINDOWS)
-	EnterCriticalSection((LPCRITICAL_SECTION)handle);
+
+	if (LETHE_LIKELY(enabledFlag))
+		EnterCriticalSection((LPCRITICAL_SECTION)internal);
+
 #else
-	pthread_mutex_lock((pthread_mutex_t *)handle);
+
+	if (LETHE_LIKELY(enabledFlag))
+		pthread_mutex_lock((pthread_mutex_t *)internal);
+
 #endif
 }
 
 void Mutex::Unlock()
 {
 #if defined(LETHE_OS_WINDOWS)
-	LeaveCriticalSection((LPCRITICAL_SECTION)handle);
+
+	if (LETHE_LIKELY(enabledFlag))
+		LeaveCriticalSection((LPCRITICAL_SECTION)internal);
+
 #else
-	pthread_mutex_unlock((pthread_mutex_t *)handle);
+
+	if (LETHE_LIKELY(enabledFlag))
+		pthread_mutex_unlock((pthread_mutex_t *)internal);
+
 #endif
 }
 
 // RWMutex
 
-RWMutex::RWMutex()
-	: counter(0)
-{
-}
-
 void RWMutex::LockRead()
 {
-	SpinMutexLock _(readMutex);
+retry_lock:
+	auto tmp = Atomic::Increment(data);
 
-	if (++counter == 1)
-		writeMutex.Lock();
+	// since we're locked exclusively AND it the exclusive lock originated from another read lock, we're done here (also: no overflow)
+	if ((tmp & (LOCKED_EXCLUSIVE | LOCKED_READ | COUNTER_OVERFLOW)) == (LOCKED_EXCLUSIVE | LOCKED_READ))
+		return;
+
+	if (tmp & COUNTER_OVERFLOW)
+	{
+		// decrement and wait => we should probably abort here, but we bet we can't do 250m from several threads this quickly to overflow multiple times
+		// the safe thing would be to abort here, of course, but doing an extra bit of overflow seems like a science fiction - would require CPUs with millions of cores
+		// aborting/freezing here would suffer from the same problem though
+		Atomic::Decrement(data);
+		Atomic::Pause();
+		goto retry_lock;
+	}
+
+	// best would be compare and swap, probably => the only way, actually
+	for(;;)
+	{
+		tmp = Atomic::Load(data);
+
+		// we're done if someone else is sharing for read and we can happily exit
+		if ((tmp & (LOCKED_EXCLUSIVE | LOCKED_READ)) == (LOCKED_EXCLUSIVE | LOCKED_READ))
+			return;
+
+		if (!(tmp & (LOCKED_EXCLUSIVE | LOCKED_READ | WANT_EXCLUSIVE)))
+		{
+			// try compare and swap - we cannot do atomic or here
+			if (Atomic::CompareAndSwap(data, tmp, tmp | LOCKED_EXCLUSIVE | LOCKED_READ))
+				break;
+		}
+
+		Atomic::Pause();
+	}
 }
 
 void RWMutex::UnlockRead()
 {
-	SpinMutexLock _(readMutex);
+	if ((Atomic::Decrement(data) & COUNTER_MASK) != 0)
+		return;
 
-	if (--counter == 0)
-		writeMutex.Unlock();
+	for (;;)
+	{
+		auto tmp = Atomic::Load(data);
+
+		LETHE_ASSERT(tmp & LOCKED_READ);
+
+		// try compare and swap - we cannot do atomic or here
+		if (Atomic::CompareAndSwap(data, tmp, tmp & ~(LOCKED_EXCLUSIVE | LOCKED_READ)))
+			break;
+	}
 }
 
 void RWMutex::LockWrite()
 {
-	writeMutex.Lock();
+	for (;;)
+	{
+		// attempt to let readers know a prority write lock is desired
+		// we don't reuse the result of atomic or here or it would degrade to a cas (msc)
+		Atomic::Or(data, WANT_EXCLUSIVE);
+		auto tmp = Atomic::Load(data);
+
+		if (!(tmp & LOCKED_EXCLUSIVE))
+		{
+			// try cas, break if done;
+			if (Atomic::CompareAndSwap(data, tmp, (tmp | LOCKED_EXCLUSIVE) & ~WANT_EXCLUSIVE))
+				break;
+		}
+
+		Atomic::Pause();
+	}
 }
 
 void RWMutex::UnlockWrite()
 {
-	writeMutex.Unlock();
+	for (;;)
+	{
+		auto tmp = Atomic::Load(data);
+
+		LETHE_ASSERT(!(tmp & LOCKED_READ));
+
+		if (Atomic::CompareAndSwap(data, tmp, tmp & ~LOCKED_EXCLUSIVE))
+			break;
+	}
 }
 
 // MutexLock

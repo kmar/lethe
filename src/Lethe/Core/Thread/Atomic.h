@@ -11,7 +11,7 @@ namespace lethe
 {
 
 template<typename T>
-struct AtomicPointer
+struct LETHE_API AtomicPointer
 {
 	inline AtomicPointer(T *value = nullptr)
 		: data(value)
@@ -60,6 +60,8 @@ struct LETHE_API Atomic
 	// generic atomic sub function
 	// returns new value (after addition)
 	template< typename T > static T Subtract(volatile T &t, T value);
+	// bitwise atomics (return old value, unlike add/sub)
+	template< typename T > static T Or(volatile T &t, T value);
 	// atomic compare and swap
 	// cmp = value to compare to
 	// xch = value to store

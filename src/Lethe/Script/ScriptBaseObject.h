@@ -3,6 +3,7 @@
 #include "../Core/Common.h"
 #include "../Core/Sys/Types.h"
 #include "../Core/Classes/ObjectHeap.h"
+#include "../Core/Thread/Atomic.h"
 
 namespace lethe
 {
