@@ -71,6 +71,8 @@ protected:
 	NamedScope *FindSpecialADLScope(const NamedScope *baseScope, const StringRef &nname) const;
 
 	Int GenTempCopy(CompiledProgram &p, Int resultBaseOffset, Int resultWords, bool resultZeroed, Int actual, const Array<TempArg> &tempArgs);
+
+	void CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attributes *attrs);
 };
 
 

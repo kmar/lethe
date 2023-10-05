@@ -46,6 +46,8 @@ public:
 	bool ValidateSignature(const AstFunc &o, const CompiledProgram &p) const;
 	bool ValidateADLCall(const AstCall &o) const;
 
+	SharedPtr<Attributes> attributes;
+
 	// for methods only
 	Int vtblIndex;
 

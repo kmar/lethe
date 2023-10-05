@@ -33,7 +33,9 @@ enum Warnings
 	// out-of-order designated initializer
 	WARN_OUT_OF_ORDER_DESIGNATED_INITIALIZER,
 	// comparing boolean and number
-	WARN_COMPARE_BOOL_AND_NUMBER
+	WARN_COMPARE_BOOL_AND_NUMBER,
+	// calling a deprecated function
+	WARN_DEPRECATED
 };
 
 }

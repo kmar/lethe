@@ -344,6 +344,8 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 		LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_SEMICOLON, "expected `;'"));
 
 	AstNode *res = NewAstNode<AstFunc>(args->location);
+	Swap(AstStaticCast<AstFunc *>(res)->attributes, attributes);
+
 	res->qualifiers |= fqualifiers;
 	res->Add(ntype.Detach());
 	res->Add(nname.Detach());
@@ -579,6 +581,9 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 					ts->ConsumeToken();
 					break;
 				}
+
+				if (ts->PeekToken().type == TOK_LARR)
+					attributes = ParseAttributes();
 
 				UniquePtr<AstNode>ftype = ParseType(depth+1);
 				LETHE_RET_FALSE(ftype);

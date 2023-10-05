@@ -806,6 +806,35 @@ const AstNode *AstCall::FindEnclosingFunction() const
 	return res && res->type == AST_FUNC ? res : nullptr;
 }
 
+void AstCall::CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attributes *attrs)
+{
+	if (!attrs)
+		return;
+
+	const auto &tokens = attrs->tokens;
+
+	for (Int i=0; i<tokens.GetSize(); i++)
+	{
+		const auto &tok = tokens[i];
+
+		if (tok.type != TOK_IDENT || StringRef(tok.text) != "deprecated")
+			continue;
+
+		String suffix;
+
+		if (i+2 < tokens.GetSize() && tokens[i+1].type == TOK_LBR && tokens[i+2].type == TOK_STRING)
+			suffix = tokens[i+2].text;
+
+		auto txt = AstStaticCast<AstText *>(fdef->nodes[AstFunc::IDX_NAME])->text;
+		p.Warning(this, String::Printf("attempt to call deprecated function `%s'", txt.Ansi()), WARN_DEPRECATED);
+
+		if (!suffix.IsEmpty())
+			p.Warning(this, String::Printf("%s", suffix.Ansi()), WARN_DEPRECATED);
+
+		return;
+	}
+}
+
 bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 {
 	p.SetLocation(location);
@@ -830,6 +859,11 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 	if (!fdef)
 		return p.Error(this, "function to call not found!");
+
+	const auto *attrs = fdef->type == AST_FUNC ? AstStaticCast<AstFunc *>(fdef)->attributes.Get() : nullptr;
+
+	if (attrs)
+		CheckDeprecatedCall(p, fdef, attrs);
 
 	if ((fdef->qualifiers & AST_Q_NATIVE) && forceFunc && fname.IsEmpty())
 	{
