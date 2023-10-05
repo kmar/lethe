@@ -344,6 +344,19 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 		LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_SEMICOLON, "expected `;'"));
 
 	AstNode *res = NewAstNode<AstFunc>(args->location);
+
+	if (attributes)
+	{
+		for (auto &&it : attributes->tokens)
+		{
+			if (it.type == TOK_IDENT && StringRef(it.text) == "deprecated")
+			{
+				fqualifiers |= AST_Q_DEPRECATED;
+				break;
+			}
+		}
+	}
+
 	Swap(AstStaticCast<AstFunc *>(res)->attributes, attributes);
 
 	res->qualifiers |= fqualifiers;

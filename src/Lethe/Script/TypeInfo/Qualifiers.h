@@ -85,12 +85,14 @@ enum AstQualifier : ULong
 	AST_Q_NOTEMP = (ULong)1 << 50,
 	// need to tag operators for func overload name gen
 	AST_Q_OPERATOR = (ULong)1 << 51,
-	// note: 12 left
+	// deprecated function
+	AST_Q_DEPRECATED = (ULong)1 << 52,
+	// note: 11 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |
 					  AST_Q_PUBLIC | AST_Q_PROTECTED | AST_Q_PRIVATE | AST_Q_METHOD | AST_Q_OVERRIDE | AST_Q_FORMAT | AST_Q_INLINE |
-					  AST_Q_INTRINSIC | AST_Q_ASSERT | AST_Q_LATENT | AST_Q_STATE | AST_Q_STATEBREAK,
+					  AST_Q_INTRINSIC | AST_Q_ASSERT | AST_Q_LATENT | AST_Q_STATE | AST_Q_STATEBREAK | AST_Q_DEPRECATED,
 	// include mask for type comparison
 	AST_Q_TYPE_CMP_MASK = AST_Q_REFERENCE | AST_Q_CONST
 };

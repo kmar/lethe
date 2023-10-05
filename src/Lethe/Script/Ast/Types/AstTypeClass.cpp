@@ -196,6 +196,10 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 		if (vidx < 0 && type == AST_CLASS && (qualifiers & AST_Q_STATE) != 0)
 			return p.Error(n, "state classes cannot add new virtual methods (did you mean final?)");
 
+		// copy deprecated qualifier for overrides
+		if (mnode)
+			n->qualifiers |= mnode->qualifiers & AST_Q_DEPRECATED;
+
 		if (!(n->qualifiers & AST_Q_DTOR))
 			AstStaticCast<AstFunc *>(n)->vtblIndex = vidx < 0 ? vtblIndex++ : vidx;
 	}

@@ -808,6 +808,12 @@ const AstNode *AstCall::FindEnclosingFunction() const
 
 void AstCall::CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attributes *attrs)
 {
+	if (!(fdef->qualifiers & AST_Q_DEPRECATED))
+		return;
+
+	auto txt = AstStaticCast<AstText *>(fdef->nodes[AstFunc::IDX_NAME])->text;
+	p.Warning(this, String::Printf("attempt to call deprecated function `%s'", txt.Ansi()), WARN_DEPRECATED);
+
 	if (!attrs)
 		return;
 
@@ -823,13 +829,7 @@ void AstCall::CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attri
 		String suffix;
 
 		if (i+2 < tokens.GetSize() && tokens[i+1].type == TOK_LBR && tokens[i+2].type == TOK_STRING)
-			suffix = tokens[i+2].text;
-
-		auto txt = AstStaticCast<AstText *>(fdef->nodes[AstFunc::IDX_NAME])->text;
-		p.Warning(this, String::Printf("attempt to call deprecated function `%s'", txt.Ansi()), WARN_DEPRECATED);
-
-		if (!suffix.IsEmpty())
-			p.Warning(this, String::Printf("%s", suffix.Ansi()), WARN_DEPRECATED);
+			p.Warning(this, String::Printf("%s", tokens[i+2].text), WARN_DEPRECATED);
 
 		return;
 	}
@@ -862,8 +862,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 	const auto *attrs = fdef->type == AST_FUNC ? AstStaticCast<AstFunc *>(fdef)->attributes.Get() : nullptr;
 
-	if (attrs)
-		CheckDeprecatedCall(p, fdef, attrs);
+	CheckDeprecatedCall(p, fdef, attrs);
 
 	if ((fdef->qualifiers & AST_Q_NATIVE) && forceFunc && fname.IsEmpty())
 	{
