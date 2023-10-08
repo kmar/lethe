@@ -242,10 +242,10 @@ void String::Init(const char *str, const char *strEnd, CharConv::Encoding encodi
 	if (str && !strEnd)
 		strEnd = str + strlen(str);
 
-	LETHE_ASSERT(str && strEnd);
-
 	if (!str || strEnd == str)
 		return;
+
+	LETHE_ASSERT(str && strEnd);
 
 	if (encoding == CharConv::encDefault)
 		encoding = CharConv::defaultEncoding;
