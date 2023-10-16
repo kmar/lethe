@@ -105,7 +105,8 @@ private:
 	static constexpr UInt LOCKED_READ = (UInt)1 << 30;
 	static constexpr UInt WANT_EXCLUSIVE = (UInt)1 << 29;
 	static constexpr UInt COUNTER_OVERFLOW = (UInt)1 << 28;
-	static constexpr UInt COUNTER_MASK = 0x0fffffffu;
+	// note: including overflow bit here
+	static constexpr UInt COUNTER_MASK = COUNTER_OVERFLOW | (COUNTER_OVERFLOW-1);
 
 	UInt data;
 };
