@@ -171,7 +171,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 	if (tdesc.qualifiers & AST_Q_CONSTEXPR)
 		return true;
 
-	if ((tdesc.qualifiers & AST_Q_NOCOPY) && nodes.GetSize() > 1)
+	if ((tdesc.qualifiers & AST_Q_NOCOPY) && nodes.GetSize() > 1 && !tdesc.IsReference())
 		return p.Error(this, "cannot initialize nocopy variable");
 
 	bool isInit = nodes.GetSize() > 1;
