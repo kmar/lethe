@@ -85,6 +85,25 @@ public:
 private:
 	static const Int MAX_DEPTH = 1024;
 
+	struct SelfMacroGuard
+	{
+		SelfMacroGuard(TokenStream *ts, const String &name)
+			: toks(ts)
+			, oldSelf(ts->GetSelfName())
+		{
+			ts->SetSelfName(name);
+		}
+
+		~SelfMacroGuard()
+		{
+			toks->SetSelfName(oldSelf);
+		}
+
+	private:
+		TokenStream *toks;
+		String oldSelf;
+	};
+
 	struct AccessGuard
 	{
 		AccessGuard(Compiler *ncomp, ULong nqualifiers)

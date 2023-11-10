@@ -1447,6 +1447,8 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	LETHE_ASSERT(nname->type == AST_IDENT);
 	const String &sname = static_cast< const AstText * >(nname.Get())->text;
 
+	SelfMacroGuard sg(ts, sname);
+
 	auto *nnamePtr = nname.Get();
 	ntype->Add(nname.Detach());
 	// now we might support inheritance...

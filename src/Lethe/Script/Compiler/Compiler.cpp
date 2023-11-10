@@ -77,7 +77,7 @@ Compiler::~Compiler()
 void Compiler::InitTokenStream()
 {
 	// we only use __LINE instead of __LINE__ to avoid clashes with external preprocessor
-	ts->SetLineFileMacros("__LINE", "__FILE", "__COUNTER", "__func");
+	ts->SetLineFileMacros("__LINE", "__FILE", "__COUNTER", "__func", "__self");
 	ts->SetVarArgMacros("__VA_ARGS", "__VA_COUNT", "__VA_OPT");
 	ts->SetStringizeMacros("__stringize", "__concat");
 	ts->SetMacroMap(&macroMap);

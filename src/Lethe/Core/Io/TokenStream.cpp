@@ -158,6 +158,11 @@ TokenType TokenStream::FetchTokenInternal(Token &ntok)
 		{
 			ntok.SetString(macroExpandFunction.Ansi());
 		}
+		else if (sr == selfMacroName)
+		{
+			ntok.SetString(macroExpandSelf.Ansi());
+			ntok.type = TOK_IDENT;
+		}
 		else
 		{
 			if (ms.argIndex < ms.argEnd && macroTokens[ms.argEnd-1]->type == TOK_ELLIPSIS)
@@ -714,12 +719,13 @@ void TokenStream::EnableMacros(bool enable)
 	macroLock += enable ? 1 : -1;
 }
 
-void TokenStream::SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName)
+void TokenStream::SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName, const String &selfName)
 {
 	lineMacroName = lineName;
 	fileMacroName = fileName;
 	counterMacroName = counterName;
 	funcMacroName = funcName;
+	selfMacroName = selfName;
 }
 
 void TokenStream::SetVarArgMacros(const String &varArgName, const String &varArgCountName, const String &varArgOptName)
@@ -738,6 +744,11 @@ void TokenStream::SetStringizeMacros(const String &stringizeName, const String &
 void TokenStream::SetFuncName(const String &fname)
 {
 	macroExpandFunction = fname;
+}
+
+void TokenStream::SetSelfName(const String &sname)
+{
+	macroExpandSelf = sname;
 }
 
 void TokenStream::SetMacroMap(TokenMacroMap *nmap)

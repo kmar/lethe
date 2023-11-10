@@ -199,10 +199,17 @@ QDataType AstTypeAuto::GetTypeDesc(const CompiledProgram &p) const
 
 			// copy const qualifiers if it's a pointer
 			// => var decl => var type, but only the first one
-			if (auto *pnode = parent->nodes[1]->nodes[1])
+			auto *vd = parent->nodes[1];
+
+			// FIXME: sometimes the init part was moved already - like auto var within a struct - into a ctor
+			// this should've been called before though, so we simply copy the const flag directly to node qualifiers
+			if (vd->nodes.GetSize() > 1)
 			{
-				auto ntype = pnode->GetTypeDesc(p);
-				res.qualifiers |= ntype.qualifiers & AST_Q_CONST;
+				if (auto *pnode = vd->nodes[1])
+				{
+					auto ntype = pnode->GetTypeDesc(p);
+					qualifiers |= ntype.qualifiers & AST_Q_CONST;
+				}
 			}
 		}
 

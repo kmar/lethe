@@ -74,11 +74,13 @@ public:
 	// set token macro map reference so that it can be shared among token streams
 	void SetMacroMap(TokenMacroMap *nmap);
 
-	void SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName);
+	void SetLineFileMacros(const String &lineName, const String &fileName, const String &counterName, const String &funcName, const String &selfName);
 	void SetVarArgMacros(const String &varArgName, const String &varArgCountName, const String &varArgOptName);
 	void SetStringizeMacros(const String &stringizeName, const String &concatName);
 
 	void SetFuncName(const String &fname);
+	void SetSelfName(const String &sname);
+	const String &GetSelfName() const {return macroExpandSelf;}
 
 	void SetMacroKeyword(TokenType tt);
 
@@ -153,6 +155,8 @@ private:
 	String counterMacroName;
 	// equivalent for __func__
 	String funcMacroName;
+	// script only: self (struct/class) name
+	String selfMacroName;
 	// equivalent for __VA_ARGS
 	String varArgMacroName;
 	// non-std extension __VA_COUNT
@@ -167,6 +171,8 @@ private:
 	ULong macroExpandCounter;
 	// current function name
 	String macroExpandFunction;
+	// current self name
+	String macroExpandSelf;
 
 	bool PushMacro(Macro &m);
 	void PushMacroArg(Int start, Int end);
