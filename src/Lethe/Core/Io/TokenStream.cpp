@@ -160,6 +160,9 @@ TokenType TokenStream::FetchTokenInternal(Token &ntok)
 		}
 		else if (sr == selfMacroName)
 		{
+			if (macroExpandSelf.IsEmpty())
+				return TOK_INVALID;
+
 			ntok.SetString(macroExpandSelf.Ansi());
 			ntok.type = TOK_IDENT;
 		}
