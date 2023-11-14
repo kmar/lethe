@@ -216,7 +216,10 @@ void RWMutex::UnlockRead()
 	{
 		auto tmp = Atomic::Load(data);
 
-		LETHE_ASSERT(tmp & LOCKED_READ);
+		// if someone else incremented the read counter or we're no longer in exclusive read mode,
+		// abort since we're too late already
+		if ((tmp & (COUNTER_MASK | LOCKED_EXCLUSIVE | LOCKED_READ)) != (LOCKED_EXCLUSIVE | LOCKED_READ))
+			break;
 
 		// try compare and swap - we cannot do atomic or here
 		if (Atomic::CompareAndSwap(data, tmp, tmp & ~(LOCKED_EXCLUSIVE | LOCKED_READ)))
