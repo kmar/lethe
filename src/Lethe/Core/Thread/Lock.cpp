@@ -170,61 +170,24 @@ void Mutex::Unlock()
 
 void RWMutex::LockRead()
 {
-retry_lock:
-	auto tmp = Atomic::Increment(data);
-
-	// since we're locked exclusively AND it the exclusive lock originated from another read lock, we're done here (also: no overflow)
-	if ((tmp & (LOCKED_EXCLUSIVE | LOCKED_READ | COUNTER_OVERFLOW)) == (LOCKED_EXCLUSIVE | LOCKED_READ))
-		return;
-
-	if (tmp & COUNTER_OVERFLOW)
+	for (;;)
 	{
-		// decrement and wait => we should probably abort here, but we bet we can't do 250m from several threads this quickly to overflow multiple times
-		// the safe thing would be to abort here, of course, but doing an extra bit of overflow seems like a science fiction - would require CPUs with millions of cores
-		// aborting/freezing here would suffer from the same problem though
-		Atomic::Decrement(data);
-		Atomic::Pause();
-		goto retry_lock;
-	}
+		auto tmp = Atomic::Load(data);
 
-	// best would be compare and swap, probably => the only way, actually
-	for(;;)
-	{
-		tmp = Atomic::Load(data);
-
-		// we're done if someone else is sharing for read and we can happily exit
-		if ((tmp & (LOCKED_EXCLUSIVE | LOCKED_READ)) == (LOCKED_EXCLUSIVE | LOCKED_READ))
-			return;
-
-		if (!(tmp & (LOCKED_EXCLUSIVE | LOCKED_READ | WANT_EXCLUSIVE)))
+		if (tmp & (WANT_EXCLUSIVE | LOCKED_EXCLUSIVE | COUNTER_OVERFLOW))
 		{
-			// try compare and swap - we cannot do atomic or here
-			if (Atomic::CompareAndSwap(data, tmp, tmp | LOCKED_EXCLUSIVE | LOCKED_READ))
-				break;
+			Atomic::Pause();
+			continue;
 		}
 
-		Atomic::Pause();
+		if (Atomic::CompareAndSwap(data, tmp, tmp+1))
+			break;
 	}
 }
 
 void RWMutex::UnlockRead()
 {
-	if ((Atomic::Decrement(data) & COUNTER_MASK) != 0)
-		return;
-
-	for (;;)
-	{
-		auto tmp = Atomic::Load(data);
-
-		// if someone else incremented the read counter or we're no longer in exclusive read mode,
-		// abort since we're too late already
-		if ((tmp & (COUNTER_MASK | LOCKED_EXCLUSIVE | LOCKED_READ)) != (LOCKED_EXCLUSIVE | LOCKED_READ))
-			break;
-
-		// try compare and swap - we cannot do atomic or here
-		if (Atomic::CompareAndSwap(data, tmp, tmp & ~(LOCKED_EXCLUSIVE | LOCKED_READ)))
-			break;
-	}
+	Atomic::Decrement(data);
 }
 
 void RWMutex::LockWrite()
@@ -236,7 +199,7 @@ void RWMutex::LockWrite()
 		Atomic::Or(data, WANT_EXCLUSIVE);
 		auto tmp = Atomic::Load(data);
 
-		if (!(tmp & LOCKED_EXCLUSIVE))
+		if (!(tmp & (LOCKED_EXCLUSIVE | COUNTER_MASK)))
 		{
 			// try cas, break if done;
 			if (Atomic::CompareAndSwap(data, tmp, (tmp | LOCKED_EXCLUSIVE) & ~WANT_EXCLUSIVE))
@@ -253,10 +216,12 @@ void RWMutex::UnlockWrite()
 	{
 		auto tmp = Atomic::Load(data);
 
-		LETHE_ASSERT(!(tmp & LOCKED_READ));
+		LETHE_ASSERT(!(tmp & COUNTER_MASK));
 
 		if (Atomic::CompareAndSwap(data, tmp, tmp & ~LOCKED_EXCLUSIVE))
 			break;
+
+		Atomic::Pause();
 	}
 }
 

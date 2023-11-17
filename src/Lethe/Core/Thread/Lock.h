@@ -92,8 +92,6 @@ public:
 class LETHE_API RWMutex : NoCopy
 {
 public:
-	inline RWMutex() : data(0) {}
-
 	void LockRead();
 	void UnlockRead();
 
@@ -102,13 +100,12 @@ public:
 
 private:
 	static constexpr UInt LOCKED_EXCLUSIVE = (UInt)1 << 31;
-	static constexpr UInt LOCKED_READ = (UInt)1 << 30;
-	static constexpr UInt WANT_EXCLUSIVE = (UInt)1 << 29;
-	static constexpr UInt COUNTER_OVERFLOW = (UInt)1 << 28;
+	static constexpr UInt WANT_EXCLUSIVE = (UInt)1 << 30;
+	static constexpr UInt COUNTER_OVERFLOW = (UInt)1 << 29;
 	// note: including overflow bit here
 	static constexpr UInt COUNTER_MASK = COUNTER_OVERFLOW | (COUNTER_OVERFLOW-1);
 
-	UInt data;
+	AtomicUInt data = 0;
 };
 
 class LETHE_API MutexLock
