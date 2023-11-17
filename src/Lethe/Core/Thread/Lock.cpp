@@ -174,7 +174,8 @@ void RWMutex::LockRead()
 	{
 		auto tmp = Atomic::Load(data);
 
-		if (tmp & (WANT_EXCLUSIVE | LOCKED_EXCLUSIVE | COUNTER_OVERFLOW))
+		// if write locked or pending or if we'd overflow, wait
+		if ((tmp & (LOCKED_EXCLUSIVE | WANT_EXCLUSIVE)) || !(~tmp & COUNTER_MASK))
 		{
 			Atomic::Pause();
 			continue;

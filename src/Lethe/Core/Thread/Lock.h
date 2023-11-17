@@ -101,9 +101,7 @@ public:
 private:
 	static constexpr UInt LOCKED_EXCLUSIVE = (UInt)1 << 31;
 	static constexpr UInt WANT_EXCLUSIVE = (UInt)1 << 30;
-	static constexpr UInt COUNTER_OVERFLOW = (UInt)1 << 29;
-	// note: including overflow bit here
-	static constexpr UInt COUNTER_MASK = COUNTER_OVERFLOW | (COUNTER_OVERFLOW-1);
+	static constexpr UInt COUNTER_MASK = WANT_EXCLUSIVE-1;
 
 	AtomicUInt data = 0;
 };
