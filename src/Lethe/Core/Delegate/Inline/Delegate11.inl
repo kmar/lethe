@@ -12,33 +12,31 @@ class DelegateVA : public DelegateBase
 
 	struct FuncWrapper : public LambdaStorageBase
 	{
-		FuncWrapper(PFun nfref) : fref(nfref)
+		LETHE_BUCKET_ALLOC_INLINE_OVERRIDE(FuncWrapper)
+	public:
+
+		LETHE_NOINLINE FuncWrapper(PFun nfref) : fref(nfref)
 		{
 			AddRef();
 		}
-		LambdaStorageBase *Clone() override
-		{
-			AddRef();
-			return this;
-		}
-		inline R LETHE_VISIBLE Invoke(P... p) const
+		LETHE_NOINLINE R LETHE_VISIBLE Invoke(P... p) const
 		{
 			return fref(p...);
 		}
 		PFun fref;
 	};
-	template< typename X > struct LambdaWrapper : public LambdaStorageBase
+
+	template< typename X >
+	struct LambdaWrapper : public LambdaStorageBase
 	{
-		LambdaWrapper(const X &lref) : lcopy(lref)
+		LETHE_BUCKET_ALLOC_SIZE_INLINE_OVERRIDE(LambdaWrapper, 64)
+	public:
+
+		LETHE_NOINLINE LambdaWrapper(const X &lref) : lcopy(lref)
 		{
 			AddRef();
 		}
-		LambdaStorageBase *Clone() override
-		{
-			AddRef();
-			return this;
-		}
-		inline R LETHE_VISIBLE Invoke(P... p) const
+		LETHE_NOINLINE  R LETHE_VISIBLE Invoke(P... p) const
 		{
 			return lcopy(p...);
 		}
@@ -134,7 +132,7 @@ public:
 	}
 
 	// invoke delegate
-	inline R Invoke(P... p) const
+	LETHE_NOINLINE R Invoke(P... p) const
 	{
 		LETHE_ASSERT(classptr);
 		return (((DummyClass*)classptr)->*(PMem &)(pmem))(p...);

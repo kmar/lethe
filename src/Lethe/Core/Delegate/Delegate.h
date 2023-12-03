@@ -3,6 +3,7 @@
 #include "../Sys/Assert.h"
 #include "../Sys/Platform.h"
 #include "../Memory/Memory.h"
+#include "../Memory/BucketAlloc.h"
 #include "../Ptr/RefCounted.h"
 #include "../Math/Templates.h"
 
@@ -14,8 +15,11 @@ class LETHE_API DelegateBase
 protected:
 	struct LambdaStorageBase : public RefCounted
 	{
-		// pure virtual causes problems with gcc without RTTI it seems
-		virtual LambdaStorageBase *Clone() {return nullptr;};
+		LambdaStorageBase *Clone()
+		{
+			AddRef();
+			return this;
+		}
 		virtual ~LambdaStorageBase() {}
 	};
 
