@@ -832,9 +832,11 @@ Array<String> Vm::GetCallStack(const Instruction *iptr, Int maxVarTextLen) const
 			res.Add("=== call stack: ===");
 		}
 
+		auto oldsz = res.GetSize();
+
 		res.Add(GetFullCallStack(pc, opc));
 
-		if (res.GetSize() >= 1000)
+		if (res.GetSize() - oldsz >= 100)
 		{
 			res.Add("... snip ...");
 			return res;
