@@ -803,6 +803,8 @@ Array<String> Vm::GetCallStack(const Instruction *iptr, Int maxVarTextLen) const
 	res.Append(locals);
 	res.Add("");
 
+	auto oldsz = res.GetSize();
+
 	for (Int idx=0;;idx++)
 	{
 		auto frame = FindStackFrame(stkptr);
@@ -830,9 +832,8 @@ Array<String> Vm::GetCallStack(const Instruction *iptr, Int maxVarTextLen) const
 			}
 
 			res.Add("=== call stack: ===");
+			oldsz = res.GetSize();
 		}
-
-		auto oldsz = res.GetSize();
 
 		res.Add(GetFullCallStack(pc, opc));
 
