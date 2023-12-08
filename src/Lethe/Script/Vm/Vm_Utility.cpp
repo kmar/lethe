@@ -834,7 +834,7 @@ Array<String> Vm::GetCallStack(const Instruction *iptr, Int maxVarTextLen) const
 
 		res.Add(GetFullCallStack(pc, opc));
 
-		if (res.GetSize() >= 100)
+		if (res.GetSize() >= 1000)
 		{
 			res.Add("... snip ...");
 			return res;
