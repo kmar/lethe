@@ -96,7 +96,12 @@ static void *AllocSegment(size_t &size, bool executable = false)
 	size += pmask;
 	size &= ~pmask;
 
-	return mmap(nullptr, size, PROT_READ|PROT_WRITE|(executable ? PROT_EXEC : 0), MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+	void *res = mmap(nullptr, size, PROT_READ|PROT_WRITE|(executable ? PROT_EXEC : 0), MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+
+	if (res == MAP_FAILED)
+		res = nullptr;
+
+	return res;
 }
 
 static void FreeSegment(void *ptr, size_t size)
