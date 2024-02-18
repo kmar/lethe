@@ -50,6 +50,11 @@ bool AstTypeFuncPtr::GetTemplateTypeText(StringBuilder &sb) const
 	return true;
 }
 
+AstNode *AstTypeFuncPtr::GetResolveTarget() const
+{
+	return (AstNode *)this;
+}
+
 void AstTypeFuncPtr::CopyTo(AstNode *n) const
 {
 	Super::CopyTo(n);

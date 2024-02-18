@@ -23,5 +23,10 @@ const AstNode *AstTypeDelegate::GetTypeNode() const
 	return this;
 }
 
+AstNode *AstTypeDelegate::GetResolveTarget() const
+{
+	return (AstNode *)this;
+}
+
 
 }

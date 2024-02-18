@@ -283,6 +283,8 @@ bool AstFor::ConvertRangeBasedFor(const ErrorHandler &p, AstNodeType itertype)
 
 	while (auto *n = ai.Next())
 	{
+		if (n->scopeRef == loopScope)
+			n->scopeRef = bscope;
 		if (n->symScopeRef == loopScope)
 			n->symScopeRef = bscope;
 	}

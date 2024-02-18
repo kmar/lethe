@@ -27,6 +27,8 @@ public:
 
 	bool GetTemplateTypeText(StringBuilder &sb) const override;
 
+	AstNode *GetResolveTarget() const override;
+
 	void CopyTo(AstNode *n) const override;
 
 protected:

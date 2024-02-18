@@ -18,7 +18,9 @@ public:
 	}
 
 	bool TypeGen(CompiledProgram &p) override;
+
 	const AstNode *GetTypeNode() const override;
+	AstNode *GetResolveTarget() const override;
 };
 
 
