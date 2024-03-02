@@ -481,6 +481,11 @@ bool DataType::IsStruct() const
 	return type == DT_STRUCT;
 }
 
+bool DataType::IsFuncPtr() const
+{
+	return type == DT_FUNC_PTR || type == DT_DELEGATE;
+}
+
 bool DataType::IsIndexableStruct() const
 {
 	// TODO: maybe no base is too strict?
@@ -1374,6 +1379,11 @@ bool QDataType::IsStruct() const
 bool QDataType::IsIndexableStruct() const
 {
 	return GetType().IsIndexableStruct();
+}
+
+bool QDataType::IsFuncPtr() const
+{
+	return GetType().IsFuncPtr();
 }
 
 bool QDataType::IsTernaryCompatible() const

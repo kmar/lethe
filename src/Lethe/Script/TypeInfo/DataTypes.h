@@ -115,6 +115,8 @@ struct LETHE_API QDataType
 	bool IsStruct() const;
 	// is indexable struct? (all members have same type)
 	bool IsIndexableStruct() const;
+	// is func ptr or delegate?
+	bool IsFuncPtr() const;
 	// can be used in switch?
 	bool IsSwitchable() const;
 	// can be used in ternary op?
@@ -306,6 +308,9 @@ public:
 
 	// is struct type?
 	bool IsStruct() const;
+
+	// is func ptr or delegate?
+	bool IsFuncPtr() const;
 
 	// is indexable struct type?
 	bool IsIndexableStruct() const;

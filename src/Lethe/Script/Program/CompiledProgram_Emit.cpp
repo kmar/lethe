@@ -1589,7 +1589,7 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 	if (&src == &dst)
 		return true;
 
-	if (src.type == dst.type && src.type != DT_ENUM && !src.IsStruct() && !src.IsArray() && !src.IsPointer())
+	if (src.type == dst.type && src.type != DT_ENUM && !src.IsStruct() && !src.IsArray() && !src.IsPointer() && !src.IsFuncPtr())
 	{
 		// same types => nothing to do
 		return true;
@@ -1683,8 +1683,21 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 			return true;
 		}
 
-		if (dst.type == DT_DELEGATE && srcq.IsMethodPtr())
+		if (dst.type == DT_FUNC_PTR && src.type == DT_FUNC_PTR && !srcq.IsMethodPtr())
+		{
+			if (!dstq.CanAssign(srcq))
+				return Error(n, "can't convert incompatible function pointers");
+
 			return true;
+		}
+
+		if (dst.type == DT_DELEGATE && srcq.IsMethodPtr())
+		{
+			if (!dstq.CanAssign(srcq))
+				return Error(n, "can't convert incompatible delegates");
+
+			return true;
+		}
 
 		auto draw = dst.type == DT_RAW_PTR;
 		auto dweak = dst.type == DT_WEAK_PTR;
