@@ -1685,18 +1685,14 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 
 		if (dst.type == DT_FUNC_PTR && src.type == DT_FUNC_PTR && !srcq.IsMethodPtr())
 		{
-			if (!dstq.CanAssign(srcq))
-				return Error(n, "can't convert incompatible function pointers");
-
-			return true;
+			if (dstq.CanAssign(srcq))
+				return true;
 		}
 
 		if (dst.type == DT_DELEGATE && srcq.IsMethodPtr())
 		{
-			if (!dstq.CanAssign(srcq))
-				return Error(n, "can't convert incompatible delegates");
-
-			return true;
+			if (dstq.CanAssign(srcq))
+				return true;
 		}
 
 		auto draw = dst.type == DT_RAW_PTR;
