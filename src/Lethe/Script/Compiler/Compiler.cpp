@@ -851,6 +851,7 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 		case TOK_KEY_CLASS:
 		case TOK_KEY_ENUM:
 		case TOK_IDENT:
+		case TOK_DOUBLE_COLON:
 		{
 			UniquePtr<AstNode> sub = ParseQualifiedDecl(qualifiers, depth+1);
 			LETHE_RET_FALSE(sub);
