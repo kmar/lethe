@@ -281,7 +281,7 @@ bool AstTypeStruct::CodeGenComposite(CompiledProgram &p)
 bool AstTypeStruct::TypeGen(CompiledProgram &p)
 {
 	if (flags & AST_F_LOCK)
-		return p.Error(this, "recursive type definition");
+		return p.Error(this, String::Printf("recursive type definition for struct/class %s", nodes[0]->GetTextRepresentation().Ansi()));
 
 	postponeTypeGen.Clear();
 

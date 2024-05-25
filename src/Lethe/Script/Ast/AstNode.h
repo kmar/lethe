@@ -469,6 +469,9 @@ public:
 	// for assignments/increments and so on
 	bool ShouldPop() const;
 
+	// get template we're in
+	const AstNode *FindTemplate() const;
+
 	// get template name we're in
 	String FindTemplateName() const;
 

@@ -214,7 +214,12 @@ bool Compiler::InstantiateTemplates(ErrorHandler &eh)
 		{
 			const auto &arg = instance->templateArgs[i];
 
-			auto *argtype = instPoint->nodes[i];
+			AstNode *argtype;
+
+			if (IsValidArrayIndex(i, instPoint->nodes.GetSize()))
+				argtype = instPoint->nodes[i];
+			else
+				return eh.Error(instPoint, "instpoint without a corresponding node");
 
 			if (!arg.typedefNode)
 				return eh.Error(argtype, "template arg without type (script limitation)");
@@ -353,8 +358,6 @@ bool Compiler::InstantiateTemplates(ErrorHandler &eh)
 		// inject short name as virtual scope
 		instance->scopeRef->nameAlias = inameShort;
 
-		HashMap<AstNode *, String> nestedNameMap;
-
 		for (Int ni=nestedInstances.GetSize()-1; ni >= 0; ni--)
 		{
 			auto *nested = nestedInstances[ni];
@@ -375,54 +378,10 @@ bool Compiler::InstantiateTemplates(ErrorHandler &eh)
 
 			StringBuilder sb;
 
-			sb.AppendFormat("%s<", qname.Ansi());
-
-			for (Int i=0; i<nested->nodes.GetSize(); i++)
-			{
-				auto *n = nested->nodes[i];
-
-				auto ci = nestedNameMap.Find(n);
-
-				if (ci != nestedNameMap.End())
-				{
-					sb += ci->value;
-					goto nestedFound;
-				}
-
-				if (n->type == AST_IDENT)
-				{
-					LETHE_ASSERT(n->type == AST_IDENT);
-					auto *ntxt = AstStaticCast<AstText *>(n);
-
-					// look up in typedefs
-					auto *targ = instance->FindTemplateArg(ntxt->text);
-
-					if (targ)
-					{
-						// replace
-						auto *newnode = targ->typedefNode->nodes[0]->Clone();
-						nested->ReplaceChild(n, newnode);
-						delete n;
-						n = newnode;
-					}
-				}
-
-				n->AppendTypeQualifiers(sb);
-
-				if (!n->GetTemplateTypeText(sb))
-					return eh.Error(n, "couldn't generate template name");
-
-			nestedFound:
-
-				if (i+1 < nested->nodes.GetSize())
-					sb += ',';
-			}
-
-			sb += '>';
+			bool dummyBool;
+			LETHE_RET_FALSE(GenerateTemplateName(eh, qname, sb, nested, dummyBool));
 
 			auto nestedInstName = AddString(sb.Ansi());
-
-			nestedNameMap[nested] = nestedInstName;
 
 			if (uniqueInstances.FindIndex(sb.Get()) < 0)
 			{

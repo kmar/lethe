@@ -177,7 +177,7 @@ bool AstFunc::ValidateSignature(const AstFunc &o, const CompiledProgram &p) cons
 	return true;
 }
 
-bool AstFunc::ValidateADLCall(const AstCall &o) const
+bool AstFunc::ValidateADLCall(const AstCall &o, const ErrorHandler &e) const
 {
 	Int callArgCount = o.nodes.GetSize()-1;
 
@@ -205,6 +205,14 @@ bool AstFunc::ValidateADLCall(const AstCall &o) const
 	for (Int i=0; i<callArgCount; i++)
 	{
 		auto *tn0 = nodes1[i]->GetTypeNode();
+
+		// FIXME: necessary for some template structs within namespaces => feels super hacky, d'oh...
+		if (!tn0)
+		{
+			nodes1[i]->Resolve(e);
+			tn0 = nodes1[i]->GetTypeNode();
+		}
+
 		LETHE_RET_FALSE(tn0);
 
 		auto *tn1 = o.nodes[i+1]->GetTypeNode();
@@ -253,6 +261,9 @@ bool AstFunc::ValidateADLCall(const AstCall &o) const
 
 bool AstFunc::TypeGen(CompiledProgram &p)
 {
+	if ((flags & AST_F_TYPE_GEN) && !(qualifiers & (AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FUNC_REFERENCED | AST_Q_CTOR | AST_Q_DTOR)))
+		return true;
+
 	LETHE_RET_FALSE(Super::TypeGen(p));
 
 	if (qualifiers & AST_Q_LATENT)

@@ -122,7 +122,8 @@ bool AstScopeResOp::ResolveNode(const ErrorHandler &eh)
 	symScopeRef = target->scopeRef;
 
 	// copy underlying nodes because of templates
-	Swap(nodes, newNode->nodes);
+	for (auto *it : newNode->nodes)
+		nodes.Add(it->Clone());
 
 	for (auto *it : nodes)
 		it->parent = this;

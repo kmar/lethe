@@ -513,6 +513,11 @@ bool AstNode::ReplaceChild(AstNode *oldc, AstNode *newc)
 			if (!newc)
 			{
 				nodes.EraseIndex(i);
+
+				// we need to invalidate cached indices for the remaning nodes
+				for (Int j=i; j<nodes.GetSize(); j++)
+					nodes[j]->cachedIndex = -1;
+
 				return true;
 			}
 
@@ -1082,7 +1087,7 @@ bool AstNode::GetTemplateTypeText(StringBuilder &) const
 	return false;
 }
 
-String AstNode::FindTemplateName() const
+const AstNode *AstNode::FindTemplate() const
 {
 	auto *insideTemplate = this;
 
@@ -1090,6 +1095,16 @@ String AstNode::FindTemplateName() const
 		insideTemplate = insideTemplate->parent;
 
 	if (insideTemplate && (insideTemplate->type == AST_STRUCT || insideTemplate->type == AST_CLASS))
+		return insideTemplate;
+
+	return nullptr;
+}
+
+String AstNode::FindTemplateName() const
+{
+	auto *insideTemplate = FindTemplate();
+
+	if (insideTemplate)
 	{
 		auto oname = AstStaticCast<const AstTypeStruct *>(insideTemplate)->overrideName;
 

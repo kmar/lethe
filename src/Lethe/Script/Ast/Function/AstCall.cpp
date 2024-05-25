@@ -141,7 +141,7 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 
 				if (funcNode && funcNode->type != AST_NPROP_METHOD && !(funcNode->qualifiers & AST_Q_METHOD))
 				{
-					if (funcNode->type == AST_FUNC && !AstStaticCast<AstFunc *>(funcNode)->ValidateADLCall(*this))
+					if (funcNode->type == AST_FUNC && !AstStaticCast<AstFunc *>(funcNode)->ValidateADLCall(*this, e))
 						continue;
 
 					if (adlNode && adlNode != funcNode)
@@ -177,7 +177,7 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 		{
 			auto *fscope = scopeRef->FindFunctionScope();
 
-			if (fscope && fscope->node == targ && (!fscope->FindThis() || targ->qualifiers & AST_Q_STATIC) && !(AstStaticCast<AstFunc *>(targ)->ValidateADLCall(*this)))
+			if (fscope && fscope->node == targ && (!fscope->FindThis() || targ->qualifiers & AST_Q_STATIC) && !(AstStaticCast<AstFunc *>(targ)->ValidateADLCall(*this, e)))
 			{
 				flags &= ~AST_F_RESOLVED;
 				nodes[0]->flags &= ~AST_F_RESOLVED;
@@ -199,7 +199,7 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 				auto tnode = nodes[0];
 				nodes.Clear();
 				LETHE_VERIFY(parent->ReplaceChild(this, tnode));
-				delete this;
+				e.AddLateDeleteNode(this);
 				return res;
 			}
 
@@ -207,6 +207,51 @@ AstNode::ResolveResult AstCall::Resolve(const ErrorHandler &e)
 			return RES_ERROR;
 		}
 	}
+
+	Int callArgs = nodes.GetSize()-1;
+
+	if (callArgs)
+		return res;
+
+	auto replaceProp = [this, &e]()
+	{
+		// replace with direct prop access!
+		parent->ReplaceChild(this, nodes[0]);
+		nodes[0] = nullptr;
+		e.AddLateDeleteNode(this);
+	};
+
+	// try to remap property call to getter
+	if (nodes[0]->type == AST_OP_DOT && nodes[0]->nodes[1]->type == AST_IDENT)
+	{
+		auto *propn = AstStaticCast<AstText *>(nodes[0]->nodes[1]);
+
+		if (propn->symScopeRef && (propn->qualifiers & AST_Q_PROPERTY))
+		{
+			StringBuilder sb;
+			sb += "__get_";
+			sb += propn->text;
+			auto *refn = propn->symScopeRef->FindSymbol(sb.Get());
+
+			if (refn)
+			{
+				refn->qualifiers |= AST_Q_FUNC_REFERENCED;
+				replaceProp();
+				return res;
+			}
+		}
+	}
+
+	// ditto for native props
+	auto *rtarg = nodes[0]->GetResolveTarget();
+
+	if (rtarg && rtarg->type == AST_FUNC)
+		rtarg->qualifiers |= AST_Q_FUNC_REFERENCED;
+
+	if (!rtarg || rtarg->type != AST_NPROP)
+		return res;
+
+	replaceProp();
 
 	return res;
 }
@@ -446,54 +491,7 @@ bool AstCall::TypeGen(CompiledProgram &p)
 		}
 	}
 
-	bool res = Super::TypeGen(p);
-
-	Int callArgs = nodes.GetSize()-1;
-
-	if (callArgs)
-		return res;
-
-	auto replaceProp = [this]()
-	{
-		// replace with direct prop access!
-		parent->ReplaceChild(this, nodes[0]);
-		nodes[0] = nullptr;
-		delete this;
-	};
-
-	// try to remap property call to getter
-	if (nodes[0]->type == AST_OP_DOT && nodes[0]->nodes[1]->type == AST_IDENT)
-	{
-		auto *propn = AstStaticCast<AstText *>(nodes[0]->nodes[1]);
-
-		if (propn->symScopeRef && (propn->qualifiers & AST_Q_PROPERTY))
-		{
-			StringBuilder sb;
-			sb += "__get_";
-			sb += propn->text;
-			auto *refn = propn->symScopeRef->FindSymbol(sb.Get());
-
-			if (refn)
-			{
-				refn->qualifiers |= AST_Q_FUNC_REFERENCED;
-				replaceProp();
-				return res;
-			}
-		}
-	}
-
-	// ditto for native props
-	auto targ = nodes[0]->GetResolveTarget();
-
-	if (targ && targ->type == AST_FUNC)
-		targ->qualifiers |= AST_Q_FUNC_REFERENCED;
-
-	if (!targ || targ->type != AST_NPROP)
-		return res;
-
-	replaceProp();
-
-	return res;
+	return Super::TypeGen(p);
 }
 
 AstNode *AstCall::FindFunction(String &fname) const

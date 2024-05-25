@@ -44,7 +44,7 @@ public:
 	ResolveResult MoveBody(const ErrorHandler &e, AstNode *targ);
 
 	bool ValidateSignature(const AstFunc &o, const CompiledProgram &p) const;
-	bool ValidateADLCall(const AstCall &o) const;
+	bool ValidateADLCall(const AstCall &o, const ErrorHandler &e) const;
 
 	SharedPtr<Attributes> attributes;
 

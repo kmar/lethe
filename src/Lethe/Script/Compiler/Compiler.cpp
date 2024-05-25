@@ -1109,11 +1109,53 @@ bool Compiler::Resolve(bool ignoreErrors)
 		}
 	}
 
+	bool progResolved = progList->IsResolved();
+
+	AstNode *fn;
+
+	bool doFinalResolveStep = false;
+
+	if (!progResolved)
+	{
+		for (AstIterator it(progList); (fn = it.Next()) != nullptr;)
+		{
+			if (fn->type != AST_FUNC)
+				continue;
+
+			if (fn->qualifiers & (AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FUNC_REFERENCED | AST_Q_CTOR | AST_Q_DTOR))
+				continue;
+
+			if (fn->flags & AST_F_RESOLVED)
+				continue;
+
+			// if we're inside template, mark as resolved
+			auto *templ = fn->FindTemplate();
+
+			if (!templ)
+				continue;
+
+			fn->flags |= AST_F_RESOLVED | AST_F_SKIP_CGEN | AST_F_TYPE_GEN;
+
+			AstNode *tnode;
+			for (AstIterator it2(fn); (tnode = it2.Next()) != nullptr;)
+				tnode->flags |= AST_F_RESOLVED | AST_F_SKIP_CGEN | AST_F_TYPE_GEN;
+
+			doFinalResolveStep = true;
+		}
+	}
+
 	eh.FlushLateDeleteNodes();
+
+	if (doFinalResolveStep)
+	{
+		++resolveSteps;
+		progList->Resolve(eh);
+		progResolved = progList->IsResolved();
+	}
 
 	onResolve(resolveSteps);
 
-	bool res = !resolveError && progList->IsResolved();
+	bool res = !resolveError && progResolved;
 
 	if (!res && !ignoreErrors)
 	{
