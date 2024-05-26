@@ -39,7 +39,7 @@ protected:
 	// 1 = yes, 0 = no, -1 = force swap
 	Int IsCommutative(const CompiledProgram &p) const;
 
-	bool CodeGenOperator(CompiledProgram &p);
+	bool CodeGenOperator(CompiledProgram &p, bool asRef);
 	bool CodeGenCommon(CompiledProgram &p, bool asRef = false);
 
 	template<typename T, typename L>

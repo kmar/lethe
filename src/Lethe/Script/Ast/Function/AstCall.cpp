@@ -1310,8 +1310,11 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 		bool tempArg = false;
 
-		if (isRef && tdesc.IsConst() && !argValue->CanPassByReference(p))
+		if (isRef && !argValue->CanPassByReference(p))
 		{
+			if (!tdesc.IsConst())
+				return p.Error(argValue, "cannot pass by non-const reference here");
+
 			if (tdesc.qualifiers & AST_Q_NOTEMP)
 				return p.Error(argValue, "cannot pass a temporary here");
 

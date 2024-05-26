@@ -796,7 +796,7 @@ const char *AstBinaryOp::GetOpName() const
 	return opName;
 }
 
-bool AstBinaryOp::CodeGenOperator(CompiledProgram &p)
+bool AstBinaryOp::CodeGenOperator(CompiledProgram &p, bool asRef)
 {
 	auto left = nodes[IDX_LEFT]->GetTypeDesc(p);
 	auto right = nodes[IDX_RIGHT]->GetTypeDesc(p);
@@ -836,7 +836,7 @@ bool AstBinaryOp::CodeGenOperator(CompiledProgram &p)
 	if (!op)
 		return p.Error(this, "matching operator not found!");
 
-	return AstCall::CallOperator(2, p, this, op);
+	return AstCall::CallOperator(2, p, this, op, asRef);
 }
 
 bool AstBinaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
@@ -887,7 +887,7 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	const auto rightType = nodes[1]->GetTypeDesc(p);
 
 	if (leftType.IsStruct() || rightType.IsStruct())
-		return CodeGenOperator(p);
+		return CodeGenOperator(p, asRef);
 
 	if (leftType.IsNumber() && rightType.IsNumber())
 	{
