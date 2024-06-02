@@ -70,7 +70,7 @@ public:
 	struct Iterator
 	{
 		Queue *queue;
-		Int index;
+		S index;
 
 		inline bool operator ==(const Iterator &o) const
 		{
@@ -98,7 +98,7 @@ public:
 	struct ConstIterator
 	{
 		const Queue *queue;
-		Int index;
+		S index;
 
 		inline bool operator ==(const ConstIterator &o) const
 		{
