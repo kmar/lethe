@@ -22,18 +22,18 @@ public:
 	// set buffer size
 	bool SetBufferSize(Int nbuffSize);
 
-	bool Read(void *buf, Int size, Int &nread);
-	bool Write(const void *buf, Int size, Int &nwritten);
+	bool Read(void *buf, Int size, Int &nread) override;
+	bool Write(const void *buf, Int size, Int &nwritten) override;
 
 	// simply returns underlying stream flags
-	UInt GetFlags() const;
+	UInt GetFlags() const override;
 
-	bool Close();
-	bool Flush();
-	bool Truncate();
+	bool Close() override;
+	bool Flush() override;
+	bool Truncate() override;
 
-	bool Seek(Long pos, SeekMode mode = SM_SET);
-	Long Tell() const;
+	bool Seek(Long pos, SeekMode mode = SM_SET) override;
+	Long Tell() const override;
 
 	// to be able to read bytes fast
 	inline Int ReadByte()
@@ -50,7 +50,7 @@ public:
 		return -1;
 	}
 
-	inline Int GetByte()
+	inline Int GetByte() override
 	{
 		column++;
 

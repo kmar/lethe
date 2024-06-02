@@ -379,7 +379,7 @@ S Array<T,S,A>::Append(const T *nbuf, S sz)
 			this->data[this->size + i] = nbuf[i];
 	}
 
-	Int res = this->size;
+	S res = this->size;
 	this->size += sz;
 	return res;
 }
@@ -559,7 +559,7 @@ inline bool Array<T,S,A>::operator ==(const Array &o) const
 	if (this->size != o.size)
 		return 0;
 
-	for (Int i=0; i<this->size; i++)
+	for (S i=0; i<this->size; i++)
 		if (this->data[i] != o.data[i])
 			return 0;
 
@@ -670,7 +670,7 @@ S Array<T,S,A>::EraseIf(F func)
 {
 	S dst = 0;
 
-	for (Int i=0; i<this->size; i++)
+	for (S i=0; i<this->size; i++)
 	{
 		if (!func(this->data[i]))
 		{
@@ -816,7 +816,7 @@ Array<T,S,A> &Array<T,S,A>::Insert(S index, const T &elem)
 
 	ConstructObjectRange<T,S>(this->data + this->size);
 
-	for (Int i=this->size; i > index; i--)
+	for (S i=this->size; i > index; i--)
 		SwapCopy(this->data[i], this->data[i-1]);
 
 	this->data[index] = elem;
@@ -846,10 +846,10 @@ Array<T,S,A> &Array<T,S,A>::Insert(S index, const T *elem, S count)
 
 	ConstructObjectRange<T,S>(this->data + this->size, count);
 
-	for (Int i=this->size-1; i >= index; i--)
+	for (S i=this->size-1; i >= index; i--)
 		SwapCopy(this->data[i+count], this->data[i]);
 
-	for (Int i=0; i<count; i++)
+	for (S i=0; i<count; i++)
 		this->data[index+i] = elem[i];
 
 	this->size+=count;
