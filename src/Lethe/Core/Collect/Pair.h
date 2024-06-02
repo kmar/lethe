@@ -65,10 +65,12 @@ struct ConstPair
 	{
 		return Compare(*this, o) < 0;
 	}
+
 	inline bool operator ==(const ConstPair &o) const
 	{
 		return Equal(first, o.first) && Equal(second, o.second);
 	}
+
 	friend inline int Compare(const ConstPair &x, const ConstPair &y)
 	{
 		int fcmp = Compare(x.first, y.first);
@@ -78,14 +80,17 @@ struct ConstPair
 
 		return Compare(x.second, y.second);
 	}
+
 	friend inline int Equal(const ConstPair &x, const ConstPair &y)
 	{
 		return x == y;
 	}
-	friend inline ConstPair MakeConstPair(const F &f, const F &s)
+
+	friend inline ConstPair MakeConstPair(const F &f, const S &s)
 	{
 		return ConstPair(f, s);
 	}
+
 private:
 	ConstPair &operator =(const ConstPair &)
 	{
