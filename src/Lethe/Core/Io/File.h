@@ -53,24 +53,24 @@ public:
 	// note: doesn't work in append mode!
 	bool CreateSafe(const String &fnm, int smode = SM_READ);
 
-	bool Read(void *buf, Int size, Int &nread);
-	bool Write(const void *buf, Int size, Int &nwritten);
+	bool Read(void *buf, Int size, Int &nread) override;
+	bool Write(const void *buf, Int size, Int &nwritten) override;
 
-	bool Close();
+	bool Close() override;
 
 	// special method used with CreateSafe: call this to prevent moving broken file
 	bool Abort();
 
-	UInt GetFlags() const;
+	UInt GetFlags() const override;
 
 	bool Seek(Long pos, SeekMode mode = SM_SET);
-	Long Tell() const;
+	Long Tell() const override;
 
-	bool Flush();
+	bool Flush() override;
 	// truncate at current position
-	bool Truncate();
+	bool Truncate() override;
 
-	Stream *Clone() const;
+	Stream *Clone() const override;
 
 #if LETHE_OS_ANDROID
 	static void SetAndroidAssetManager(void *amgr);
