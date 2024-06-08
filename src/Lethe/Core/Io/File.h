@@ -10,7 +10,7 @@ namespace lethe
 // we never use stupid text mode here
 class LETHE_API File : public Stream
 {
-	LETHE_BUCKET_ALLOC(File)
+	LETHE_BUCKET_ALLOC_OVERRIDE(File)
 public:
 	LETHE_INJECT_STREAM()
 
@@ -63,7 +63,7 @@ public:
 
 	UInt GetFlags() const override;
 
-	bool Seek(Long pos, SeekMode mode = SM_SET);
+	bool Seek(Long pos, SeekMode mode = SM_SET) override;
 	Long Tell() const override;
 
 	bool Flush() override;
