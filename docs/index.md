@@ -90,7 +90,7 @@ _triple quotes can be used to produce a raw string literal:_
 ```
 <a id="name_type"></a>
 #### names
-**name** is global unique string stored as a 32-bit integer (this may change in the future to 64-bit)
+**name** is global unique string stored as a packed 64-bit integer (also 64-bit aligned)
 internally they are used for class names but are exposed to the scripting language
 ```cpp
 'this is a name literal'
