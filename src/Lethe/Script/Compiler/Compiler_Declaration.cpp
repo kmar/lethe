@@ -671,7 +671,7 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 			auto *fscope = res->scopeRef->FindFunctionScope();
 			const NamedScope *clsscope = nullptr;
 
-			if (fscope->parent && fscope->parent->type == NSCOPE_ARGS)
+			if (fscope && fscope->parent && fscope->parent->type == NSCOPE_ARGS)
 			{
 				clsscope = fscope->parent->parent;
 
