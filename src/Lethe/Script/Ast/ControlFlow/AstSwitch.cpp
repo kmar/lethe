@@ -188,13 +188,8 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 			{
 				// optimization: names will be handled just like integers!
 				Name tmp = text;
-				caseExpr->num.i = tmp.GetIndex();
-				icases.Insert(caseExpr->num.i);
-				imin = Min(caseExpr->num.i, imin);
-				imax = Max(caseExpr->num.i, imax);
-				uimin = (UInt)imin;
-				uimax = (UInt)imax;
-				isUInt = true;
+				caseExpr->num.ul = tmp.GetValue();
+				ulcases.Insert(caseExpr->num.ul);
 			}
 		}
 		break;
@@ -338,6 +333,7 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 
 			case DT_LONG:
 			case DT_ULONG:
+			case DT_NAME:
 				p.EmitI24(OPC_LPUSH64, 0);
 				p.EmitULongConst(caseExpr->num.ul);
 				p.Emit(OPC_LCMPEQ);

@@ -647,7 +647,7 @@ Int OpcodeIntBinary(DataTypeEnum dt, Int iopc, Int lopc)
 template< Int opci, Int opcui, Int opcl, Int opcul, Int opcf, Int opcd, Int opcs >
 Int OpCodeCmp(DataTypeEnum dt)
 {
-	if ((dt >= DT_BOOL && dt < DT_UINT) || dt == DT_NAME)
+	if (dt >= DT_BOOL && dt < DT_UINT)
 		return opci;
 
 	switch(dt)
@@ -659,6 +659,7 @@ Int OpCodeCmp(DataTypeEnum dt)
 		return opcl;
 
 	case DT_ULONG:
+	case DT_NAME:
 		return opcul;
 
 	case DT_FLOAT:

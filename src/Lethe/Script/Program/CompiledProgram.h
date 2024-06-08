@@ -361,14 +361,25 @@ public:
 	// convert qualified state class name to local state name
 	HashMap<Name, Name> stateToLocalNameMap;
 
-	// this is necessary to fixup state name from base class to new
-	static inline ULong PackNames(Name n0, Name n1)
+	struct PackedNames
 	{
-		return ((ULong)n0.GetIndex() << 32) | (UInt)(n1.GetIndex());
+		Name n0;
+		Name n1;
+
+		PackedNames() {}
+		inline explicit PackedNames(Name nn0, Name nn1) : n0(nn0), n1(nn1) {}
+		inline bool operator ==(const PackedNames &o) const {return n0 == o.n0 && n1 == o.n1;}
+		friend inline UInt Hash(const PackedNames &pn) {return HashMerge(Hash(pn.n0), Hash(pn.n1));}
+	};
+
+	// this is necessary to fixup state name from base class to new
+	static inline PackedNames PackNames(Name n0, Name n1)
+	{
+		return PackedNames(n0, n1);
 	}
 
 	// Pack(class name, state localName) => new qualified state class name
-	HashMap<ULong, Name> fixupStateMap;
+	HashMap<PackedNames, Name> fixupStateMap;
 
 	void StartStackFrame();
 	void EndStackFrame();

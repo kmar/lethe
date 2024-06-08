@@ -377,11 +377,19 @@ String Vm::DisassembleInternal(Int pc, Int ins) const
 			return adr + String::Printf("%s %d (%s \"%s\")", d->name, ins >> 8, nativeName.Ansi(), sval.Ansi());
 		}
 
-		if (pc > 0 && nativeName == "*NEW" && (prog->instructions[pc-1] & 255) == OPC_PUSH_ICONST)
+		if (pc > 1 && nativeName == "*NEW" && prog->instructions[pc-1] == OPC_PUSH_LCONST && (prog->instructions[pc-2] & 255) == OPC_PUSH_ICONST)
 		{
-			Int sidx = Int((UInt)prog->instructions[pc-1] >> 8);
+			Int sidx = Int((UInt)prog->instructions[pc-2] >> 8);
 			Name n;
-			n.SetIndex(sidx);
+			n.SetValue(sidx);
+			return adr + String::Printf("%s %d (%s %s)", d->name, ins >> 8, nativeName.Ansi(), n.ToString().Ansi());
+		}
+
+		if (pc > 1 && nativeName == "*NEW" && prog->instructions[pc-1] == OPC_PUSHC_LCONST && (prog->instructions[pc-2] & 255) == OPC_PUSH_ICONST)
+		{
+			Int sidx = Int((UInt)prog->instructions[pc-2] >> 8);
+			Name n;
+			n.SetValue(prog->cpool.lPool[sidx]);
 			return adr + String::Printf("%s %d (%s %s)", d->name, ins >> 8, nativeName.Ansi(), n.ToString().Ansi());
 		}
 

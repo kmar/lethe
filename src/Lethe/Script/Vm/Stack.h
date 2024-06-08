@@ -51,6 +51,7 @@ public:
 	enum Constants
 	{
 		INT_WORDS = 1,
+		NAME_WORDS = (sizeof(Name) + sizeof(StackWord)-1)/sizeof(StackWord),
 		LONG_WORDS = (sizeof(Long) + sizeof(StackWord)-1)/sizeof(StackWord),
 		DOUBLE_WORDS = (sizeof(Double) + sizeof(StackWord)-1)/sizeof(StackWord),
 		STRING_WORDS = (sizeof(String) + sizeof(StackWord)-1)/sizeof(StackWord),
@@ -359,7 +360,7 @@ inline void Stack::PushFloat(Float value)
 
 inline void Stack::PushName(Name name)
 {
-	*reinterpret_cast<Name *>(--top) = name;
+	PushLong(name.GetValue());
 }
 
 inline Double Stack::GetDouble(Int offset) const

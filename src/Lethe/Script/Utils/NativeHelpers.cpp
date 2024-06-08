@@ -126,7 +126,7 @@ DynamicArray::compareFunc DynamicArray::GetCompareFuncInternal(ScriptContext &ct
 	ELEM_COMPARE(DT_SHORT, Short)
 	ELEM_COMPARE(DT_INT, Int)
 	ELEM_COMPARE(DT_CHAR, Int)
-	ELEM_COMPARE(DT_NAME, Int)
+	ELEM_COMPARE(DT_NAME, ULong)
 	ELEM_COMPARE(DT_ENUM, Int)
 	ELEM_COMPARE(DT_UINT, UInt)
 	ELEM_COMPARE(DT_LONG, Long)
@@ -974,10 +974,10 @@ void objSetVtable(Stack &stk)
 {
 	// stack: [0] = pushed this, [1] = name index, [2] = result (bool)
 	// param: name (new class)
-	auto nidx = stk.GetSignedInt(1);
+	auto nidx = stk.GetLong(1);
 
 	Name n;
-	n.SetIndex(nidx);
+	n.SetValue(nidx);
 
 	Int res = 0;
 
@@ -1014,7 +1014,7 @@ void objSetVtable(Stack &stk)
 		res = 1;
 	} while(false);
 
-	stk.SetInt(2, res);
+	stk.SetInt(1+Stack::NAME_WORDS, res);
 }
 
 void objIsAnyOf(Stack &stk)
@@ -1046,7 +1046,7 @@ void objGetClassName(Stack &stk)
 	auto *obj = (BaseObject *)stk.GetThis();
 	auto *objCls = obj->GetScriptClassType();
 
-	stk.SetInt(1, objCls->className.GetIndex());
+	stk.SetLong(1, objCls->className.GetValue());
 }
 
 void objGetNonStateClassName(Stack &stk)
@@ -1059,7 +1059,7 @@ void objGetNonStateClassName(Stack &stk)
 	while (objCls->structQualifiers & AST_Q_STATE)
 		objCls = &objCls->baseType.GetType();
 
-	stk.SetInt(1, objCls->className.GetIndex());
+	stk.SetLong(1, objCls->className.GetValue());
 }
 
 void objFixStateName(Stack &stk)
@@ -1397,7 +1397,7 @@ static void natHashFloat(Stack &stk)
 	if (!value)
 		value = 0;
 
-	res = Hash(FloatToBinary(value));
+	res = lethe::Hash(FloatToBinary(value));
 }
 
 static void natHashDouble(Stack &stk)
@@ -1411,7 +1411,7 @@ static void natHashDouble(Stack &stk)
 	if (!value)
 		value = 0;
 
-	res = Hash(DoubleToBinary(value));
+	res = lethe::Hash(DoubleToBinary(value));
 }
 
 static void natFloorFloat(Stack &stk)

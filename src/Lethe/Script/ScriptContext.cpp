@@ -258,7 +258,7 @@ ExecResult ScriptContext::CallOffset(Int pcOffset)
 BaseObject *ScriptContext::NewObject(Name name)
 {
 	auto &stk = *vmStack.Get();
-	stk.PushInt(name.GetIndex());
+	stk.PushLong(name.GetValue());
 	Builtin::Opcode_New_Dynamic(stk);
 	auto fptr = stk.GetPtr(0);
 

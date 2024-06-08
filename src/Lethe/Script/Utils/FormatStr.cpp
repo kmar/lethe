@@ -323,7 +323,8 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			}
 
 			Name n;
-			n.SetIndex(stk.GetSignedInt(ofs++));
+			n.SetValue(stk.GetLong(ofs));
+			ofs += Stack::NAME_WORDS;
 			fmt = 's';
 			res.AppendFormat(optstr, n.ToString().Ansi());
 

@@ -907,7 +907,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		Int istr = p.cpool.Add(calleeFuncName);
 
 		// emit class name, label
-		p.EmitIntConst(clsname.GetIndex());
+		p.EmitULongConst(clsname.GetValue());
 		p.EmitIntConst(istr);
 		p.EmitI24(OPC_BCALL, BUILTIN_LPUSHSTR_CONST);
 		// note: set state label cleans up stack
@@ -979,7 +979,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			}
 
 			// emit class name, label
-			p.EmitIntConst(clsname.GetIndex());
+			p.EmitULongConst(clsname.GetValue());
 			p.EmitIntConst(istr);
 			p.EmitI24(OPC_BCALL, BUILTIN_LPUSHSTR_CONST);
 			// note: set state label cleans up stack

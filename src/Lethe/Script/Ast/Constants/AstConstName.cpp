@@ -10,7 +10,7 @@ namespace lethe
 AstConstName::AstConstName(const String &ntext, const TokenLocation &nloc)
 	: Super(ntext, AST_CONST_NAME, nloc)
 {
-	num.i = Name(ntext).GetIndex();
+	num.ul = Name(ntext).GetValue();
 }
 
 QDataType AstConstName::GetTypeDesc(const CompiledProgram &p) const

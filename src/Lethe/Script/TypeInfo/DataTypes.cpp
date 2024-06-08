@@ -1962,11 +1962,11 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 	case DT_NAME:
 	{
 		Name val = *static_cast<const Name *>(ptr);
-		// validate name index
-		if ((UInt)val.GetIndex() >= (UInt)NameTable::Get().GetSize())
+		// validate name index => note, lo 32 bits is string index which should fit in nt size
+		if ((UInt)val.GetValue() >= (UInt)NameTable::Get().GetSize())
 			sb += '?';
 		else
-			sb.AppendFormat("'%s' #%d", val.ToString().Escape().Ansi(), val.GetIndex());
+			sb.AppendFormat("'%s' #%d", val.ToString().Escape().Ansi(), (int)(UInt)val.GetValue());
 	}
 	break;
 

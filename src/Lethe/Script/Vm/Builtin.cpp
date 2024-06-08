@@ -105,7 +105,7 @@ void Opcode_LPushName_Const(Stack &stk)
 {
 	UInt offset = stk.GetInt(0);
 	stk.Pop(1);
-	stk.PushInt(stk.GetConstantPool().nPool[offset].GetIndex());
+	stk.PushLong(stk.GetConstantPool().nPool[offset].GetValue());
 }
 
 void Opcode_GetStrChar(Stack &stk)
@@ -301,19 +301,19 @@ void Opcode_Conv_DToS(Stack &stk)
 
 void Opcode_Conv_NToS(Stack &stk)
 {
-	Int nidx = stk.GetInt(0);
-	stk.Pop(1);
+	auto nidx = stk.GetLong(0);
+	stk.Pop(Stack::NAME_WORDS);
 	Name n;
-	n.SetIndex(nidx);
+	n.SetValue(nidx);
 	stk.PushString(n.ToString());
 }
 
 void Opcode_Conv_SToN(Stack &stk)
 {
-	Int idx = Name(stk.GetString(+0)).GetIndex();
+	auto idx = Name(stk.GetString(+0)).GetValue();
 	stk.DelString(0);
 	stk.Pop(Stack::STRING_WORDS);
-	stk.PushInt(idx);
+	stk.PushLong(idx);
 }
 
 void Opcode_Conv_SToBool(Stack &stk)
@@ -354,10 +354,10 @@ void Opcode_PStrStore_Imm(Stack &stk)
 // note: opcode new pushes twice to simplify ctor call
 Int Opcode_New_Internal(Stack &stk)
 {
-	Int nidx = stk.GetSignedInt(0);
-	stk.Pop(1);
+	ULong nidx = stk.GetLong(0);
+	stk.Pop(Stack::NAME_WORDS);
 	Name n;
-	n.SetIndex(nidx);
+	n.SetValue(nidx);
 
 	auto dt = stk.GetProgram().FindClass(n);
 
@@ -536,9 +536,9 @@ void Opcode_AddWeakNull(Stack &stk)
 void Opcode_IsA(Stack &stk)
 {
 	Name n;
-	n.SetIndex(stk.GetSignedInt(0));
-	auto obj = static_cast<BaseObject *>(stk.GetPtr(1));
-	stk.Pop(2);
+	n.SetValue(stk.GetLong(0));
+	auto obj = static_cast<BaseObject *>(stk.GetPtr(Stack::NAME_WORDS));
+	stk.Pop(1 + Stack::NAME_WORDS);
 
 	if (obj)
 		stk.PushInt(obj->GetScriptClassType()->IsA(n));
@@ -552,9 +552,9 @@ void Opcode_IsA(Stack &stk)
 void Opcode_IsANoPop(Stack &stk)
 {
 	Name n;
-	n.SetIndex(stk.GetSignedInt(0));
-	auto obj = static_cast<BaseObject *>(stk.GetPtr(1));
-	stk.Pop(1);
+	n.SetValue(stk.GetLong(0));
+	auto obj = static_cast<BaseObject *>(stk.GetPtr(Stack::NAME_WORDS));
+	stk.Pop(Stack::NAME_WORDS);
 
 	if (obj)
 		stk.PushInt(obj->GetScriptClassType()->IsA(n));
@@ -568,8 +568,9 @@ void Opcode_IsANoPop(Stack &stk)
 void Opcode_FixWeak(Stack &stk)
 {
 	Name n;
-	n.SetIndex(stk.GetSignedInt(0));
-	stk.Pop(1);
+	n.SetValue(stk.GetLong(0));
+	stk.Pop(Stack::NAME_WORDS);
+
 	auto obj = static_cast<BaseObject *>(stk.GetPtr(0));
 
 	if (obj && (!Atomic::Load(obj->strongRefCount) || !obj->GetScriptClassType()->IsA(n)))
@@ -592,8 +593,9 @@ void Opcode_FixWeakRef(Stack &stk)
 void Opcode_FixAddWeak(Stack &stk)
 {
 	Name n;
-	n.SetIndex(stk.GetSignedInt(0));
-	stk.Pop(1);
+	n.SetValue(stk.GetLong(0));
+	stk.Pop(Stack::NAME_WORDS);
+
 	auto obj = static_cast<BaseObject *>(stk.GetPtr(0));
 
 	if (obj)
@@ -608,8 +610,9 @@ void Opcode_FixAddWeak(Stack &stk)
 void Opcode_FixStrong(Stack &stk)
 {
 	Name n;
-	n.SetIndex(stk.GetSignedInt(0));
-	stk.Pop(1);
+	n.SetValue(stk.GetLong(0));
+	stk.Pop(Stack::NAME_WORDS);
+
 	auto obj = static_cast<BaseObject *>(stk.GetPtr(0));
 
 	if (obj && !obj->GetScriptClassType()->IsA(n))
@@ -619,8 +622,9 @@ void Opcode_FixStrong(Stack &stk)
 void Opcode_FixAddStrong(Stack &stk)
 {
 	Name n;
-	n.SetIndex(stk.GetSignedInt(0));
-	stk.Pop(1);
+	n.SetValue(stk.GetLong(0));
+	stk.Pop(Stack::NAME_WORDS);
+
 	auto obj = static_cast<BaseObject *>(stk.GetPtr(0));
 
 	if (obj)
@@ -1169,10 +1173,10 @@ void Opcode_SetStateLabel(Stack &stk)
 {
 	auto labelName = stk.GetString(0);
 	Name clsname;
-	clsname.SetIndex(stk.GetSignedInt(Stack::STRING_WORDS));
+	clsname.SetValue(stk.GetLong(Stack::STRING_WORDS));
 
 	Opcode_LDelStr0(stk);
-	stk.Pop(Stack::STRING_WORDS+1);
+	stk.Pop(Stack::STRING_WORDS + Stack::NAME_WORDS);
 
 	auto &ctx = stk.GetContext();
 

@@ -196,7 +196,7 @@ CompiledProgram::CompiledProgram(bool njitFriendly)
 	dt->typeIndex = AddType(new DataType(*dt))->typeIndex;
 
 	dt = elemTypes + DT_NAME;
-	dt->align = dt->size = 4;
+	dt->align = dt->size = sizeof(Name);
 	dt->type = DT_NAME;
 	dt->typeIndex = AddType(new DataType(*dt))->typeIndex;
 

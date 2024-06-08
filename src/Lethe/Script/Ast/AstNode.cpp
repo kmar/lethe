@@ -363,12 +363,12 @@ bool AstNode::BakeGlobalData(AstNode *n, QDataType qdt, Int ofs, CompiledProgram
 	case DT_UINT:
 	case DT_ENUM:
 	case DT_CHAR:
-	case DT_NAME:
 		MemCpy(gdata + ofs, &n->num.ui, sizeof(UInt));
 		break;
 
 	case DT_LONG:
 	case DT_ULONG:
+	case DT_NAME:
 		MemCpy(gdata + ofs, &n->num.ul, sizeof(ULong));
 		break;
 

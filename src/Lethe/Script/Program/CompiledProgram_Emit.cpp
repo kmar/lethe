@@ -112,13 +112,16 @@ void CompiledProgram::EmitDoubleConst(Double dconst)
 
 void CompiledProgram::EmitNameConst(Name n)
 {
+	// FIXME: this optimization is unsafe as it prevents bytecode serialization;
+	// but I don't plan that anyway...
 	UInt ofs = (UInt)cpool.Add(n);
+	(void)ofs;
+	EmitULongConst(n.GetValue());
+#if 0
 	UInt idx = n.GetIndex();
 
 	if (idx <= 0x7fffffu)
 	{
-		// FIXME: this optimization is unsafe as it prevents bytecode serialization;
-		// but I don't plan that anyway...
 		EmitI24(OPC_PUSH_ICONST, idx);
 	}
 	else
@@ -126,6 +129,7 @@ void CompiledProgram::EmitNameConst(Name n)
 		EmitI24(OPC_PUSH_ICONST, ofs);
 		Emit(OPC_BCALL + (BUILTIN_LPUSHNAME_CONST << 8));
 	}
+#endif
 }
 
 Int CompiledProgram::EmitForwardJump(UInt ins)
@@ -1429,7 +1433,7 @@ const Int CompiledProgram::elemConvTab[ECONV_MAX][ECONV_MAX] =
 		OPC_LCMPNZ,	// ULONG
 		OPC_FCMPNZ,	// FLOAT
 		OPC_DCMPNZ,	// DOUBLE
-		OPC_ICMPNZ,	// NAME
+		OPC_LCMPNZ,	// NAME
 		OPC_BCALL + (BUILTIN_CONV_STOBOOL << 8),	// STRING
 		OPC_HALT	// POINTER
 	},

@@ -24,12 +24,7 @@ class LETHE_API NameTable
 	friend struct Name;
 
 	NameTableNum names;
-	mutable HashMap< Int, String > stringCache;
-
-	// this ugly thing is here because Microsoft broke NatVis in some 2017 update... *sigh*
-#if LETHE_DEBUG
-	mutable Array<String> debugNames;
-#endif
+	mutable HashMap<ULong, String> stringCache;
 
 	mutable Mutex mutex;
 
@@ -40,9 +35,12 @@ public:
 	~NameTable();
 
 	String GetString(const Name &name) const;
-	void ToCharBuffer(const Name &name, Array<char> &nbuf) const;
+	template<typename Cont>
+	void ToCharBuffer(const Name &name, Cont &nbuf, bool zeroTerminated = true) const;
 
-	// get size
+	String GetStringPrefix(const Name &name) const;
+
+	// get size (string part only since number part is now encoded within name value)
 	int GetSize() const;
 
 	// add name (this must be locked)
@@ -64,10 +62,12 @@ struct LETHE_API Name
 {
 private:
 	friend class NameTable;
-	Int index;		// name index (0 should be empty string)
+	// name value (0 should be empty string)
+	// hi 32 bits: number+1, lo 32 bits: string index => table
+	ULong value;
 public:
 
-	inline Name() : index(0) {}
+	inline Name() : value(0) {}
 	Name(const char *str);
 	Name(const String &str);
 
@@ -77,40 +77,43 @@ public:
 
 	inline bool IsEmpty() const
 	{
-		return index == 0;
+		return value == 0;
 	}
 
-	inline Int GetIndex() const
+	inline ULong GetValue() const
 	{
-		return index;
+		return value;
 	}
 
 	// note: use this at your own risk!
-	inline void SetIndex(Int idx)
+	inline void SetValue(ULong val)
 	{
-		index = idx;
+		value = val;
 	}
 
 	String ToString() const;
 
-	void ToCharBuffer(Array<char> &buf) const;
+	String ToStringPrefix() const;
+
+	template<typename Cont>
+	void ToCharBuffer(Cont &buf, bool zeroTerminated = true) const;
 
 	inline bool operator ==(const Name &o) const
 	{
-		return index == o.index;
+		return value == o.value;
 	}
 	inline bool operator !=(const Name &o) const
 	{
-		return index != o.index;
+		return value != o.value;
 	}
 	inline bool operator <(const Name &o) const
 	{
-		return index < o.index;
+		return value < o.value;
 	}
 	// fast hash version, unstable
 	friend inline UInt Hash(const Name &n)
 	{
-		return (UInt)Hash(n.index);
+		return (UInt)Hash(n.value);
 	}
 
 	// stable version, to be used for serialization
@@ -118,7 +121,7 @@ public:
 
 	inline Name &Clear()
 	{
-		index = 0;
+		value = 0;
 		return *this;
 	}
 
@@ -126,5 +129,18 @@ public:
 	// idx -1 means none
 	void Split(String &base, Int &idx) const;
 };
+
+template<typename Cont>
+void NameTable::ToCharBuffer(const Name &name, Cont &nbuf, bool zeroTerminated) const
+{
+	MutexLock _(mutex);
+	names.ToCharBuffer(name.value, nbuf, zeroTerminated);
+}
+
+template<typename Cont>
+void Name::ToCharBuffer(Cont &nbuf, bool zeroTerminated) const
+{
+	return NameTable::Get().ToCharBuffer(*this, nbuf, zeroTerminated);
+}
 
 }

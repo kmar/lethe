@@ -13,37 +13,26 @@ LETHE_SINGLETON_INSTANCE(NameTable)
 
 static const Int NTAB_STRCACHE_MAX = 8192;
 
-// note: this won't work for custom NameTable instances, just for the global (singleton) one
-thread_local Array<UInt> nameTableStableHashCache;
-
 UInt NameTable::GetStableHash(Name n) const
 {
-	if (!n.index)
-		return 0;
+	return n.value ? names.GetStableHash(n.value) : 0;
+}
 
-	if (this != &Get())
-		return names.GetStableHash(n.index);
-
-	// this is the singleton so try to build thread-local cache first
-	while ((UInt)n.index >= (UInt)nameTableStableHashCache.GetSize())
-	{
-		nameTableStableHashCache.Add(names.GetStableHash(nameTableStableHashCache.GetSize()));
-	}
-
-	// and look it up
-	return nameTableStableHashCache[n.index];
+String NameTable::GetStringPrefix(const Name &name) const
+{
+	return names.GetStringPrefix(name.value);
 }
 
 String NameTable::GetString(const Name &name) const
 {
 	MutexLock _(mutex);
-	HashMap<Int, String>::ConstIterator ci = stringCache.Find(name.index);
+	auto ci = stringCache.Find(name.value);
 
 	if (ci != stringCache.End())
 		return ci->value;
 
-	String tmp = names.GetString(name.index);
-	stringCache[name.index] = tmp;
+	auto tmp = names.GetString(name.value);
+	stringCache[name.value] = tmp;
 
 	if (stringCache.GetSize() > NTAB_STRCACHE_MAX)
 	{
@@ -55,29 +44,16 @@ String NameTable::GetString(const Name &name) const
 	return tmp;
 }
 
-void NameTable::ToCharBuffer(const Name &name, Array<char> &nbuf) const
-{
-	MutexLock _(mutex);
-	names.ToCharBuffer(name.index, nbuf);
-}
-
 NameTable::NameTable()
 {
 	names.Add(String());
-#if LETHE_DEBUG
-	debugNames.Add(String());
-#endif
 }
 
 // add name (this must be locked)
 Name NameTable::Add(const char *name)
 {
 	if (!name || !*name)
-	{
-		Name res;
-		res.index = 0;
-		return res;
-	}
+		return Name();
 
 	return Add(StringRef(name));
 }
@@ -90,14 +66,7 @@ Name NameTable::Add(const StringRef &nname)
 		return res;
 
 	MutexLock _(mutex);
-	res.index = names.Add(nname);
-
-#if LETHE_DEBUG
-	if (res.index >= debugNames.GetSize())
-	{
-		LETHE_VERIFY(res.index == debugNames.Add(nname.Ansi()));
-	}
-#endif
+	res.value = names.Add(nname);
 
 	return res;
 }
@@ -105,11 +74,9 @@ Name NameTable::Add(const StringRef &nname)
 NameTable &NameTable::Clear()
 {
 	LETHE_ASSERT(this != &NameTable::Get());
-	MutexLock _(mutex);
 	names.Clear();
-#if LETHE_DEBUG
-	debugNames.Clear();
-#endif
+	MutexLock _(mutex);
+	stringCache.Clear();
 	return *this;
 }
 
@@ -122,15 +89,11 @@ void NameTable::FixupString(String &str)
 
 NameTable::~NameTable()
 {
-	// reset thread local stable hash cache if this is the singleton
-	if (this == &Get())
-		nameTableStableHashCache.Reset();
 }
 
 // get size
 int NameTable::GetSize() const
 {
-	MutexLock _(mutex);
 	return names.GetSize();
 }
 
@@ -166,21 +129,20 @@ String Name::ToString() const
 	return NameTable::Get().GetString(*this);
 }
 
-void Name::ToCharBuffer(Array<char> &nbuf) const
+String Name::ToStringPrefix() const
 {
-	return NameTable::Get().ToCharBuffer(*this, nbuf);
+	return NameTable::Get().GetStringPrefix(*this);
 }
 
 void Name::Split(String &base, Int &idx) const
 {
 	auto &nt = NameTable::Get();
-	MutexLock _(nt.mutex);
-	nt.names.Extract(index, base, idx);
+	nt.names.Extract(value, base, idx);
 }
 
 UInt StableHash(const Name &n)
 {
-	if (!n.index)
+	if (!n.value)
 		return 0;
 
 	return NameTable::Get().GetStableHash(n);
