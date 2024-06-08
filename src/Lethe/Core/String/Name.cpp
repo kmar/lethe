@@ -124,6 +124,15 @@ Name &Name::operator =(const String &str)
 	return *this = NameTable::Get().Add(str);
 }
 
+void Name::SetNumber(Int num)
+{
+	if (num < 0)
+		num = -1;
+
+	value = (UInt)value;
+	value |= ((ULong)num + 1) << 32;
+}
+
 String Name::ToString() const
 {
 	return NameTable::Get().GetString(*this);

@@ -91,6 +91,14 @@ public:
 		value = val;
 	}
 
+	// -1 = none
+	inline Int GetNumber() const
+	{
+		return (Int)((UInt)(value >> 32)-1);
+	}
+
+	void SetNumber(Int num);
+
 	String ToString() const;
 
 	String ToStringPrefix() const;
