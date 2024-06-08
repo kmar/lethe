@@ -166,7 +166,7 @@ UInt NameTableNum::GetStableHash(ULong val) const
 	}
 
 	// and merge with num part of the name
-	return HashMerge(shash, (UInt)(val >> 32));
+	return HashMerge(shash, Hash((UInt)(val >> 32)));
 }
 
 }
