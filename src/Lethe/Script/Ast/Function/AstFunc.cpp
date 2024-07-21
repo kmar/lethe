@@ -253,7 +253,16 @@ bool AstFunc::ValidateADLCall(const AstCall &o, const ErrorHandler &e) const
 		}
 
 		if (tn0 != tn1)
+		{
+			// test if tn1 is inherited from tn0
+			if (tn1->type == tn0->type && (tn0->type == AST_STRUCT || tn0->type == AST_CLASS))
+			{
+				if (tn0->scopeRef->IsBaseOf(tn1->scopeRef))
+					continue;
+			}
+
 			return false;
+		}
 	}
 
 	return true;
