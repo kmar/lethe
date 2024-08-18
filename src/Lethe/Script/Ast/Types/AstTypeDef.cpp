@@ -50,7 +50,19 @@ const AstNode *AstTypeDef::GetTypeNode() const
 
 AstNode *AstTypeDef::GetResolveTarget() const
 {
-	return nodes[0]->GetResolveTarget();
+	if (qualifiers & AST_Q_TYPEDEF_LOCK)
+		return nullptr;
+
+	auto *res = nodes[0]->GetResolveTarget();
+
+	while (res && res->type == AST_TYPEDEF)
+	{
+		qualifiers |= AST_Q_TYPEDEF_LOCK;
+		res = res->nodes[0]->GetResolveTarget();
+		qualifiers &= ~AST_Q_TYPEDEF_LOCK;
+	}
+
+	return res;
 }
 
 QDataType AstTypeDef::GetTypeDesc(const CompiledProgram &p) const
