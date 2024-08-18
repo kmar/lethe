@@ -105,8 +105,12 @@ AstNode *AstSubscriptOp::GetResolveTarget() const
 			// assume indexable struct or using an operator
 			const auto &m = tn->scopeRef->members;
 
-			if (!m.IsEmpty())
-				return m.GetValue(0)->GetResolveTarget();
+			// must find first non-static vardecl, index 0 could be template typedef
+			for (Int i=0; i<m.GetSize(); i++)
+			{
+				if (m.GetKey(i).value->type == AST_VAR_DECL && !(m.GetKey(i).value->qualifiers & AST_Q_STATIC))
+					return m.GetKey(i).value->GetResolveTarget();
+			}
 		}
 	}
 
