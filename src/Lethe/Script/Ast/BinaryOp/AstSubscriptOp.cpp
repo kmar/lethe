@@ -361,7 +361,7 @@ bool AstSubscriptOp::CodeGenSubscript(CompiledProgram &p, bool store, bool allow
 				if (elemType.IsMethodPtr())
 					return p.Error(this, "cannot load method");
 
-				p.EmitU24(opcodeRefLoadOfs[elemType.GetTypeEnum()], sz);
+				p.EmitU24(opcodeRefLoadOfs[elemType.GetTypeEnumUnderlying()], sz);
 			}
 			else
 				return p.Error(this, "unsupported subscript elem type");

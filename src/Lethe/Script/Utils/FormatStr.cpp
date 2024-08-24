@@ -58,7 +58,7 @@ bool FormatCheckType(DataTypeEnum src, const void *dt)
 {
 	auto *type = static_cast<const DataType *>(dt);
 
-	auto dst = type->type;
+	auto dst = type->GetTypeEnumUnderlying();
 
 	return FormatTypeOk(dst, src);
 }

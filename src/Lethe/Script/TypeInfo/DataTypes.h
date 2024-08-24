@@ -169,7 +169,13 @@ struct LETHE_API QDataType
 	{
 		return *ref;
 	}
+
+	const DataType &GetTypeUnderlying() const;
+
 	DataTypeEnum GetTypeEnum() const;
+
+	// convert to underlying type for enums
+	DataTypeEnum GetTypeEnumUnderlying() const;
 
 	// get/extract human readable type name
 	String GetName() const;
@@ -214,11 +220,13 @@ public:
 	mutable Name className;
 	// elem type ref for arrays
 	// return type for function ptr
+	// underlying type for enums
 	QDataType elemType;
 
 	// for structs/classes
 	// note: name is only required for debugging
 	String name;
+	// note: also base enum type for enum items
 	QDataType baseType;
 	// class/struct qualifiers (native, placeable)
 	ULong structQualifiers;
@@ -248,7 +256,7 @@ public:
 		// per-member user-defined attributes
 		SharedPtr<Attributes> attributes;
 		QDataType type;
-		Int offset = -1;
+		Long offset = -1;
 		// member only: bitfield offset and size in bits
 		Short bitOffset = 0;
 		Short bitSize = 0;
@@ -262,6 +270,8 @@ public:
 	// user-defined attributes (only valid for enums, struct and classes)
 	SharedPtr<Attributes> attributes;
 	TokenLocation location;
+
+	inline DataTypeEnum GetTypeEnumUnderlying() const {return type == DT_ENUM ? elemType.ref->type : type;}
 
 	// get complementary pointer type
 	const DataType *GetPointerType(DataTypeEnum dte) const;
@@ -368,8 +378,6 @@ private:
 	// class inheritance name list for dynamic casts (sorted)
 	mutable StackArray<Name, 16> isa;
 
-	// only works for numeric types
-	static Int GetTypeEnumSize(DataTypeEnum t);
 	// TODO: handle const?
 	static DataTypeEnum EvalTypeEnum(DataTypeEnum t);
 	static bool IsNumberEnum(DataTypeEnum t0);

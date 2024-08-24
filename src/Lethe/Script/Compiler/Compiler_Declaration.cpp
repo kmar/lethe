@@ -1235,10 +1235,27 @@ AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
 
 	nname->flags |= AST_F_RESOLVED;
 	ntype->Add(nname.Detach());
+
+	UniquePtr<AstNode> underlying;
+
+	// handle underlying type
+	if (ts->PeekToken().type == TOK_COLON)
+	{
+		ts->ConsumeToken();
+		underlying = ParseType(depth+1);
+		LETHE_RET_FALSE(underlying);
+	}
+	else
+	{
+		underlying = NewAstNode<AstTypeInt>(ts->GetTokenLocation());
+	}
+
+	ntype->Add(underlying.Detach());
+
 	// expect lblock
 	LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_LBLOCK, "expected `{`"));
 
-	ntype->num.i = 0;
+	ntype->num.ul = 0;
 	bool itemValueKnown = 1;
 
 	AstText *lastItem = 0;
@@ -1283,10 +1300,10 @@ AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
 		}
 		else if (itemValueKnown)
 		{
-			AstNode *val = NewAstNode<AstConstInt>(nt.location);
-			val->num.i = ntype->num.i;
+			AstNode *val = NewAstNode<AstConstULong>(nt.location);
+			val->num.ul = ntype->num.ul;
 			item->Add(val);
-			item->num.i = ntype->num.i++;
+			item->num.ul = ntype->num.ul++;
 			item->flags |= AST_F_RESOLVED;
 		}
 		else

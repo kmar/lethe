@@ -14,7 +14,19 @@ bool AstTypeEnum::BeginCodegen(CompiledProgram &p)
 {
 	auto dt = const_cast<DataType *>(p.AddType(new DataType));
 	dt->type = DT_ENUM;
-	dt->size = dt->align = (Int)sizeof(Int);
+
+	// elemType = underlying type for an enum
+	dt->elemType = nodes[IDX_UNDERLYING]->GetTypeDesc(p);
+	auto *underlying = dt->elemType.ref;
+
+	dt->size = underlying->size;
+	dt->align = underlying->align;
+
+	if (!underlying->IsInteger())
+		return p.Error(nodes[IDX_UNDERLYING], "underlying type must be an integer");
+
+	if (underlying->type == DT_ENUM)
+		return p.Error(nodes[IDX_UNDERLYING], "underlying type cannot be another enum");
 
 	if (nodes[0]->type != AST_EMPTY)
 		dt->name = AstStaticCast<AstText *>(nodes[0])->GetQText(p);
@@ -45,13 +57,13 @@ bool AstTypeEnum::TypeGen(CompiledProgram &p)
 	typeRef.qualifiers = qualifiers;
 
 	// generate new type...
-	for (Int i=1; i<nodes.GetSize(); i++)
+	for (Int i=IDX_FIRST_ITEM; i<nodes.GetSize(); i++)
 	{
 		auto n = AstStaticCast<AstEnumItem *>(nodes[i]);
 		DataType::Member m;
 		m.name = n->text;
 		m.type = n->typeRef;
-		m.offset = n->nodes[0]->num.i;
+		m.offset = (Long)n->nodes[0]->num.ul;
 		dt->members.Add(m);
 	}
 

@@ -111,56 +111,63 @@ AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const C
 
 	auto tmp = num;
 
+	const auto *tref = dt.baseType.IsNumber() ? &dt : nullptr;
+
 	switch(dte)
 	{
 	case DT_BOOL:
-		res = new AstConstBool(location);
+		res = new AstConstBool(location, tref);
 		AST_CONST_CONV_TO(bool, i, dt.type, res, !=0);
 		break;
 
 	case DT_BYTE:
-		res = type == AST_CONST_INT ? this : new AstConstInt(location);
+		res = new AstConstInt(location, tref);
 		AST_CONST_CONV_TO(Byte, i, dt.type, res,);
 		break;
 
 	case DT_SBYTE:
-		res = type == AST_CONST_INT ? this : new AstConstInt(location);
+		res = new AstConstInt(location, tref);
 		AST_CONST_CONV_TO(SByte, i, dt.type, res,);
 		break;
 
 	case DT_SHORT:
-		res = type == AST_CONST_INT ? this : new AstConstInt(location);
+		res = new AstConstInt(location, tref);
 		AST_CONST_CONV_TO(Short, i, dt.type, res,);
 		break;
 
 	case DT_USHORT:
-		res = type == AST_CONST_INT ? this : new AstConstInt(location);
+		res = new AstConstInt(location, tref);
 		AST_CONST_CONV_TO(UShort, i, dt.type, res,);
 		break;
 
 	case DT_CHAR:
-		res = new AstConstChar(location);
+		res = new AstConstChar(location, tref);
 		AST_CONST_CONV_TO(Int, i, dt.type, res,);
 		break;
 
 	case DT_ENUM:
+	{
+		const auto &tmpt = dt.baseType.IsNumber() ? dt : *dt.elemType.ref;
+		return ConvertConstNode(tmpt, dt.GetTypeEnumUnderlying(), p);
+	}
+
 	case DT_INT:
-		res = new AstConstInt(location, dt.baseType.IsNumber() ? &dt : nullptr);
+		res = new AstConstInt(location, tref);
 		AST_CONST_CONV_TO(Int, i, dt.type, res,);
 		break;
 
 	case DT_UINT:
-		res = new AstConstUInt(location);
+		res = new AstConstUInt(location, tref);
 		AST_CONST_CONV_TO(UInt, ui, dt.type, res,);
 		break;
 
 	case DT_LONG:
-		res = new AstConstLong(location);
+		res = new AstConstLong(location, tref);
 		AST_CONST_CONV_TO(Long, l, dt.type, res,);
 		break;
 
 	case DT_ULONG:
-		res = new AstConstULong(location);
+		res = new AstConstULong(location, tref);
 		AST_CONST_CONV_TO(ULong, ul, dt.type, res,);
 		break;
 
@@ -188,11 +195,8 @@ AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const C
 
 AstNode *AstConstant::ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p)
 {
-	const DataType &dt = GetTypeDesc(p).GetType();
+	const DataType &dt = GetTypeDesc(p).GetTypeUnderlying();
 	auto thisType = dt.type;
-
-	if (thisType == DT_ENUM)
-		thisType = DT_INT;
 
 	if (dte == thisType || !IsConstant())
 		return this;
@@ -283,6 +287,18 @@ bool AstConstant::IsZeroConstant(const CompiledProgram &p) const
 #undef AST_CONST_CONV_TO
 #undef AST_CONST_CONV_TO_STRING
 #undef AST_CONST_CONV_WARN_IF
+
+// AstConstEnumBase
+
+LETHE_BUCKET_ALLOC_DEF(AstConstEnumBase)
+
+void AstConstEnumBase::CopyTo(AstNode *n) const
+{
+	Super::CopyTo(n);
+	auto *tmp = AstStaticCast<AstConstInt *>(n);
+	tmp->typeRef = typeRef;
+}
+
 
 
 }

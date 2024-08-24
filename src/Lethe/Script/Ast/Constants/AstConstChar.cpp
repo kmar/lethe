@@ -9,6 +9,10 @@ namespace lethe
 
 QDataType AstConstChar::GetTypeDesc(const CompiledProgram &p) const
 {
+	// special handling for enum items
+	if (typeRef)
+		return QDataType::MakeConstType(*typeRef);
+
 	QDataType res;
 	res.ref = &p.elemTypes[DT_CHAR];
 	res.qualifiers = AST_Q_CONST;

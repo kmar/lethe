@@ -85,7 +85,7 @@ bool AstUnaryPostOp::CodeGen(CompiledProgram &p)
 		}
 	}
 
-	p.EmitI24(opcodeRefIncPost[dt.GetTypeEnum()], amt);
+	p.EmitI24(opcodeRefIncPost[dt.GetTypeEnumUnderlying()], amt);
 	p.PopStackType(1);
 
 	if (shouldpop)

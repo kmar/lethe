@@ -1349,7 +1349,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		if (checkFormat && i > formatString+1)
 		{
 			auto ftype = formatTypes[i-formatString-2];
-			auto atype = top.GetTypeEnum();
+			auto atype = top.GetTypeEnumUnderlying();
 
 			if (!FormatTypeOk(atype, ftype))
 				return p.Error(argValue, "format type mismatch");

@@ -277,7 +277,7 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 
 	const QDataType &t0 = nodes[0]->GetTypeDesc(p);
 	const QDataType &t1 = nodes[1]->GetTypeDesc(p);
-	DataTypeEnum tdt = DataType::ComposeTypeEnum(t0.GetTypeEnum(), t1.GetTypeEnum());
+	DataTypeEnum tdt = DataType::ComposeTypeEnum(t0.GetTypeEnumUnderlying(), t1.GetTypeEnumUnderlying());
 
 	// convert nodes to type
 	LETHE_RET_FALSE(nodes[0]->ConvertConstTo(tdt, p));
@@ -442,7 +442,7 @@ QDataType AstBinaryOp::GetTypeDesc(const CompiledProgram &p) const
 	}
 
 	return QDataType::MakeType(
-			   p.elemTypes[DataType::ComposeTypeEnum(dt0.GetTypeEnum(), dt1.GetTypeEnum())]);
+			   p.elemTypes[DataType::ComposeTypeEnum(dt0.GetTypeEnumUnderlying(), dt1.GetTypeEnumUnderlying())]);
 }
 
 Int AstBinaryOp::IsCommutative(const CompiledProgram &p) const

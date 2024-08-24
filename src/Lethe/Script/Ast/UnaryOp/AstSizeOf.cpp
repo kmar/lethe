@@ -75,7 +75,7 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 			if (it.name == txt)
 			{
 				if (type == AST_OFFSETOF)
-					n->num.i = it.offset;
+					n->num.i = (Int)it.offset;
 				else if (type == AST_BITOFFSETOF)
 					n->num.i = it.bitOffset;
 				else

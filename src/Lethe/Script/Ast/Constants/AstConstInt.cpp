@@ -5,8 +5,6 @@
 namespace lethe
 {
 
-LETHE_AST_BUCKET_ALLOC_DEF(AstConstInt)
-
 // AstConstInt
 
 QDataType AstConstInt::GetTypeDesc(const CompiledProgram &p) const
@@ -32,13 +30,6 @@ const AstNode *AstConstInt::GetTypeNode() const
 {
 	static AstTypeInt tnode{TokenLocation()};
 	return &tnode;
-}
-
-void AstConstInt::CopyTo(AstNode *n) const
-{
-	Super::CopyTo(n);
-	auto *tmp = AstStaticCast<AstConstInt *>(n);
-	tmp->typeRef = typeRef;
 }
 
 }

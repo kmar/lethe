@@ -5,14 +5,15 @@
 namespace lethe
 {
 
-class LETHE_API AstConstUInt : public AstConstant
+class LETHE_API AstConstUInt : public AstConstEnumBase
 {
 public:
 	LETHE_AST_NODE(AstConstUInt)
 
-	typedef AstConstant Super;
+	typedef AstConstEnumBase Super;
 
-	AstConstUInt(const TokenLocation &nloc) : Super(AST_CONST_UINT, nloc) {}
+	AstConstUInt(const TokenLocation &nloc, const DataType *tref = nullptr)
+		: Super(AST_CONST_UINT, nloc, tref) {}
 
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 	bool CodeGen(CompiledProgram &p) override;

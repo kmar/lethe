@@ -1616,8 +1616,8 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 		return true;
 	}
 
-	ElemConvType esrc = ElemConvFromDataType(src.type);
-	ElemConvType edst = ElemConvFromDataType(dst.type);
+	ElemConvType esrc = ElemConvFromDataType(src.GetTypeEnumUnderlying());
+	ElemConvType edst = ElemConvFromDataType(dst.GetTypeEnumUnderlying());
 
 	if (edst == ECONV_BOOL && src.IsPointer())
 	{
@@ -1644,7 +1644,7 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 
 	if (dst.type == DT_ENUM)
 	{
-		if (src.type == DT_INT && src.baseType.ref == &dst)
+		if (src.IsInteger() && src.baseType.ref == &dst)
 			return true;
 
 		if (warn || (src.type == DT_ENUM && &src != &dst))

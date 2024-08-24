@@ -16,6 +16,8 @@
 #include "Constants/AstConstString.h"
 #include "Constants/AstEnumItem.h"
 
+#include "Types/AstTypeEnum.h"
+
 #include "Function/AstFunc.h"
 #include "Function/AstCall.h"
 #include "CodeGenTables.h"
@@ -322,7 +324,7 @@ bool AstNode::BakeGlobalData(AstNode *n, QDataType qdt, Int ofs, CompiledProgram
 {
 	Byte *gdata = p.cpool.data.GetData();
 
-	switch (qdt.GetTypeEnum())
+	switch (qdt.GetTypeEnumUnderlying())
 	{
 	case DT_NULL:
 		// no need to zero-init
@@ -605,7 +607,7 @@ bool AstNode::BeginCodegen(CompiledProgram &p)
 
 bool AstNode::FoldConst(const CompiledProgram &p)
 {
-	bool res = 0;
+	bool res = false;
 
 	for (Int i=0; i<nodes.GetSize(); i++)
 		res |= nodes[i]->FoldConst(p);
@@ -1012,7 +1014,7 @@ bool AstNode::EmitPtrLoad(const QDataType &dt, CompiledProgram &p)
 			if (dt.IsMethodPtr())
 				return p.Error(this, "cannot load method");
 
-			p.EmitI24(opcodeRefLoadOfs[dt.GetTypeEnum()], 1);
+			p.EmitI24(opcodeRefLoadOfs[dt.GetTypeEnumUnderlying()], 1);
 		}
 	}
 	else if (dte == DT_ARRAY_REF || dte == DT_DELEGATE || dte == DT_DYNAMIC_ARRAY)
@@ -1172,7 +1174,7 @@ DataTypeEnum AstNode::TypeEnumFromNode(const AstNode *n)
 		return DT_CHAR;
 
 	case AST_ENUM_ITEM:
-		return DT_ENUM;
+		return TypeEnumFromNode(n->parent->nodes[AstTypeEnum::IDX_UNDERLYING]);
 
 	case AST_TYPE_INT:
 		return DT_INT;

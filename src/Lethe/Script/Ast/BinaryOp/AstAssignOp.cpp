@@ -271,7 +271,8 @@ bool AstAssignOp::CodeGenDoAssign(AstNode *n, CompiledProgram &p, const QDataTyp
 
 	QDataType lv = dst;
 	lv.RemoveReference();
-	DataTypeEnum dte = lv.GetTypeEnum();
+	auto dte = lv.GetTypeEnum();
+	auto dteu = lv.GetTypeEnumUnderlying();
 
 	if (rhs.GetTypeEnum() == DT_DYNAMIC_ARRAY && !rhs.IsReference())
 	{
@@ -379,12 +380,12 @@ bool AstAssignOp::CodeGenDoAssign(AstNode *n, CompiledProgram &p, const QDataTyp
 
 			// helps JIT a bit
 			if (p.GetJitFriendly() && (lv.qualifiers & AST_Q_LOCAL_INT) && dte <= DT_USHORT)
-				dte = DT_INT;
+				dte = dteu = DT_INT;
 
 			if (lv.IsMethodPtr())
 				return p.Error(n, "cannot store method");
 
-			p.EmitU24(opcodeLocalStore[!pop][dte], Int((UInt)lins >> 8));
+			p.EmitU24(opcodeLocalStore[!pop][dteu], Int((UInt)lins >> 8));
 		}
 		else if (linsType == OPC_GLOADADR)
 		{
@@ -393,14 +394,14 @@ bool AstAssignOp::CodeGenDoAssign(AstNode *n, CompiledProgram &p, const QDataTyp
 			if (lv.IsMethodPtr())
 				return p.Error(n, "cannot store method");
 
-			p.EmitU24(opcodeGlobalStore[!pop][dte], Int((UInt)lins >> 8));
+			p.EmitU24(opcodeGlobalStore[!pop][dteu], Int((UInt)lins >> 8));
 		}
 		else
 		{
 			if (lv.IsMethodPtr())
 				return p.Error(n, "cannot store method");
 
-			p.Emit(opcodeRefStore[!pop][dte]);
+			p.Emit(opcodeRefStore[!pop][dteu]);
 		}
 
 		LETHE_ASSERT((p.instructions.Back() & 255u) != OPC_HALT);

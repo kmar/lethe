@@ -127,7 +127,8 @@ DynamicArray::compareFunc DynamicArray::GetCompareFuncInternal(ScriptContext &ct
 	ELEM_COMPARE(DT_INT, Int)
 	ELEM_COMPARE(DT_CHAR, Int)
 	ELEM_COMPARE(DT_NAME, ULong)
-	ELEM_COMPARE(DT_ENUM, Int)
+	case DT_ENUM:
+		return GetCompareFuncInternal(ctx, *dt.elemType.ref, ch);
 	ELEM_COMPARE(DT_UINT, UInt)
 	ELEM_COMPARE(DT_LONG, Long)
 	ELEM_COMPARE(DT_ULONG, ULong)

@@ -945,7 +945,7 @@ void CompiledProgram::AddClassType(Name n, const DataType *dt)
 
 const DataType *CompiledProgram::AddType(DataType *newType)
 {
-	bool isEnumItem = newType->type == DT_INT && newType->baseType.GetTypeEnum() == DT_ENUM;
+	bool isEnumItem = newType->IsInteger() && newType->baseType.GetTypeEnum() == DT_ENUM;
 
 	if (newType->IsArray() || newType->IsPointer() || newType->type == DT_FUNC_PTR || newType->type == DT_DELEGATE || isEnumItem)
 	{

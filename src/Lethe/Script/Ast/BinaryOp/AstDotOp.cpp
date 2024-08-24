@@ -270,7 +270,7 @@ bool AstDotOp::CodeGenInternal(CompiledProgram &p)
 			return p.Error(right, "symbol not found in composite type");
 
 		if (m->offset)
-			p.EmitI24(OPC_AADD_ICONST, m->offset);
+			p.EmitI24(OPC_AADD_ICONST, (Int)m->offset);
 
 		// dereference here
 		if (m->type.IsReference())
@@ -354,7 +354,7 @@ bool AstDotOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 			return p.Error(right, "symbol not found in composite type");
 
 		if (m->offset)
-			p.EmitI24(OPC_AADD_ICONST, m->offset);
+			p.EmitI24(OPC_AADD_ICONST, (Int)m->offset);
 
 		if (m->type.IsReference())
 			p.Emit(OPC_PLOADPTR_IMM);

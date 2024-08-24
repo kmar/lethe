@@ -292,7 +292,7 @@ bool AstInitializerList::GenInitializerList(CompiledProgram &p, QDataType qdt, I
 			if (!m)
 				return p.Error(nodes[i], String::Printf("member `%s' not found", designators[i].name.Ansi()));
 
-			ofs = m->offset;
+			ofs = (Int)m->offset;
 
 			if (ofs < lastDesignatorOffset)
 				p.Warning(nodes[i], String::Printf("out of order designated initialization of `%s'",
@@ -307,7 +307,7 @@ bool AstInitializerList::GenInitializerList(CompiledProgram &p, QDataType qdt, I
 			m = &cbase->members[imember++];
 		}
 
-		ofs = baseOfs + m->offset;
+		ofs = baseOfs + (Int)m->offset;
 
 		AstNode *n = nodes[i];
 

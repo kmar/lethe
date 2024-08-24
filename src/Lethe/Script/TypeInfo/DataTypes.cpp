@@ -118,56 +118,9 @@ bool DataType::operator ==(const DataType &o) const
 	return MatchType(o);
 }
 
-Int DataType::GetTypeEnumSize(DataTypeEnum t)
-{
-	switch(t)
-	{
-	case DT_BOOL:
-	case DT_BYTE:
-	case DT_SBYTE:
-		return 1;
-
-	case DT_SHORT:
-	case DT_USHORT:
-		return 2;
-
-	case DT_CHAR:
-	case DT_ENUM:
-	case DT_INT:
-	case DT_UINT:
-	case DT_FLOAT:
-		return 4;
-
-	case DT_LONG:
-	case DT_ULONG:
-	case DT_DOUBLE:
-		return 8;
-
-	case DT_NAME:
-		return sizeof(Name);
-
-	case DT_STRING:
-		return sizeof(String);
-
-	case DT_FUNC_PTR:
-	case DT_RAW_PTR:
-	case DT_STRONG_PTR:
-	case DT_WEAK_PTR:
-		return sizeof(UIntPtr);
-
-	case DT_DELEGATE:
-		return sizeof(UIntPtr)*2;
-
-	default:
-		;
-	}
-
-	return 0;
-}
-
 bool DataType::IsSmallNumber() const
 {
-	return type >= DT_BOOL && type < DT_CHAR && size < 4;
+	return type >= DT_BOOL && type <= DT_ENUM && size < 4;
 }
 
 bool DataType::IsInteger() const
@@ -235,6 +188,17 @@ String DataType::GetName() const
 	String prefix;
 	const char *suffix;
 
+	if (IsInteger() && baseType.GetTypeEnum() == DT_ENUM)
+	{
+		StringBuilder sb;
+		DataType tmp;
+		tmp.type = type;
+		sb += tmp.GetName();
+		sb += " in ";
+		sb += baseType.GetName();
+		return sb.Get();
+	}
+
 	switch(type)
 	{
 	case DT_NONE:
@@ -259,10 +223,6 @@ String DataType::GetName() const
 		return "char";
 
 	case DT_INT:
-		if (baseType.ref && baseType.GetTypeEnum() == DT_ENUM)
-		{
-			return "int in " + baseType.GetName();
-		}
 		return "int";
 
 	case DT_UINT:
@@ -681,7 +641,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 		// TODO: more!!!
 		if (m.type.GetType().funCtor >= 0)
 		{
-			Int delta = m.offset - ofs;
+			Int delta = (Int)m.offset - ofs;
 			p.Emit(OPC_PUSH_ICONST + ((UInt)delta << 8));
 			p.Emit(OPC_AADD + (1 << 8));
 			p.EmitBackwardJump(OPC_CALL, m.type.GetType().funCtor);
@@ -891,7 +851,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 			// TODO: more!!!
 			if (m.type.GetTypeEnum() == DT_STRING)
 			{
-				Int delta = m.offset - ofs;
+				Int delta = (Int)m.offset - ofs;
 				p.Emit(OPC_PUSH_ICONST + ((UInt)delta << 8));
 				p.Emit(OPC_AADD + (1 << 8));
 				p.Emit(OPC_BCALL + (BUILTIN_PDELSTR_NP << 8));
@@ -901,7 +861,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 			{
 				if (m.type.GetType().funDtor >= 0)
 				{
-					Int delta = m.offset - ofs;
+					Int delta = (Int)m.offset - ofs;
 					p.Emit(OPC_PUSH_ICONST + ((UInt)delta << 8));
 					p.Emit(OPC_AADD + (1 << 8));
 					p.EmitBackwardJump(OPC_CALL, m.type.GetType().funDtor);
@@ -1129,7 +1089,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 
 			// flush-copy, start new
 			GENDT_FLUSH_COPY()
-			lastCopyOfs = m.offset;
+			lastCopyOfs = (Int)m.offset;
 			copyLen = m.type.GetSize();
 			continue;
 		}
@@ -1421,7 +1381,7 @@ bool QDataType::IsSwitchable() const
 
 bool QDataType::IsSigned() const
 {
-	switch(GetTypeEnum())
+	switch(GetTypeEnumUnderlying())
 	{
 	case DT_SBYTE:
 	case DT_SHORT:
@@ -1438,7 +1398,7 @@ bool QDataType::IsSigned() const
 
 bool QDataType::IsLongInt() const
 {
-	auto dte = GetTypeEnum();
+	auto dte = GetTypeEnumUnderlying();
 	return dte == DT_LONG || dte == DT_ULONG;
 }
 
@@ -1459,9 +1419,19 @@ bool QDataType::IsFloatingPoint() const
 	return dte == DT_FLOAT || dte == DT_DOUBLE;
 }
 
+const DataType &QDataType::GetTypeUnderlying() const
+{
+	return ref->type == DT_ENUM ? *ref->elemType.ref : *ref;
+}
+
 DataTypeEnum QDataType::GetTypeEnum() const
 {
 	return ref->type;
+}
+
+DataTypeEnum QDataType::GetTypeEnumUnderlying() const
+{
+	return ref->type == DT_ENUM ? ref->elemType.ref->type : ref->type;
 }
 
 bool QDataType::IsMethodPtr() const
@@ -1661,7 +1631,7 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 
 	if (dte == DT_ENUM)
 	{
-		if (o.GetTypeEnum() == DT_INT && o.ref->baseType.ref == ref)
+		if (o.GetType().IsInteger() && o.ref->baseType.ref == ref)
 			return true;
 
 		return o.ref == ref;
@@ -1904,7 +1874,19 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 
 	case DT_ENUM:
 	{
-		Int val = *static_cast<const Int *>(ptr);
+		Long val = 0;
+
+		switch(GetTypeEnumUnderlying())
+		{
+		case DT_SBYTE: val = *static_cast<const SByte *>(ptr);break;
+		case DT_BYTE: val = *static_cast<const Byte *>(ptr);break;
+		case DT_SHORT: val = *static_cast<const Short *>(ptr);break;
+		case DT_USHORT: val = *static_cast<const UShort *>(ptr);break;
+		case DT_INT: val = *static_cast<const Int *>(ptr);break;
+		case DT_UINT: val = *static_cast<const UInt *>(ptr);break;
+		case DT_LONG: case DT_ULONG: val = (Long)*static_cast<const ULong *>(ptr);break;
+		default:;
+		}
 
 		for (auto &&m : members)
 		{

@@ -13,6 +13,13 @@ class LETHE_API AstTypeEnum : public AstCustomType
 public:
 	LETHE_AST_NODE(AstTypeEnum)
 
+	enum
+	{
+		IDX_NAME = 0,
+		IDX_UNDERLYING = 1,
+		IDX_FIRST_ITEM = 2
+	};
+
 	typedef AstCustomType Super;
 
 	AstTypeEnum(const TokenLocation &nloc) : Super(AST_ENUM, nloc) {}

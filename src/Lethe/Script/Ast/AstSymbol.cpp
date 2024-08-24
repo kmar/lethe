@@ -58,10 +58,10 @@ AstNode *AstSymbol::DerefConstant(const CompiledProgram &p)
 
 		if (constNode->IsConstant())
 		{
-			LETHE_RET_FALSE(constNode->ConvertConstTo(DT_INT, p));
+			LETHE_RET_FALSE(constNode->ConvertConstTo(dt.GetTypeEnumUnderlying(), p));
 			constNode = target->nodes[0];
 
-			AstStaticCast<AstConstInt *>(constNode)->typeRef = target->GetTypeDesc(p).ref;
+			AstStaticCast<AstConstEnumBase *>(constNode)->typeRef = target->GetTypeDesc(p).ref;
 
 			return constNode;
 		}
@@ -75,7 +75,7 @@ AstNode *AstSymbol::DerefConstant(const CompiledProgram &p)
 			return constNode;
 	}
 
-	return 0;
+	return nullptr;
 }
 
 Int AstSymbol::ToBoolConstant(const CompiledProgram &p)
@@ -793,7 +793,7 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 			if (dt.IsMethodPtr())
 				return p.Error(this, "cannot load method");
 
-			p.EmitU24(opcodeGlobalLoad[Min<Int>(dt.GetTypeEnum(), DT_FUNC_PTR)], frameOfs);
+			p.EmitU24(opcodeGlobalLoad[Min<Int>(dt.GetTypeEnumUnderlying(), DT_FUNC_PTR)], frameOfs);
 
 			if (dte == DT_STRONG_PTR)
 				dt.qualifiers |= AST_Q_SKIP_DTOR;
@@ -893,7 +893,7 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 		if (dt.IsMethodPtr())
 			return p.Error(this, "cannot load method");
 
-		p.EmitU24(opcodeLocalLoad[Min<Int>(dt.GetTypeEnum(), DT_FUNC_PTR)], delta);
+		p.EmitU24(opcodeLocalLoad[Min<Int>(dt.GetTypeEnumUnderlying(), DT_FUNC_PTR)], delta);
 
 		if (dte == DT_STRONG_PTR)
 			dt.qualifiers |= AST_Q_SKIP_DTOR;
@@ -1072,7 +1072,7 @@ bool AstSymbol::BitfieldStore(CompiledProgram &p, AstNode *node, AstNode *dnode,
 	}
 	// ok, we got ptr to struct/class start on stack
 
-	p.EmitIntConst(m->offset);
+	p.EmitIntConst((Int)m->offset);
 	p.EmitU24(OPC_AADD, 1);
 
 	Instruction opLoad = OPC_HALT, opStore = OPC_HALT;
