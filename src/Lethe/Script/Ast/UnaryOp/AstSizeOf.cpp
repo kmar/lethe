@@ -16,7 +16,8 @@ bool AstSizeOf::TryTypeGen(AstNode *tn, const CompiledProgram &p)
 	// FIXME: this asks for trouble!
 	LETHE_RET_FALSE(tn->TypeGenDef(const_cast<CompiledProgram &>(p)));
 	LETHE_RET_FALSE(tn->TypeGen(const_cast<CompiledProgram &>(p)));
-	return tn->CodeGenComposite(const_cast<CompiledProgram &>(p));
+	// we must not call CodeGenComposite here
+	return true;
 }
 
 bool AstSizeOf::FoldConst(const CompiledProgram &p)
@@ -38,14 +39,21 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 	LETHE_RET_FALSE(TryTypeGen(tn, p));
 	auto qdt = tn->GetTypeDesc(p);
 
+	auto size = qdt.GetSize();
+	auto align = qdt.GetAlign();
+
+	// empty struct handling: we force virtual size and alignment to 1 byte here
+	if (!size && qdt.GetTypeEnum() == DT_STRUCT)
+		size = align = 1;
+
 	switch(type)
 	{
 	case AST_SIZEOF:
-		n->num.i = qdt.GetSize();
+		n->num.i = size;
 		break;
 
 	case AST_ALIGNOF:
-		n->num.i = qdt.GetAlign();
+		n->num.i = align;
 		break;
 
 	case AST_OFFSETOF:
