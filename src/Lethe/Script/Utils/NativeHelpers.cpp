@@ -1115,19 +1115,22 @@ void objMemberNameFromOffset(Stack &stk)
 	auto *objCls = obj->GetScriptClassType();
 
 	auto ofs = ap.Get<Int>();
+	auto &res = ap.Get<Name>();
 
-	Name res;
-
-	for (auto &&it : objCls->members)
+	while (objCls && objCls->type == DT_CLASS)
 	{
-		if (it.offset == ofs)
+		for (auto &&it : objCls->members)
 		{
-			res = it.name;
-			break;
+			if (it.offset == ofs)
+			{
+				// found
+				res = it.name;
+				return;
+			}
 		}
-	}
 
-	ap.Get<Name>() = res;
+		objCls = objCls->baseType.ref;
+	}
 }
 
 
@@ -1142,13 +1145,18 @@ void objFindMemberOffset(Stack &stk)
 	auto *obj = (BaseObject *)stk.GetThis();
 	auto *objCls = obj->GetScriptClassType();
 
-	for (auto &&it : objCls->members)
+	while (objCls && objCls->type == DT_CLASS)
 	{
-		if (it.name == mname)
+		for (auto &&it : objCls->members)
 		{
-			res = (Int)it.offset;
-			break;
+			if (it.name == mname)
+			{
+				res = (Int)it.offset;
+				return;
+			}
 		}
+
+		objCls = objCls->baseType.ref;
 	}
 }
 
