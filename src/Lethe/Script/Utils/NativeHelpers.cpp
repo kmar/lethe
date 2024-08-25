@@ -1107,6 +1107,52 @@ void objResetStateDelegateRef(Stack &stk)
 	stk.GetContext().SetStateDelegateRef(nullptr);
 }
 
+void objMemberNameFromOffset(Stack &stk)
+{
+	// stack: [0] = pushed this, [1] = offset, [2] = result (name)
+	ArgParserMethod ap(stk);
+	auto *obj = (BaseObject *)stk.GetThis();
+	auto *objCls = obj->GetScriptClassType();
+
+	auto ofs = ap.Get<Int>();
+
+	Name res;
+
+	for (auto &&it : objCls->members)
+	{
+		if (it.offset == ofs)
+		{
+			res = it.name;
+			break;
+		}
+	}
+
+	ap.Get<Name>() = res;
+}
+
+
+void objFindMemberOffset(Stack &stk)
+{
+	ArgParserMethod ap(stk);
+	auto mname = ap.Get<Name>();
+	auto &res = ap.Get<Int>();
+
+	res = -1;
+
+	auto *obj = (BaseObject *)stk.GetThis();
+	auto *objCls = obj->GetScriptClassType();
+
+	for (auto &&it : objCls->members)
+	{
+		if (it.name == mname)
+		{
+			res = (Int)it.offset;
+			break;
+		}
+	}
+}
+
+
 void natCallstack(Stack &stk)
 {
 	String res;
@@ -1693,6 +1739,8 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("object::fix_state_name", objFixStateName);
 	p.cpool.BindNativeFunc("object::set_state_delegate_ref", objSetStateDelegateRef);
 	p.cpool.BindNativeFunc("object::reset_state_delegate_ref", objResetStateDelegateRef);
+	p.cpool.BindNativeFunc("object::member_name_from_offset", objMemberNameFromOffset);
+	p.cpool.BindNativeFunc("object::find_member_offset", objFindMemberOffset);
 
 	// state helpers:
 	p.cpool.BindNativeFunc("class_name_from_delegate", native_classNameFromDelegate);

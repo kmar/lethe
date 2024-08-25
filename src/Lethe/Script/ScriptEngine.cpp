@@ -171,8 +171,14 @@ __intrinsic class object
 	native bool vtable(name className);
 
 	// state helpers
-	native void final set_state_delegate_ref(void delegate() &ref);
-	native void final reset_state_delegate_ref();
+	native final void set_state_delegate_ref(void delegate() &ref);
+	native final void reset_state_delegate_ref();
+
+	// nonstatic member helpers
+	// returns empty name if invalid
+	nodiscard native final name member_name_from_offset(int offset) const;
+	// returns -1 if not found
+	nodiscard native final int find_member_offset(name member_name) const;
 }
 
 // state helpers
