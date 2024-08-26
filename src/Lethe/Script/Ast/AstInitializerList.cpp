@@ -69,13 +69,8 @@ bool AstInitializerList::GenInitializeElem(CompiledProgram &p, AstNode *n, QData
 	// perform conversion if necessary
 	if (elem.GetType() != top.GetType())
 	{
-		auto oldWords = Stack::AlignSize(top.GetSize());
 		LETHE_RET_FALSE(p.EmitConv(n, top, elem));
 		top = p.exprStack.Back();
-		auto newWords = Stack::AlignSize(top.GetSize());
-
-		if (!global)
-			ofs += newWords - oldWords;
 	}
 
 	if (!elem.CanAlias(ntype))
@@ -230,7 +225,7 @@ bool AstInitializerList::GenInitializerList(CompiledProgram &p, QDataType qdt, I
 			ofs += elem.GetSize();
 		}
 
-		return 1;
+		return true;
 	}
 
 	StackArray< const DataType *, 64 > bases;
