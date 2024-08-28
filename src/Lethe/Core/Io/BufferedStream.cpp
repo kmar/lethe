@@ -4,9 +4,7 @@
 namespace lethe
 {
 
-// dirty flags
-static const UInt DIRTY_READ = 65536;
-static const UInt DIRTY_WRITE = 131072;
+LETHE_BUCKET_ALLOC_DEF(BufferedStream)
 
 // BufferedStream
 
@@ -42,6 +40,11 @@ BufferedStream::~BufferedStream()
 	Flush();
 }
 
+void BufferedStream::FlushRead()
+{
+	rdBuffPtr = rdBuffTop = 0;
+}
+
 bool BufferedStream::SetStream(Stream &refs)
 {
 	flags = 0;
@@ -49,12 +52,12 @@ bool BufferedStream::SetStream(Stream &refs)
 	if (LETHE_UNLIKELY(stream && !Flush()))
 		return false;
 
+	FlushRead();
+
 	stream = &refs;
 	flags = refs.GetFlags();
-	cpos = -1;
 
-	if (flags & SF_SEEKABLE)
-		cpos = stream->Tell();
+	cpos = (flags & SF_SEEKABLE) ? stream->Tell() : -1;
 
 	return SetBufferSize(buffSize);
 }
@@ -65,6 +68,8 @@ bool BufferedStream::SetBufferSize(Int nbuffSize)
 
 	if (LETHE_UNLIKELY(!Flush() || nbuffSize < 0))
 		return false;
+
+	FlushRead();
 
 	if (LETHE_UNLIKELY(!stream))
 	{
@@ -95,19 +100,19 @@ bool BufferedStream::SetBufferSize(Int nbuffSize)
 
 UInt BufferedStream::GetFlags() const
 {
-	return flags & ~(DIRTY_READ|DIRTY_WRITE);
+	return flags | Stream::SF_BUFFERED;
 }
 
 bool BufferedStream::Read(void *buf, Int size, Int &nread)
 {
 	LETHE_ASSERT(stream && size >= 0 && (buf || size==0));
 
-	// flush if necessary
-	if (LETHE_UNLIKELY((flags & DIRTY_WRITE) && !Flush()))
-		return false;
-
-	// let Write know
-	flags |= DIRTY_READ;
+	if (wrBuffPtr > 0)
+	{
+		// we may need to write-flush here
+		LETHE_ASSERT(rdBuffPtr == rdBuffTop);
+		LETHE_RET_FALSE(Flush());
+	}
 
 	// take fast path first if possible
 	if (LETHE_LIKELY(rdBuffPtr + size <= rdBuffTop))
@@ -171,12 +176,12 @@ bool BufferedStream::Write(const void *buf, Int size, Int &nwritten)
 {
 	LETHE_ASSERT(stream && buf && size >= 0);
 
-	// flush if necessary
-	if (LETHE_UNLIKELY((flags & DIRTY_READ) && !Flush()))
-		return false;
-
-	// let Read know
-	flags |= DIRTY_WRITE;
+	if (rdBuffPtr < rdBuffTop)
+	{
+		// flush read buffer, must be seekable
+		LETHE_RET_FALSE(stream->Seek(-(rdBuffTop - rdBuffPtr), SM_CUR));
+		FlushRead();
+	}
 
 	// take fast path first if possible
 	if (LETHE_LIKELY(wrBuffPtr + size <= wrBuffSize))
@@ -237,6 +242,34 @@ bool BufferedStream::Write(const void *buf, Int size, Int &nwritten)
 	return res;
 }
 
+bool BufferedStream::Rewind()
+{
+	LETHE_RET_FALSE(stream && Flush());
+
+	FlushRead();
+
+	auto res = stream->Rewind();
+
+	if (res)
+		cpos = 0;
+
+	return res;
+}
+
+bool BufferedStream::SeekEnd()
+{
+	LETHE_RET_FALSE(stream && Flush());
+
+	FlushRead();
+
+	auto res = stream->SeekEnd();
+
+	if (res)
+		cpos = stream->Tell();
+
+	return res;
+}
+
 bool BufferedStream::Seek(Long pos, SeekMode mode)
 {
 	LETHE_RET_FALSE(stream);
@@ -275,6 +308,8 @@ bool BufferedStream::Seek(Long pos, SeekMode mode)
 	if (LETHE_UNLIKELY(!Flush()))
 		return false;
 
+	FlushRead();
+
 	if (LETHE_UNLIKELY(!stream->Seek(cpos, SM_BEG) || !stream->Seek(pos, mode)))
 		return false;
 
@@ -287,10 +322,17 @@ Long BufferedStream::Tell() const
 	return (flags & SF_SEEKABLE) ? cpos : -1;
 }
 
+Long BufferedStream::GetSize()
+{
+	return stream ? stream->GetSize() : -1;
+}
+
 bool BufferedStream::Close()
 {
 	if (!Flush())
 		return false;
+
+	FlushRead();
 
 	stream = nullptr;
 	return true;
@@ -298,10 +340,7 @@ bool BufferedStream::Close()
 
 bool BufferedStream::Flush()
 {
-	// flushing read buffer is simple
-	rdBuffPtr = rdBuffTop = 0;
-
-	// flushing write buffer is slightly more complicated
+	// flushing write buffer only
 	if (wrBuffPtr > 0)
 	{
 		LETHE_ASSERT(stream);
@@ -311,7 +350,6 @@ bool BufferedStream::Flush()
 	}
 
 	wrBuffPtr = 0;
-	flags &= ~(DIRTY_READ | DIRTY_WRITE);
 	return true;
 }
 
@@ -327,6 +365,9 @@ bool BufferedStream::Truncate()
 		// update physical pointer
 		if (LETHE_UNLIKELY(!stream->Seek(cpos)))
 			return false;
+
+		// force-flush read buffer as well
+		FlushRead();
 	}
 
 	return stream->Truncate();

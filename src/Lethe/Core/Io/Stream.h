@@ -26,7 +26,8 @@ public:
 		SF_READABLE = 2,
 		SF_WRITABLE = 4,
 		SF_SEEKABLE = 8,
-		SF_APPENDABLE = 16
+		SF_APPENDABLE = 16,
+		SF_BUFFERED = 32
 	};
 	// stream seek mode
 	enum SeekMode

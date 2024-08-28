@@ -8,8 +8,11 @@ namespace lethe
 {
 
 // as usual, not thread-safe!
+// note: for performance reasons Flush() doesn't flush read buffers, neither does Close => underlying stream's
+// position won't be in sync once BufferedStream dies
 class LETHE_API BufferedStream : public Stream
 {
+	LETHE_BUCKET_ALLOC_OVERRIDE(BufferedStream)
 public:
 	LETHE_INJECT_STREAM()
 
@@ -32,8 +35,12 @@ public:
 	bool Flush() override;
 	bool Truncate() override;
 
+	bool Rewind() override;
+	bool SeekEnd() override;
 	bool Seek(Long pos, SeekMode mode = SM_SET) override;
 	Long Tell() const override;
+
+	Long GetSize() override;
 
 	// to be able to read bytes fast
 	inline Int ReadByte()
@@ -78,6 +85,8 @@ private:
 	Array< Byte > wrBuffer;
 	Int wrBuffPtr;
 	Int wrBuffSize;
+
+	void FlushRead();
 };
 
 }
