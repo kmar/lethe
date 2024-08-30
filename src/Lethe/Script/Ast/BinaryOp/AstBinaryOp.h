@@ -34,6 +34,7 @@ public:
 	const AstNode *GetContextTypeNode(const AstNode *node) const override;
 
 	static const AstNode *FindUserDefOperatorType(const char *opName, const AstNode *type0, const AstNode *type1);
+	static bool HasUserDefOperatorType(const char *opName, const AstNode *type0, const AstNode *type1);
 
 protected:
 	// 1 = yes, 0 = no, -1 = force swap

@@ -580,7 +580,7 @@ bool AstSymbol::CodeGen(CompiledProgram &p)
 {
 	LETHE_RET_FALSE(CodeGenInternal(p));
 
-	if (qualifiers & AST_Q_BITFIELD)
+	if ((qualifiers & AST_Q_BITFIELD) && !(flags & AST_F_SKIP_CGEN))
 		return BitfieldLoad(p, this);
 
 	return true;

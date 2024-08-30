@@ -1112,6 +1112,34 @@ bool AstBinaryOp::CodeGenCommon(CompiledProgram &p, bool asRef)
 	return true;
 }
 
+bool AstBinaryOp::HasUserDefOperatorType(const char *opName, const AstNode *type0, const AstNode *type1)
+{
+	LETHE_RET_FALSE(type0 && type1);
+
+	for (Int i=0; i<2; i++)
+	{
+		auto *tpe = i == 0 ? type0 : type1;
+
+		if (tpe->type != AST_STRUCT || !tpe->scopeRef)
+			continue;
+
+		for (auto &&it : tpe->scopeRef->operators)
+		{
+			if (it->type != AST_FUNC)
+				continue;
+
+			auto *fn = AstStaticCast<AstFunc *>(it);
+
+			const auto &fname = AstStaticCast<AstText *>(fn->nodes[AstFunc::IDX_NAME])->text;
+
+			if (fname == opName)
+				return true;
+		}
+	}
+
+	return false;
+}
+
 const AstNode *AstBinaryOp::FindUserDefOperatorType(const char *opName, const AstNode *type0, const AstNode *type1)
 {
 	LETHE_RET_FALSE(type0 && type1);

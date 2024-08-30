@@ -102,7 +102,11 @@ AstNode *AstSubscriptOp::GetResolveTarget() const
 			tn = tmp;
 		else
 		{
-			// assume indexable struct or using an operator
+			// we must not resolve too hastily here - if tn is unresolved, we might still hit the user def operator later!
+			if (AstBinaryOp::HasUserDefOperatorType("[]", tn, nodes[1]->GetTypeNode()) && !tn->IsResolved())
+				return nullptr;
+
+			// assume indexable struct using an operator
 			const auto &m = tn->scopeRef->members;
 
 			// must find first non-static vardecl, index 0 could be template typedef
