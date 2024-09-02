@@ -46,6 +46,16 @@ bool AstSizeOf::FoldConst(const CompiledProgram &p)
 	if (!size && qdt.GetTypeEnum() == DT_STRUCT)
 		size = align = 1;
 
+	// the problem here is that qdt can be DT_CLASS but in fact a pointer
+	if (qdt.GetTypeEnum() == DT_CLASS)
+	{
+		if ((qdt.qualifiers & (AST_Q_RAW | AST_Q_WEAK)) || (nodes[0]->target && nodes[0]->target->type == AST_VAR_DECL))
+		{
+			// it must be a pointer
+			size = align = (Int)sizeof(IntPtr);
+		}
+	}
+
 	switch(type)
 	{
 	case AST_SIZEOF:
