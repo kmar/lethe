@@ -73,7 +73,7 @@ bool AstInitializerList::GenInitializeElem(CompiledProgram &p, AstNode *n, QData
 		top = p.exprStack.Back();
 	}
 
-	if (!elem.CanAlias(ntype))
+	if (!elem.CanAlias(top))
 		return p.Error(n, "invalid type");
 
 	// FIXME: refactor (merge) this copy-pasted code with code in AstVarDecl

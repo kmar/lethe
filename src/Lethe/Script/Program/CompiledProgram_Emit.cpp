@@ -1764,7 +1764,8 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 					QDataType qtmp;
 					qtmp.ref = &dst;
 					DynArrayVarFix(qtmp);
-					exprStack.Back() = qtmp;
+					PopStackType(true);
+					PushStackType(qtmp);
 					return true;
 				}
 				break;
@@ -1780,13 +1781,15 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 					QDataType qdt;
 					qdt.ref = dst.complementaryType;
 
-					exprStack.Pop();
-					exprStack.Push(qdt);
+					PopStackType(true);
+					PushStackType(qdt);
 
 					QDataType qtmp;
 					qtmp.ref = &dst;
 					DynArrayVarFix(qtmp);
-					exprStack.Back() = qtmp;
+
+					PopStackType(true);
+					PushStackType(qtmp);
 					return true;
 				}
 				break;
@@ -1820,8 +1823,10 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 					EmitIntConst(src.arrayDims);
 					EmitU24(OPC_LSTORE32, 2);
 
-					exprStack.Back().ref = &dst;
-					exprStack.Back().RemoveReference();
+					PopStackType(true);
+					auto qtmp = dstq;
+					qtmp.RemoveReference();
+					PushStackType(qtmp);
 					return true;
 				}
 
