@@ -51,7 +51,6 @@ bool AstInitializerList::GenInitializeElem(CompiledProgram &p, AstNode *n, QData
 		return p.Error(n, "bitfields cannot be used in initializer lists");
 
 	// eval node!
-	QDataType ntype = n->GetTypeDesc(p);
 
 	n = n->ConvertConstTo(elem.GetTypeEnum(), p);
 	LETHE_RET_FALSE(n);
