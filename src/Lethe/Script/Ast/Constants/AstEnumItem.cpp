@@ -46,7 +46,7 @@ bool AstEnumItem::TypeGen(CompiledProgram &p)
 	if (!(nodes[0]->type >= AST_CONST_BOOL && nodes[0]->type <= AST_CONST_ULONG))
 		return p.Error(this, "enum item must be a constant integer expression");
 
-	AstStaticCast<AstConstInt *>(nodes[0])->typeRef = typeRef.ref;
+	AstStaticCast<AstConstEnumBase *>(nodes[0])->typeRef = typeRef.ref;
 
 	return true;
 }

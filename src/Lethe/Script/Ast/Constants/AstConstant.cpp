@@ -295,7 +295,7 @@ LETHE_BUCKET_ALLOC_DEF(AstConstEnumBase)
 void AstConstEnumBase::CopyTo(AstNode *n) const
 {
 	Super::CopyTo(n);
-	auto *tmp = AstStaticCast<AstConstInt *>(n);
+	auto *tmp = AstStaticCast<AstConstEnumBase *>(n);
 	tmp->typeRef = typeRef;
 }
 
