@@ -237,6 +237,18 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 
 	auto fqualifiers = ParseQualifiers();
 
+	// allow "modern-C++ style" auto func()->result
+	if (ntype->type == AST_TYPE_AUTO && ts->PeekToken().type == TOK_C_DEREF)
+	{
+		ts->ConsumeToken();
+		UniquePtr<AstNode> typeover = ParseType(depth+1);
+		LETHE_RET_FALSE(typeover);
+		typeover->qualifiers |= ntype->qualifiers;
+		typeover->scopeRef = ntype->scopeRef;
+		typeover.SwapWith(ntype);
+		currentScope->resultPtr = ntype.Get();
+	}
+
 	// copy native to func
 	// what also applies here: private/protected/public/static/native/final/virtual
 	if (ntype->qualifiers & AST_Q_FUNC_MASK)
