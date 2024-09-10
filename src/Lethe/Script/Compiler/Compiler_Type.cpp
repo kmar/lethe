@@ -579,6 +579,17 @@ AstNode *Compiler::ParseTypeWithQualifiers(Int depth, ULong nqualifiers, bool in
 	UniquePtr<AstNode> args = ParseFuncArgsDecl(depth+1);
 	LETHE_RET_FALSE(args);
 
+	// modern C++ style auto func()->res decl
+	if (res->type == AST_TYPE_AUTO && ts->PeekToken().type == TOK_C_DEREF)
+	{
+		ts->ConsumeToken();
+		UniquePtr<AstNode> typeover = ParseType(depth+1);
+		LETHE_RET_FALSE(typeover);
+		typeover->qualifiers |= res->qualifiers;
+		typeover->scopeRef = res->scopeRef;
+		typeover.SwapWith(res);
+	}
+
 	UniquePtr<AstNode> nres;
 
 	if (funPtr)
