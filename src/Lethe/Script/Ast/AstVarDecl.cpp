@@ -179,7 +179,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 	bool isStatic = ((varType->qualifiers & AST_Q_STATIC) != 0) || ((qualifiers & AST_Q_STATIC) != 0);
 	bool isCompleteInitializerList = false;
 
-	if (tdesc.GetTypeEnum() == DT_STATIC_ARRAY && isInit && !isInitializerList)
+	if (tdesc.GetTypeEnum() == DT_STATIC_ARRAY && isInit && !isInitializerList && !tdesc.IsReference())
 		return p.Error(this, "static arrays must be initialized via initializer list");
 
 	if (isInit && tdesc.IsReference() && tdesc.IsPointer() && !tdesc.IsConst())
