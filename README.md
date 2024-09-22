@@ -6,7 +6,7 @@ a statically typed, unsafe scripting language
 note: experimental, work in progress, there will most likely be bugs => use at your own risk
 
 * requirements:
-	* C++11 compiler
+	* C++17 compiler
 	* IEEE floating point
 	* 2's complement integers
 	* sizeof(bool) == 1
