@@ -28,6 +28,6 @@
 #	define LETHE_API
 #endif
 
-#if _MSC_VER
+#if _MSC_VER && defined(LETHE_DYNAMIC)
 #	pragma warning(disable:4251)	// disable need dll-interface for templates
 #endif
