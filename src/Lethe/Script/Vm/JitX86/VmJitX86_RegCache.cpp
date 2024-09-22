@@ -234,21 +234,22 @@ RegExpr VmJitX86::RegCache::Alloc(Int offset, VmJitX86 &jit, Int flags)
 	{
 		auto &ce = cache[ei];
 
-		if (IsX64 && ce.reg.GetSize() != MEM_XMM)
-		{
-			bool isPtr = ce.reg.ToRegPtr().base == ce.reg.base;
-
-			if (isPtr != !!(flags & RA_PTR))
+		if constexpr (IsX64)
+			if (ce.reg.GetSize() != MEM_XMM)
 			{
-				ce.pointer = pointer;
-				auto &creg = ce.reg;
+				bool isPtr = ce.reg.ToRegPtr().base == ce.reg.base;
 
-				if (flags & RA_PTR)
-					creg = creg.ToRegPtr();
-				else
-					creg = creg.ToReg32();
+				if (isPtr != !!(flags & RA_PTR))
+				{
+					ce.pointer = pointer;
+					auto &creg = ce.reg;
+
+					if (flags & RA_PTR)
+						creg = creg.ToRegPtr();
+					else
+						creg = creg.ToReg32();
+				}
 			}
-		}
 
 		res = ce.reg;
 		ce.counter = ++mru;
@@ -663,11 +664,12 @@ bool VmJitX86::RegCache::TransferRegWrite(const RegExpr &src, Int ofs, Int ignor
 		}
 	}
 
-	if (IsX64 && src.GetSize() != MEM_XMM && src.base == src.ToRegPtr().base)
-	{
-		e.reg = e.reg.ToRegPtr();
-		ptr = true;
-	}
+	if constexpr (IsX64)
+		if (src.GetSize() != MEM_XMM && src.base == src.ToRegPtr().base)
+		{
+			e.reg = e.reg.ToRegPtr();
+			ptr = true;
+		}
 
 	e.offset = ofs;
 	e.write = 1;

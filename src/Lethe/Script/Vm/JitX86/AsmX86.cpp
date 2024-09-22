@@ -236,11 +236,13 @@ Int AsmX86::GenSIB(const RegExpr &re, bool fulldisp)
 		return -1;
 	}
 
-	if (IsX64 && b != NoRegister && (b & 8))
-		code[lastRex] |= 1;
+	if constexpr (IsX64)
+		if (b != NoRegister && (b & 8))
+			code[lastRex] |= 1;
 
-	if (IsX64 && i != NoRegister && (i & 8))
-		code[lastRex] |= 2;
+	if constexpr (IsX64)
+		if (i != NoRegister && (i & 8))
+			code[lastRex] |= 2;
 
 	// beware of EBP base, depends on MOD!
 	if (b == NoRegister)
@@ -265,12 +267,13 @@ void AsmX86::EmitModRmDirect(Int val, const RegExpr &src, Int modshift)
 	bool fulldisp = 0;
 	bool useSib = src.index != NoRegister || src.base == ESP;
 
-	if (IsX64 && src.mem != MEM_NONE)
-	{
-		// force SIB for extended addressing
-		useSib |= src.index != NoRegister && !!(src.index & 8);
-		useSib |= src.base != NoRegister && !!(src.base & 8);
-	}
+	if constexpr (IsX64)
+		if (src.mem != MEM_NONE)
+		{
+			// force SIB for extended addressing
+			useSib |= src.index != NoRegister && !!(src.index & 8);
+			useSib |= src.base != NoRegister && !!(src.base & 8);
+		}
 
 	if (!src.IsRegister())
 	{
@@ -301,8 +304,9 @@ void AsmX86::EmitModRmDirect(Int val, const RegExpr &src, Int modshift)
 			}
 			else
 			{
-				if (IsX64 && (src.base & 8))
-					code[lastRex] |= 1;
+				if constexpr (IsX64)
+					if (src.base & 8)
+						code[lastRex] |= 1;
 
 				modrm |= src.base & 7;
 			}
@@ -312,15 +316,17 @@ void AsmX86::EmitModRmDirect(Int val, const RegExpr &src, Int modshift)
 	}
 	else
 	{
-		if (IsX64 && (src.base & 8))
-			code[lastRex] |= modshift ? 1 : 4;
+		if constexpr (IsX64)
+			if (src.base & 8)
+				code[lastRex] |= modshift ? 1 : 4;
 
 		modrm |= 0xc0;
 		modrm |= (src.base & 7) << (3 ^ modshift);
 	}
 
-	if (IsX64 && (val & 8))
-		code[lastRex] |= dshift ? 4 : 1;
+	if constexpr (IsX64)
+		if (val & 8)
+			code[lastRex] |= dshift ? 4 : 1;
 
 	modrm |= (val & 7) << dshift;
 	Emit(modrm);
@@ -854,8 +860,9 @@ void AsmX86::Xchg(RegExpr dst, RegExpr src)
 	{
 		if (src.base == EAX)
 		{
-			if (IsX64 && (dst.base & 8))
-				code[lastRex] |= 0x1;
+			if constexpr (IsX64)
+				if (dst.base & 8)
+					code[lastRex] |= 0x1;
 
 			Emit(0x90 + (dst.base & 7));
 			return;
@@ -863,8 +870,9 @@ void AsmX86::Xchg(RegExpr dst, RegExpr src)
 
 		if (dst.base == EAX)
 		{
-			if (IsX64 && (src.base & 8))
-				code[lastRex] |= 0x1;
+			if constexpr (IsX64)
+				if (src.base & 8)
+					code[lastRex] |= 0x1;
 
 			Emit(0x90 + (src.base & 7));
 			return;
@@ -908,8 +916,9 @@ void AsmX86::Test(const RegExpr &dst, const RegExpr &src)
 			Emit(0xa8);
 		else
 		{
-			if (IsX64 && (dst.base & 8))
-				code[lastRex] |= 1;
+			if constexpr (IsX64)
+				if (dst.base & 8)
+					code[lastRex] |= 1;
 
 			Emit(0xf7 - delta);
 			Emit(0xc0 + (dst.base & 7));
@@ -950,8 +959,9 @@ void AsmX86::Setxx(Cond cond, const RegExpr &dst)
 
 	if (dst.IsRegister())
 	{
-		if (IsX64 && (dst.base & 8))
-			code[lastRex] |= 1;
+		if constexpr (IsX64)
+			if (dst.base & 8)
+				code[lastRex] |= 1;
 
 		Emit(0xc0 + (dst.base & 7));
 	}
@@ -992,13 +1002,14 @@ void AsmX86::Mov(const RegExpr &dst_, const RegExpr &src)
 
 	auto dst = dst_;
 
-	if (IsX64 && dst.base >= RAX && dst.base <= R15 && src.IsImmediate() && dst.IsRegister())
-	{
-		// a simple optimization: when loading an immediate with upper 32 bits clear, just do a 32-bit mov
-		// (implies clearing of upper 32 bits in long mode, saves bytes)
-		if ((Long)(UInt)src.offset == src.offset)
-			dst = dst.ToReg32();
-	}
+	if constexpr (IsX64)
+		if (dst.base >= RAX && dst.base <= R15 && src.IsImmediate() && dst.IsRegister())
+		{
+			// a simple optimization: when loading an immediate with upper 32 bits clear, just do a 32-bit mov
+			// (implies clearing of upper 32 bits in long mode, saves bytes)
+			if ((Long)(UInt)src.offset == src.offset)
+				dst = dst.ToReg32();
+		}
 
 	if ((dst.IsRegister() && dst.base >= XMM0) || (src.IsRegister() && src.base >= XMM0))
 	{
@@ -1026,8 +1037,9 @@ void AsmX86::Mov(const RegExpr &dst_, const RegExpr &src)
 	{
 		if (src.IsImmediate())
 		{
-			if (IsX64 && (dst.base & 8))
-				code[lastRex] |= 1;
+			if constexpr (IsX64)
+				if (dst.base & 8)
+					code[lastRex] |= 1;
 
 			switch(regSize)
 			{
@@ -1085,11 +1097,12 @@ void AsmX86::Inc(const RegExpr &dst)
 
 	EmitRex(dst);
 
-	if (!IsX64 && (regSize == MEM_DWORD || regSize == MEM_WORD) && dst.IsRegister())
-	{
-		Emit(0x40 + (dst.base & 7));
-		return;
-	}
+	if constexpr (!IsX64)
+		if ((regSize == MEM_DWORD || regSize == MEM_WORD) && dst.IsRegister())
+		{
+			Emit(0x40 + (dst.base & 7));
+			return;
+		}
 
 	if (regSize == MEM_BYTE && dst.IsRegister())
 	{
@@ -1113,11 +1126,12 @@ void AsmX86::Dec(const RegExpr &dst)
 
 	EmitRex(dst);
 
-	if (!IsX64 && (regSize == MEM_DWORD || regSize == MEM_WORD) && dst.IsRegister())
-	{
-		Emit(0x48 + (dst.base & 7));
-		return;
-	}
+	if constexpr (!IsX64)
+		if ((regSize == MEM_DWORD || regSize == MEM_WORD) && dst.IsRegister())
+		{
+			Emit(0x48 + (dst.base & 7));
+			return;
+		}
 
 	if (regSize == MEM_BYTE && dst.IsRegister())
 	{

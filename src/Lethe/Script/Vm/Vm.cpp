@@ -208,7 +208,7 @@ ExecResult Vm::ExecutePtr(const void *adr)
 
 #define VM_DEBUG_CHECK_PTR(x) \
 	LETHE_ASSERT(stk.GetPtr(x)); \
-	if (flags & EXEC_DEBUG) if (!stk.GetPtr(x))	return RuntimeException(iptr-1, "null pointer dereference");
+	if constexpr (flags & EXEC_DEBUG) if (!stk.GetPtr(x)) return RuntimeException(iptr-1, "null pointer dereference");
 
 template<Int flags>
 ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
@@ -1494,14 +1494,14 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 		case OPC_NMCALL:
 			{
 				// necessary for debugging to ignore breaks in nested script calls
-				if (flags & EXEC_DEBUG)
+				if constexpr (flags & EXEC_DEBUG)
 					++stk.nesting;
 
 				auto *savedRet = stk.GetPtr(-1);
 				cpool.nFunc[DecodeUImm24(ins)](stk);
 				stk.SetPtr(-1, savedRet);
 
-				if (flags & EXEC_DEBUG)
+				if constexpr (flags & EXEC_DEBUG)
 					--stk.nesting;
 			}
 			break;
@@ -1686,7 +1686,7 @@ ExecResult Vm::ExecuteTemplate(const Instruction *iptr)
 			LETHE_UNREACHABLE;
 		}
 
-		if ((flags & (EXEC_DEBUG | EXEC_NO_BREAK)) == EXEC_DEBUG)
+		if constexpr ((flags & (EXEC_DEBUG | EXEC_NO_BREAK)) == EXEC_DEBUG)
 		{
 			// check for abort
 			if (Atomic::Load(stk.breakExecution))

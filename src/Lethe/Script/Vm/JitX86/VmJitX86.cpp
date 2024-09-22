@@ -176,8 +176,13 @@ void VmJitX86::PushInt(UInt i, bool isPtr)
 		Xor(reg.ToReg32(), reg.ToReg32());
 	else
 	{
-		if (IsX64 && isPtr)
-			Mov(reg, (Long)i | ((Long)1 << 32));
+		if constexpr (IsX64)
+		{
+			if (isPtr)
+				Mov(reg, (Long)i | ((Long)1 << 32));
+			else
+				Mov(reg, i);
+		}
 		else
 			Mov(reg, i);
 	}
@@ -342,8 +347,9 @@ RegExpr VmJitX86::GetPtrNoAdr(Int i)
 
 	RegExpr reg = FindGpr(i, 0);
 
-	if (!IsX64 && reg.IsRegister())
-		return reg;
+	if constexpr (!IsX64)
+		if (reg.IsRegister())
+			return reg;
 
 	reg = AllocGprPtr(i, 1);
 

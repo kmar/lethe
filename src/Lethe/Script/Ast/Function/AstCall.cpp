@@ -1410,7 +1410,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 		if (isEllipsis)
 		{
-			if (Stack::WORD_SIZE < 8)
+			if constexpr (Stack::WORD_SIZE < 8)
 				p.EmitUIntConst((UInt)(UIntPtr)&argtype.GetType());
 			else
 				p.EmitULongConst((ULong)(UIntPtr)&argtype.GetType());

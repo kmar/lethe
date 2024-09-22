@@ -234,11 +234,11 @@ void VmJitX86::PInc(Int ofs)
 		reg = GetPtr(0);
 
 	// add [eax], const
-	if (size == 1)
+	if constexpr (size == 1)
 		Add(Mem8(reg), ofs);
-	else if (size == 2)
+	else if constexpr (size == 2)
 		Add(Mem16(reg), ofs);
-	else if (size == 4)
+	else if constexpr (size == 4)
 		Add(Mem32(reg), ofs);
 	else
 		Add(Mem64(reg), ofs);
@@ -248,9 +248,9 @@ void VmJitX86::PInc(Int ofs)
 	gprCache.reserved = 0;
 
 	// mov eax,[eax]
-	if (size == 1)
+	if constexpr (size == 1)
 		uns ? Movzx(dst, Mem8(reg)) : Movsx(dst, Mem8(reg));
-	else if (size == 2)
+	else if constexpr (size == 2)
 		uns ? Movzx(dst, Mem16(reg)) : Movsx(dst, Mem16(reg));
 	else
 		Mov(dst, Mem32(reg));

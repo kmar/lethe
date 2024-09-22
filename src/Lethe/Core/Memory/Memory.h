@@ -58,12 +58,15 @@ inline void MemSwap(void *dst, void *src, size_t count)
 	LETHE_COMPILE_ASSERT(sizeof(void *) <= 8);
 
 	// handle the rest
-	if (sizeof(void *) > 4 && count >= 4)
+	if constexpr (sizeof(void *) > 4)
 	{
-		memcpy(&tmp, d, 4); memcpy(d, s, 4); memcpy(s, &tmp, 4);
-		d += 4;
-		s += 4;
-		count -= 4;
+		if (count >= 4)
+		{
+			memcpy(&tmp, d, 4); memcpy(d, s, 4); memcpy(s, &tmp, 4);
+			d += 4;
+			s += 4;
+			count -= 4;
+		}
 	}
 
 	if (count >= 2)

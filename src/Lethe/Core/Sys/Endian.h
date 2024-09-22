@@ -166,7 +166,7 @@ struct Endian
 	}
 	static inline void WriteUIntPtr(Byte *b, UIntPtr val)
 	{
-		if (sizeof(val) == 4)
+		if constexpr (sizeof(val) == 4)
 			WriteUInt(b, (UInt)val);
 		else
 			WriteULong(b, (ULong)val);

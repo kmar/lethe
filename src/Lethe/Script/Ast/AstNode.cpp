@@ -979,7 +979,7 @@ bool AstNode::EmitPtrLoad(const QDataType &dt, CompiledProgram &p)
 		if (hasDtor)
 		{
 			// zero again...
-			if (Stack::WORD_SIZE > 4)
+			if constexpr (Stack::WORD_SIZE > 4)
 			{
 				p.EmitI24(OPC_PUSHZ_RAW, 1);
 				p.EmitU24(OPC_LSTOREPTR, stkSize+1);

@@ -30,5 +30,4 @@
 
 #if _MSC_VER
 #	pragma warning(disable:4251)	// disable need dll-interface for templates
-#	pragma warning(disable:4127)	// disable silly conditional expression is constant warning
 #endif

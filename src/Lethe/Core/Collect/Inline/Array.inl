@@ -371,8 +371,11 @@ S Array<T,S,A>::Append(const T *nbuf, S sz)
 
 	ConstructObjectRange<T,S>(this->data + this->size, sz);
 
-	if (MemCopyTraits<T>::VALUE && sz > 0)
-		MemCpy(this->data + this->size, nbuf, (size_t)sz * sizeof(T));
+	if constexpr (MemCopyTraits<T>::VALUE)
+	{
+		if (sz > 0)
+			MemCpy(this->data + this->size, nbuf, (size_t)sz * sizeof(T));
+	}
 	else
 	{
 		for (S i=0; i<sz; i++)
@@ -525,8 +528,11 @@ LETHE_NOINLINE Array<T,S,A> &Array<T,S,A>::operator =(const Array &o)
 	Resize(o.size);
 	LETHE_ASSERT(!o.size || this->data);
 
-	if (MemCopyTraits<T>::VALUE && o.size > 0)
-		MemCpy(this->data, o.data, (size_t)o.size * sizeof(T));
+	if constexpr (MemCopyTraits<T>::VALUE)
+	{
+		if (o.size > 0)
+			MemCpy(this->data, o.data, (size_t)o.size * sizeof(T));
+	}
 	else
 	{
 		for (S i=0; i < o.size; i++)
@@ -542,8 +548,11 @@ LETHE_NOINLINE Array<T,S,A> &Array<T,S,A>::operator =(const ArrayRef<T,S> &o)
 	Resize(o.GetSize());
 	LETHE_ASSERT(!o.GetSize() || this->data);
 
-	if (MemCopyTraits<T>::VALUE && o.GetSize() > 0)
-		MemCpy(this->data, o.GetData(), (size_t)o.GetSize() * sizeof(T));
+	if constexpr (MemCopyTraits<T>::VALUE)
+	{
+		if (o.GetSize() > 0)
+			MemCpy(this->data, o.GetData(), (size_t)o.GetSize() * sizeof(T));
+	}
 	else
 	{
 		for (S i=0; i < o.GetSize(); i++)

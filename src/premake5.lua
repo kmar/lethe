@@ -1,7 +1,7 @@
 workspace "lethe"
 
 flags {"NoBufferSecurityCheck"}
-cppdialect "c++11"
+cppdialect "c++17"
 
 exceptionhandling("off")
 rtti("off")
