@@ -6,6 +6,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstTypeEnum : public AstCustomType
 {
 	LETHE_BUCKET_ALLOC(AstTypeEnum)
@@ -32,5 +34,7 @@ public:
 
 	SharedPtr<Attributes> attributes;
 };
+
+LETHE_API_END
 
 }

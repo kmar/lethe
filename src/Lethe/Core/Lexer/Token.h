@@ -214,6 +214,8 @@ enum TokenNumberFlags
 	TOKF_MACRO_IGNORE		=	1 << 30
 };
 
+LETHE_API_BEGIN
+
 // note: we don't wrap anything here with methods, that would be just useless waste of effort
 class LETHE_API Token
 {
@@ -274,5 +276,7 @@ public:
 private:
 	StackArray<char, 256 > allocText;
 };
+
+LETHE_API_END
 
 }

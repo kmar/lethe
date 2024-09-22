@@ -7,6 +7,8 @@ namespace lethe
 
 class AstCall;
 
+LETHE_API_BEGIN
+
 class LETHE_API AstFunc : public AstFuncBase
 {
 	LETHE_BUCKET_ALLOC(AstFunc)
@@ -61,5 +63,6 @@ private:
 	bool AnalyzeFlow(CompiledProgram &p, Int startPC) const;
 };
 
+LETHE_API_END
 
 }

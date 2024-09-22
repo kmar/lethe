@@ -235,6 +235,8 @@ inline T AstStaticCast(const AstNode *n)
 	return static_cast<T>(n);
 }
 
+LETHE_API_BEGIN
+
 class LETHE_API AstIterator
 {
 public:
@@ -518,6 +520,8 @@ protected:
 	static DataTypeEnum TypeEnumFromNode(const AstNode *n);
 	static const AstNode *CoerceTypes(const AstNode *type0, const AstNode *type1);
 };
+
+LETHE_API_END
 
 
 }

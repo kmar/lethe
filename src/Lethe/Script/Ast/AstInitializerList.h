@@ -5,6 +5,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstInitializerList : public AstNode
 {
 	LETHE_BUCKET_ALLOC(AstInitializerList)
@@ -37,5 +39,7 @@ private:
 	bool IsElemConst(const CompiledProgram &p, AstNode *n, QDataType elem) const;
 	bool IsCompleteInitializedElem(CompiledProgram &p, AstNode *n, QDataType elem) const;
 };
+
+LETHE_API_END
 
 }

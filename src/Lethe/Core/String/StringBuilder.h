@@ -11,6 +11,8 @@ namespace lethe
 class String;
 class StringRef;
 
+LETHE_API_BEGIN
+
 // temporary string buffer (useful for building strings)
 // do NOT use this as struct/class members
 class LETHE_API StringBuilder
@@ -63,5 +65,7 @@ private:
 	void PrepareForModification();
 	StringBuilder &AppendFormatInternal(const char *fmt, va_list ap);
 };
+
+LETHE_API_END
 
 }

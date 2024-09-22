@@ -81,6 +81,8 @@ struct ScriptDelegate : public lethe::ScriptDelegateBase
 	}
 };
 
+LETHE_API_BEGIN
+
 struct LETHE_API QDataType
 {
 	// ref datatype
@@ -385,5 +387,7 @@ private:
 	void GetVariableTextInternal(Int bitfieldData, bool skipReadCheck, HashSet<const void *> &hset, StringBuilder &sb, const void *ptr, Int maxLen = 256, bool baseStruct = false, bool depth0 = false) const;
 	static bool ValidReadPtr(const void *ptr, IntPtr size);
 };
+
+LETHE_API_END
 
 }

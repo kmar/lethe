@@ -29,5 +29,12 @@
 #endif
 
 #if _MSC_VER && defined(LETHE_DYNAMIC)
-#	pragma warning(disable:4251)	// disable need dll-interface for templates
+	// macros to locally disable "need dll-interface for templates" warning
+#	define LETHE_API_BEGIN \
+	__pragma(warning(push)) \
+	__pragma(warning(disable:4251))
+#	define LETHE_API_END __pragma(warning(pop))
+#else
+#	define LETHE_API_BEGIN
+#	define LETHE_API_END
 #endif

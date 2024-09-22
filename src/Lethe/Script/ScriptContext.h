@@ -53,6 +53,8 @@ struct ScriptContextDebugData
 	String origFunction;
 };
 
+LETHE_API_BEGIN
+
 // script execution context (wraps vm and stack)
 class LETHE_API ScriptContext : public NoCopy, public RefCounted
 {
@@ -224,5 +226,7 @@ private:
 	void OnRuntimeError(const char *msg);
 	bool OnDebugBreak(ScriptContext &ctx, ExecResult &res);
 };
+
+LETHE_API_END
 
 }

@@ -36,6 +36,8 @@ enum MemSize
 	MEM_BYTE
 };
 
+LETHE_API_BEGIN
+
 struct LETHE_API RegExpr
 {
 	RegExpr() : base(NoRegister), index(NoRegister), offset(0), scale(1), mem(MEM_NONE)  {}
@@ -476,5 +478,7 @@ protected:
 	// force movsxd for next mov
 	bool forceMovsxd = false;
 };
+
+LETHE_API_END
 
 }

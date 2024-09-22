@@ -2,8 +2,11 @@
 
 #include "PriorityQueue.h"
 
+
 namespace lethe
 {
+
+LETHE_API_BEGIN
 
 class LETHE_API FreeIdList
 {
@@ -77,5 +80,7 @@ private:
 	// anything above (and including) counter is free
 	Int counter;
 };
+
+LETHE_API_END
 
 }

@@ -7,6 +7,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 // as usual, not thread-safe!
 // note: for performance reasons Flush() doesn't flush read buffers, neither does Close => underlying stream's
 // position won't be in sync once BufferedStream dies
@@ -88,5 +90,7 @@ private:
 
 	void FlushRead();
 };
+
+LETHE_API_END
 
 }

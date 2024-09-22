@@ -15,6 +15,8 @@ namespace lethe
 
 struct SerializeContext;
 
+LETHE_API_BEGIN
+
 // note: Streams are NOT thread-safe by design!
 class LETHE_API Stream : NoCopy, public RefCounted
 {
@@ -167,5 +169,7 @@ protected:
 	Array<Int> ungetBuf;
 	Int column;
 };
+
+LETHE_API_END
 
 }

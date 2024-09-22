@@ -18,6 +18,8 @@ enum RegAlloc
 	RA_DOUBLE = 8
 };
 
+LETHE_API_BEGIN
+
 class LETHE_API VmJitX86 : public AsmX86, public VmJitBase
 {
 public:
@@ -546,5 +548,7 @@ private:
 
 	void UnregisterCode();
 };
+
+LETHE_API_END
 
 }

@@ -14,6 +14,8 @@ class CoreModule;
 
 // platform-independent Thread
 
+LETHE_API_BEGIN
+
 // thread is not run/created until the first call to Run()
 class LETHE_API Thread : NoCopy, public RefCounted
 {
@@ -67,5 +69,7 @@ public:
 	// PRIVATE!!! don't touch!
 	void PrivateStartWork();
 };
+
+LETHE_API_END
 
 }

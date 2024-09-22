@@ -39,6 +39,8 @@ enum NamedScopeType
 
 class AstNode;
 
+LETHE_API_BEGIN
+
 class LETHE_API NamedScope : public RefCounted
 {
 	LETHE_BUCKET_ALLOC(NamedScope)
@@ -165,5 +167,6 @@ private:
 	Array< Int > continueHandles;
 };
 
+LETHE_API_END
 
 }

@@ -45,6 +45,8 @@ struct CompileStats
 
 class ScriptEngine;
 
+LETHE_API_BEGIN
+
 struct LETHE_API NativeClassProxy
 {
 private:
@@ -305,5 +307,7 @@ private:
 
 	Int SetBreakpointInternal(const String &nfilename, Int npc, bool enabled);
 };
+
+LETHE_API_END
 
 }

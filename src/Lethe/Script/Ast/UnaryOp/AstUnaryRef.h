@@ -6,6 +6,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstUnaryRef : public AstUnaryOp
 {
 	LETHE_BUCKET_ALLOC(AstUnaryRef)
@@ -44,5 +46,7 @@ public:
 private:
 	mutable UniquePtr<AstTypeArrayRef> aref;
 };
+
+LETHE_API_END
 
 }

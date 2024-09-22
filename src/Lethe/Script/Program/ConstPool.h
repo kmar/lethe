@@ -70,6 +70,8 @@ struct NativeClass
 	}
 };
 
+LETHE_API_BEGIN
+
 class LETHE_API ConstPool
 {
 public:
@@ -189,5 +191,7 @@ private:
 	Int BindNativeClassInternal(const String &cname, Int size, Int align, void (*ctor)(void *inst), void (*dtor)(void *inst), bool isStruct);
 	Int FindNativeClassInternal(const String &cname, bool isStruct) const;
 };
+
+LETHE_API_END
 
 }

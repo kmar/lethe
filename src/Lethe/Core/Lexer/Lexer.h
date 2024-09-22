@@ -23,6 +23,8 @@ enum LexerFlags
 	LEXF_TRIM_WHITESPACE = 2
 };
 
+LETHE_API_BEGIN
+
 // priorities implicitly defined by parser (recursive descent)
 
 class LETHE_API Lexer : NoCopy
@@ -148,5 +150,7 @@ private:
 	// handle next line after \r or \n
 	void NextLine(Int ch, Token &tok);
 };
+
+LETHE_API_END
 
 }

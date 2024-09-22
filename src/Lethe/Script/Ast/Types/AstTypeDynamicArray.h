@@ -6,6 +6,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstTypeDynamicArray : public AstTypeArray
 {
 	LETHE_BUCKET_ALLOC(AstTypeDynamicArray)
@@ -39,5 +41,7 @@ public:
 private:
 	UniquePtr<AstTypeArrayRef> aref;
 };
+
+LETHE_API_END
 
 }

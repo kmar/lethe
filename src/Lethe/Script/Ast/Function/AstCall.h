@@ -7,6 +7,8 @@ namespace lethe
 
 class AstFuncBase;
 
+LETHE_API_BEGIN
+
 class LETHE_API AstCall : public AstNode
 {
 	LETHE_BUCKET_ALLOC(AstCall)
@@ -75,5 +77,6 @@ protected:
 	void CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attributes *attrs);
 };
 
+LETHE_API_END
 
 }

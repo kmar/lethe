@@ -17,6 +17,8 @@ class ScriptEngine;
 class ScriptContext;
 struct TokenLocation;
 
+LETHE_API_BEGIN
+
 class LETHE_API DebugServer : public RefCounted
 {
 public:
@@ -85,5 +87,7 @@ private:
 
 	void OnDebugError(const String &msg, const TokenLocation &loc, Int warnId);
 };
+
+LETHE_API_END
 
 }

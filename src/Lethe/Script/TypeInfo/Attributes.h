@@ -9,10 +9,14 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 struct LETHE_API Attributes : RefCounted
 {
 	// attributes are pre-parsed as lexer tokens
 	Array<Token> tokens;
 };
+
+LETHE_API_END
 
 }

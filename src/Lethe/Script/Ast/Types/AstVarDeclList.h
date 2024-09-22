@@ -6,6 +6,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstVarDeclList : public AstCustomType
 {
 	LETHE_BUCKET_ALLOC(AstVarDeclList)
@@ -22,5 +24,6 @@ public:
 	void LoadIfVarDecl(CompiledProgram &p) override;
 };
 
+LETHE_API_END
 
 }

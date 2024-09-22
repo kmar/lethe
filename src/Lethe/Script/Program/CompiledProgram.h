@@ -34,6 +34,8 @@ class VmJitBase;
 
 class ScriptEngine;
 
+LETHE_API_BEGIN
+
 class LETHE_API ErrorHandler
 {
 public:
@@ -526,5 +528,7 @@ private:
 
 	bool EmitDefer(NamedScope *cscope, Int nstart = 0);
 };
+
+LETHE_API_END
 
 }

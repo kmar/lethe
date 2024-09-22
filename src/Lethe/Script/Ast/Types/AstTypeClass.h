@@ -5,6 +5,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstTypeClass : public AstTypeStruct
 {
 	LETHE_BUCKET_ALLOC(AstTypeClass)
@@ -51,5 +53,6 @@ private:
 	bool InjectBaseStates(CompiledProgram &p);
 };
 
+LETHE_API_END
 
 }

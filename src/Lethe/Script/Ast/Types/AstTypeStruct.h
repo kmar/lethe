@@ -8,6 +8,8 @@ namespace lethe
 
 class AstTypeDef;
 
+LETHE_API_BEGIN
+
 class LETHE_API AstTypeStruct : public AstCustomType
 {
 	LETHE_BUCKET_ALLOC(AstTypeStruct)
@@ -72,5 +74,7 @@ public:
 
 	SharedPtr<Attributes> attributes;
 };
+
+LETHE_API_END
 
 }

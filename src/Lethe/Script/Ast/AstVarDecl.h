@@ -7,6 +7,8 @@ namespace lethe
 
 class AstSymbol;
 
+LETHE_API_BEGIN
+
 class LETHE_API AstVarDecl : public AstNode
 {
 	LETHE_BUCKET_ALLOC(AstVarDecl)
@@ -43,5 +45,6 @@ private:
 	void AddLiveRefs(AstNode *n);
 };
 
+LETHE_API_END
 
 }

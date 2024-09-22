@@ -29,6 +29,8 @@ struct TokenMacro
 
 using TokenMacroMap = HashMap<String, UniquePtr<TokenMacro>>;
 
+LETHE_API_BEGIN
+
 class LETHE_API TokenStream
 {
 	LETHE_BUCKET_ALLOC(TokenStream)
@@ -187,5 +189,7 @@ private:
 	inline Int CyclicDelta(Int x, Int y) const;
 	inline void AdvanceIndex(Int &idx);
 };
+
+LETHE_API_END
 
 }

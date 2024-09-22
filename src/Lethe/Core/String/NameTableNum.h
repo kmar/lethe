@@ -11,6 +11,8 @@ namespace lethe
 class StringRef;
 class NameTable;
 
+LETHE_API_BEGIN
+
 class LETHE_API NameTableNum
 {
 public:
@@ -88,5 +90,6 @@ void NameTableNum::ToCharBuffer(ULong val, Cont &nbuf, bool zeroTerm) const
 		nbuf.Add(0);
 }
 
+LETHE_API_END
 
 }

@@ -8,6 +8,8 @@ namespace lethe
 
 class String;
 
+LETHE_API_BEGIN
+
 // by default, MemoryStream is backed by Array<Byte> for RW access
 // note that MemoryStream is always open
 // MemoryStream cannot handle more than 2G-1 bytes of data, even in 64-bit mode!
@@ -92,5 +94,7 @@ private:
 	Int cpos;				// current stream pos
 	Int refBufSize;			// ref buffer size
 };
+
+LETHE_API_END
 
 }

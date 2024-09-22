@@ -12,6 +12,8 @@ namespace lethe
 class ScriptContext;
 class CompiledProgram;
 
+LETHE_API_BEGIN
+
 // in script VM, stack grows up
 // stack granularity is 4 bytes (uint)
 // why is this beneficial? for accessing locals with int offset
@@ -415,5 +417,7 @@ inline void Stack::PushArrayRef(const ArrayRef<T> &aref)
 	PushRaw(2);
 	MemCpy(top, &aref, sizeof(aref));
 }
+
+LETHE_API_END
 
 }

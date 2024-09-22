@@ -125,6 +125,8 @@ enum ExecResult
 	EXEC_BREAK
 };
 
+LETHE_API_BEGIN
+
 class LETHE_API VmJitBase
 {
 public:
@@ -236,5 +238,7 @@ private:
 	Int GetFullCallStackDepth(Int pc, Int opc) const;
 	const Stack::StackWord *FindStackFrame(const Stack::StackWord *ptr) const;
 };
+
+LETHE_API_END
 
 }

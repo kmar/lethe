@@ -5,6 +5,8 @@
 namespace lethe
 {
 
+LETHE_API_BEGIN
+
 class LETHE_API AstLabel : public AstText
 {
 	LETHE_BUCKET_ALLOC(AstLabel)
@@ -29,5 +31,6 @@ private:
 	StackArray<Int, 1> forwardTargets;
 };
 
+LETHE_API_END
 
 }

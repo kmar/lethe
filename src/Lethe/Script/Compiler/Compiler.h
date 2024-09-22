@@ -26,6 +26,8 @@ namespace lethe
 
 class AstText;
 
+LETHE_API_BEGIN
+
 class LETHE_API Compiler
 {
 public:
@@ -400,5 +402,7 @@ AstText *Compiler::NewAstTextRef(StringRef ntext, const TokenLocation &nloc)
 	res->scopeRef = currentScope;
 	return res;
 }
+
+LETHE_API_END
 
 }
