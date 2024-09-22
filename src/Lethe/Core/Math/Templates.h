@@ -87,21 +87,7 @@ template< size_t N, typename T > static inline constexpr size_t ArraySize(T (&)[
 // get alignment of native type
 template< typename T > struct AlignOf
 {
-#if LETHE_COMPILER_MSC
-#	pragma warning(push)
-#	pragma warning(disable: 4324) // alignment (padding)
-#	pragma warning(disable: 4510) // default constructor could not be generated
-#	pragma warning(disable: 4610) // s can never be instantiated
-#endif
-	struct s
-	{
-		char c;
-		T t;
-	};
-	static const size_t align = sizeof(s) - sizeof(T);
-#if LETHE_COMPILER_MSC
-#	pragma warning(pop)
-#endif
+	static constexpr size_t align = alignof(T);
 };
 
 // returns true if val is power of two
