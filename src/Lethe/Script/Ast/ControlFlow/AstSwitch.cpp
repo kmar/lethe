@@ -96,6 +96,9 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 
 	QDataType dt = expr->GetTypeDesc(p);
 
+	if (expr->type == AST_VAR_DECL_LIST && !expr->nodes.IsEmpty())
+		dt = expr->nodes[0]->GetTypeDesc(p);
+
 	if (!dt.IsSwitchable())
 		return p.Error(expr, "cannot switch this type");
 
@@ -282,6 +285,8 @@ bool AstSwitch::CodeGen(CompiledProgram &p)
 	}
 
 	LETHE_RET_FALSE(expr->CodeGen(p));
+
+	expr->LoadIfVarDecl(p);
 
 	if (p.exprStack.GetSize() != 1)
 		return p.Error(expr, "switch expression must return a value");

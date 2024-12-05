@@ -573,6 +573,15 @@ AstNode *Compiler::ParseStatement(Int depth)
 		UniquePtr<AstNode> tmp = ParseVarDeclOrExpr(depth+1, 1);
 		LETHE_RET_FALSE(tmp);
 
+		if (tmp->type == AST_VAR_DECL_LIST && ts->PeekToken().type == TOK_SEMICOLON)
+		{
+			// C++17 style switch with initializer
+			ts->GetToken();
+			scope->Add(tmp.Detach());
+			tmp = ParseExpression(depth+1);
+			LETHE_RET_FALSE(tmp);
+		}
+
 		if (extra)
 			LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_RBR, "expected `)`"));
 
