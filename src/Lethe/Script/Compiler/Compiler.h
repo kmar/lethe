@@ -263,8 +263,14 @@ private:
 	AstNode *ParseSwitchBody(Int depth, bool switchBreak);
 	AstNode *ParseStatement(Int depth);
 	AstNode *ParseNoBreakStatement(Int depth);
-	AstNode *ParseBlock(Int depth, bool isFunc = false, bool noCheck = false, bool isStateFunc = false,
-		const String *fname = nullptr, bool isSwitchBreak = false);
+
+	AstNode *ParseBlock(Int depth);
+	AstNode *ParseVirtualBlock(Int depth);
+	AstNode *ParseSwitchBreakBlock(Int depth);
+	AstNode *ParseFuncBlock(Int depth, bool isState, const String *fname);
+
+	AstNode *ParseBlockInternal(Int depth, bool isFunc = false, bool noCheck = false, bool isStateFunc = false,
+		const String *fname = nullptr, bool isSwitchBreak = false, bool isVirtualBlock = false);
 
 	AstNode *ParseVarDeclOrExpr(Int depth, bool refFirstInit = 0, bool initOnly = 1);
 

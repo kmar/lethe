@@ -345,7 +345,7 @@ AstNode *Compiler::ParseFuncDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &
 			if (ts->PeekToken().type == TOK_EQ_GT)
 				fbody = ParseShorthandFunction(depth+1, ntype, fname);
 			else
-				fbody = ParseBlock(depth+1, true, false, (fqualifiers & AST_Q_STATE) != 0, &fname);
+				fbody = ParseFuncBlock(depth+1, (fqualifiers & AST_Q_STATE) != 0, &fname);
 
 			ts->SetFuncName(String());
 
@@ -836,7 +836,7 @@ AstNode *Compiler::ParseVarDeclOrExpr(Int depth, bool refFirstInit, bool initOnl
 			{
 				ts->UngetToken(delta);
 				// add virtual new scope
-				AstNode *nres = ParseBlock(depth+1, 0, 1);
+				AstNode *nres = ParseVirtualBlock(depth+1);
 				ts->UngetToken(1);
 				return nres;
 			}

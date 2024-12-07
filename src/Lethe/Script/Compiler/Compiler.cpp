@@ -226,8 +226,7 @@ bool Compiler::CheckDepth(Int ndepth)
 
 NamedScope *Compiler::AddUniqueNamedScope(const String &nname)
 {
-	if (currentScope->members.FindIndex(nname) >= 0 ||
-			currentScope->namedScopes.FindIndex(nname) >= 0)
+	if (!currentScope->IsUniqueName(nname))
 	{
 		String tmp = String::Printf("illegal redefinition of `%s'", nname.Ansi());
 		Expect(false, tmp.Ansi());
@@ -243,11 +242,11 @@ NamedScope *Compiler::AddUniqueNamedScope(const String &nname)
 
 NamedScope *Compiler::FindAddNamedScope(const String &nname)
 {
-	if (currentScope->members.FindIndex(nname) >= 0)
+	if (!currentScope->IsUniqueMemberName(nname))
 	{
 		String tmp = String::Printf("illegal redefinition of `%s'", nname.Ansi());
 		Expect(0, tmp.Ansi());
-		return 0;
+		return nullptr;
 	}
 
 	Int idx = currentScope->namedScopes.FindIndex(nname);
@@ -264,14 +263,13 @@ NamedScope *Compiler::FindAddNamedScope(const String &nname)
 
 bool Compiler::AddScopeMember(const String &nname, AstNode *nnode, bool isCtor)
 {
-	ErrorHandler::CheckShadowing(currentScope, nname, nnode, onWarning);
-
-	if ((isCtor && currentScope->ctorDefined) || currentScope->members.FindIndex(nname) >= 0 ||
-			currentScope->namedScopes.FindIndex(nname) >= 0)
+	if ((isCtor && currentScope->ctorDefined) || !currentScope->IsUniqueName(nname))
 	{
 		String tmp = String::Printf("illegal redefinition of `%s'", nname.Ansi());
 		return ExpectLoc(0, tmp.Ansi(), nnode->location);
 	}
+
+	ErrorHandler::CheckShadowing(currentScope, nname, nnode, onWarning);
 
 	if (isCtor)
 		currentScope->ctorDefined = true;

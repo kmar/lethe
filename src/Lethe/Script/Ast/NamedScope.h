@@ -134,6 +134,12 @@ public:
 	// merge with scope; used in multi-threaded parsing
 	bool Merge(NamedScope &ns, const Compiler &c, HashMap<NamedScope *, NamedScope *> &scopeRemap);
 
+	// check for unique name (member or named scope)
+	bool IsUniqueName(const String &nname) const;
+
+	// check for unique member name
+	bool IsUniqueMemberName(const String &nname) const;
+
 	// allocate variable
 	Int AllocVar(const QDataType &ndesc, bool alignStack = 1);
 	Int varOfs;
@@ -148,6 +154,9 @@ public:
 
 	// flag to detect dup ctors
 	bool ctorDefined;
+
+	// flag to detect virtual var decl scopes
+	bool virtualScope;
 
 	// helper for vardecl of statics
 	Int blockThis;

@@ -84,7 +84,7 @@ AstNode *Compiler::ParseSwitchBody(Int depth, bool switchBreak)
 
 		if (switchBreak)
 		{
-			auto *blk = ParseBlock(depth+1, false, true, false, nullptr, true);
+			auto *blk = ParseSwitchBreakBlock(depth+1);
 			LETHE_RET_FALSE(blk);
 
 			const auto &nxt = ts->PeekToken();
@@ -665,13 +665,34 @@ AstNode *Compiler::ParseStatement(Int depth)
 	return res.Detach();
 }
 
-AstNode *Compiler::ParseBlock(Int depth, bool isFunc, bool noCheck, bool isStateFunc,
-	const String *fname, bool isSwitchBreak)
+AstNode *Compiler::ParseBlock(Int depth)
+{
+	return ParseBlockInternal(depth);
+}
+
+AstNode *Compiler::ParseVirtualBlock(Int depth)
+{
+	return ParseBlockInternal(depth, false, true, false, nullptr, false, true);
+}
+
+AstNode *Compiler::ParseSwitchBreakBlock(Int depth)
+{
+	return ParseBlockInternal(depth+1, false, true, false, nullptr, true);
+}
+
+AstNode *Compiler::ParseFuncBlock(Int depth, bool isState, const String *fname)
+{
+	return ParseBlockInternal(depth+1, true, false, isState, fname);
+}
+
+AstNode *Compiler::ParseBlockInternal(Int depth, bool isFunc, bool noCheck, bool isStateFunc,
+	const String *fname, bool isSwitchBreak, bool isVirtualBlock)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 
 	NamedScopeGuard nsg(this, currentScope->Add(new NamedScope(isFunc ? NSCOPE_FUNCTION : NSCOPE_LOCAL)));
 	currentScope->needExtraScope = false;
+	currentScope->virtualScope = isVirtualBlock;
 
 	if (fname)
 		currentScope->name = *fname;

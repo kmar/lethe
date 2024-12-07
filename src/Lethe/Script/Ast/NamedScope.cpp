@@ -26,6 +26,7 @@ NamedScope::NamedScope()
 	, resultPtr(nullptr)
 	, needExtraScope(false)
 	, ctorDefined(false)
+	, virtualScope(false)
 	, blockThis(0)
 	, deferredTop(0x7fffffff)
 {
@@ -605,6 +606,22 @@ bool NamedScope::Merge(NamedScope &ns, const Compiler &c, HashMap<NamedScope *, 
 	ns.members.Clear();
 
 	return true;
+}
+
+bool NamedScope::IsUniqueName(const String &nname) const
+{
+	if (members.FindIndex(nname) >= 0 || namedScopes.FindIndex(nname) >= 0)
+		return false;
+
+	return virtualScope && parent ? parent->IsUniqueName(nname) : true;
+}
+
+bool NamedScope::IsUniqueMemberName(const String &nname) const
+{
+	if (members.FindIndex(nname) >= 0)
+		return false;
+
+	return virtualScope && parent ? parent->IsUniqueMemberName(nname) : true;
 }
 
 
