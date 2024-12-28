@@ -560,6 +560,13 @@ bool TokenStream::PushMacro(Macro &m)
 		// make sure we get as many as needed...
 		Int curArg = 0;
 		Int numArgs = m.argPtrs.GetSize();
+
+		// special void args hack
+		const bool voidArgs = numArgs > 0 && m.argPtrs[0]->type == TOK_EOF;
+
+		if (voidArgs)
+			numArgs = 0;
+
 		Int minArgs = numArgs - hasEllipsis;
 		Int maxArgs = hasEllipsis ? 128 : minArgs;
 
@@ -577,6 +584,7 @@ bool TokenStream::PushMacro(Macro &m)
 		};
 
 		bool ellipsisArgs = false;
+		bool needFlush = false;
 
 		for (;;)
 		{
@@ -593,6 +601,8 @@ bool TokenStream::PushMacro(Macro &m)
 
 			if (tt == TOK_LBR)
 				++nesting;
+
+			needFlush = true;
 
 			if (tt == TOK_COMMA && !nesting)
 			{
@@ -614,7 +624,10 @@ bool TokenStream::PushMacro(Macro &m)
 		}
 
 		LETHE_RET_FALSE(curArg < m.argPtrs.GetSize());
-		flushArg();
+
+		if (needFlush)
+			flushArg();
+
 		LETHE_RET_FALSE(curArg >= minArgs && curArg <= maxArgs);
 	}
 

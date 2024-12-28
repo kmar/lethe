@@ -583,8 +583,13 @@ bool Compiler::ParseMacroArgs(Array<Token> &nargs)
 		}
 	}
 
-	// this will simplify macro expansion handling later
-	LETHE_RET_FALSE(ExpectPrev(!nargs.IsEmpty(), "empty func-style macros not allowed"));
+	if (nargs.IsEmpty())
+	{
+		// FIXME: this is hacky but we have to distinguish here
+		Token tmp;
+		tmp.type = TOK_EOF;
+		nargs.Add(tmp);
+	}
 
 	return true;
 }
@@ -627,7 +632,10 @@ bool Compiler::ParseMacroInternal(bool conditionalOnly)
 		return true;
 
 	if (!ts->AddSwapSimpleMacro(tname, args, tokens))
+	{
 		ErrorLoc(String::Printf("illegal macro redefinition: `%s'", tname.Ansi()), ntokLoc);
+		return false;
+	}
 
 	return true;
 }
