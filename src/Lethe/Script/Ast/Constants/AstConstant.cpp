@@ -195,7 +195,8 @@ AstNode *AstNode::ConvertConstNode(const DataType &dt, DataTypeEnum dte, const C
 
 AstNode *AstConstant::ConvertConstTo(DataTypeEnum dte, const CompiledProgram &p)
 {
-	const DataType &dt = GetTypeDesc(p).GetTypeUnderlying();
+	const auto qdt = GetTypeDesc(p);
+	const auto &dt = qdt.GetTypeUnderlying();
 	auto thisType = dt.type;
 
 	if (dte == thisType || !IsConstant())
