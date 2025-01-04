@@ -1163,7 +1163,7 @@ bool Compiler::Resolve(bool ignoreErrors)
 
 	bool res = !resolveError && progResolved;
 
-	if (!res && !ignoreErrors)
+	if (!res && !ignoreErrors && !resolveError)
 	{
 		// walk AST and dump errors
 		const AstNode *n;
