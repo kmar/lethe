@@ -231,7 +231,7 @@ bool AstSymbol::ResolveNode(const ErrorHandler &e)
 
 	if (sym)
 	{
-		if (sym && sym->type == AST_VAR_DECL && sym->parent->nodes[0] == this)
+		if (sym && sym->type == AST_VAR_DECL && (sym->parent->nodes[0] == this || sym == sym->parent->nodes[0]->target))
 			return e.Error(this, "var decl recursion");
 
 		// this is necessary for symbol aliases used by state vars inside state functions
