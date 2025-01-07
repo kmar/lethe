@@ -75,7 +75,7 @@ public:
 	// use this if align is variable
 	inline void PushAlignForce(Int align);
 
-	inline void PushStruct(Int align, Int sizeBytes);
+	void PushStruct(Int align, Int sizeBytes);
 
 	inline void PushRaw(Int words);
 	void PushRawZero(Int words);
