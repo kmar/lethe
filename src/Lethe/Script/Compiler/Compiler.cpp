@@ -1038,6 +1038,156 @@ void Compiler::InjectScopes(ErrorHandler &eh)
 	eh.dynamicArrayScope = dynamicArrayScope;
 }
 
+bool Compiler::ReplaceClasses(ErrorHandler &eh)
+{
+	HashMap<AstNode *, AstNode *> remap;
+
+	static const char baseSuffix[] = "/base";
+
+	for (auto &&it : replaceClasses)
+	{
+		if (it->type != AST_STRUCT && it->type != AST_CLASS)
+			continue;
+
+		auto *node = AstStaticCast<AstTypeStruct *>(it);
+
+		if (!IsValidArrayIndex(AstTypeStruct::IDX_BASE, node->nodes.GetSize()))
+			return eh.Error(node, "replace_class needs base");
+
+		// base is either AST_IDENT or AST_OP_SCOPE_RES
+		auto *base = node->nodes[AstTypeStruct::IDX_BASE];
+
+		if (base->type != AST_BASE || base->nodes.IsEmpty())
+			return eh.Error(node, "replace_class needs base");
+
+		base = base->nodes[0];
+
+		AstNode *ident = nullptr;
+
+		if (base->type == AST_IDENT)
+		{
+			if (base->Resolve(eh) != AstNode::RES_OK)
+				return eh.Error(base, "failed to resolve base");
+
+			ident = base->GetResolveTarget();
+		}
+		else if (base->type == AST_OP_SCOPE_RES)
+		{
+			auto *sres = AstStaticCast<AstScopeResOp *>(base);
+
+			if (sres->Resolve(eh) != AstNode::RES_OK)
+				return eh.Error(sres, "failed to resolve base");
+
+			ident = sres->GetResolveTarget();
+		}
+
+		if (!ident || (ident->type != AST_STRUCT && ident->type != AST_CLASS))
+			return eh.Error(base, "couldn't resolve ident");
+
+
+		// now the problem here is, IF we do this, we're fucked? => nope, nope, nope
+		auto *primaryBase = AstStaticCast<AstTypeStruct *>(ident);
+
+		if (primaryBase->qualifiers & (AST_Q_NATIVE | AST_Q_INTRINSIC))
+			return eh.Error(base, "cannot replace native/intrinsic struct/class");
+
+		// we need to iterate nested classes here and replace base if same
+		AstIterator ait(primaryBase);
+
+		while (AstNode *n = ait.Next())
+		{
+			if (n->type != AST_CLASS || n == primaryBase)
+				continue;
+
+			if (AstTypeStruct::IDX_BASE >= n->nodes.GetSize())
+				continue;
+
+			auto *nbase = n->nodes[AstTypeStruct::IDX_BASE];
+
+			if (nbase->type != AST_BASE)
+				continue;
+
+			auto *nbasetmp = nbase->nodes[0];
+
+			if (nbasetmp->Resolve(eh) != AstNode::RES_OK)
+				continue;
+		}
+
+		auto *txt = AstStaticCast<AstText *>(primaryBase->nodes[AstTypeStruct::IDX_NAME]);
+
+		if (!StringRef(txt->text).EndsWith(baseSuffix))
+		{
+			// first time => inject using typedef
+			txt->text += baseSuffix;
+		}
+
+		auto idx = remap.FindIndex(primaryBase);
+
+		if (idx >= 0)
+		{
+			// chain!
+			auto *chain = remap.GetValue(idx);
+			// replace our basechain
+			base->target = chain;
+		}
+
+		remap[primaryBase] = it;
+	}
+
+	// finally we need to inject the original nodes
+
+	for (auto &&it : remap)
+	{
+		auto *txt = AstStaticCast<AstText *>(it.key->nodes[AstTypeStruct::IDX_NAME]);
+
+		// complicated scope rename
+		if (auto *sparent = it.key->scopeRef->parent)
+		{
+			auto itx = sparent->namedScopes.Find(it.key->scopeRef->name);
+
+			if (itx != sparent->namedScopes.End())
+			{
+				auto old = itx->value;
+				sparent->namedScopes.Erase(itx);
+				sparent->namedScopes.Add(it.key->scopeRef->name + baseSuffix, old);
+			}
+		}
+
+		it.key->scopeRef->name += baseSuffix;
+
+		currentScope = it.key->scopeRef->parent;
+		auto rname = txt->text;
+		rname.Erase(rname.GetLength() - StringRef(baseSuffix).GetLength());
+		auto *nscope = AddUniqueNamedScope(rname);
+		nscope->base = it.value->scopeRef;
+		nscope->type = nscope->base->type;
+
+		if (!nscope)
+			return eh.Error(txt, "failed to add new scope");
+
+		auto *nclass = it.key->parent->Add(NewAstNode<AstTypeClass>(it.value->location));
+		nclass->scopeRef = nscope;
+		nscope->node = nclass;
+
+		auto *nname = nclass->Add(NewAstText<AstSymbol>(rname.Ansi(), it.value->location));
+		nname->flags |= AST_F_RESOLVED | AST_F_SKIP_CGEN;
+		nname->scopeRef = nscope->parent;
+
+		auto *nbasetmp = nclass->Add(NewAstNode<AstNode>(AST_BASE, it.value->location));
+		nbasetmp->flags |= AST_F_RESOLVED;
+		nbasetmp->scopeRef = nscope->parent;
+
+		auto *nbase = nbasetmp->Add(NewAstText<AstSymbol>("//dummy", it.value->location));
+		nbase->scopeRef = nscope->parent;
+		nbase->flags |= AST_F_RESOLVED | AST_F_SKIP_CGEN;
+		nbase->target = it.value;
+
+		currentScope = nullptr;
+	}
+
+	return true;
+}
+
 bool Compiler::Resolve(bool ignoreErrors)
 {
 	LETHE_RET_FALSE(progList);
@@ -1050,6 +1200,8 @@ bool Compiler::Resolve(bool ignoreErrors)
 		eh.onError = onError;
 		eh.onWarning = onWarning;
 	}
+
+	LETHE_RET_FALSE(ReplaceClasses(eh));
 
 	LETHE_RET_FALSE(MoveExternalFunctions(eh));
 	LETHE_RET_FALSE(InstantiateTemplates(eh));

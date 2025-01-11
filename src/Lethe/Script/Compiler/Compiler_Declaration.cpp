@@ -458,10 +458,10 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 		if (initOnly && !idx)
 		{
 			// note: TOK_COLON for range based for
-			LETHE_RET_FALSE(Expect(nt.type == TOK_EQ || nt.type == TOK_COLON, "expected `='"));
+			LETHE_RET_FALSE(Expect(nttype == TOK_EQ || nt.type == TOK_COLON, "expected `='"));
 		}
 
-		if (nt.type == TOK_EQ)
+		if (nttype == TOK_EQ)
 		{
 			ts->ConsumeToken();
 
@@ -1447,6 +1447,14 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 	LETHE_RET_FALSE(CheckDepth(depth));
 	// after struct keyword
 
+	bool replaceClass = false;
+
+	auto *strnode = AstStaticCast<AstTypeStruct *>(ntype.Get());
+
+	for (Int i=0; strnode && strnode->attributes && i<strnode->attributes->tokens.GetSize(); i++)
+		if (strnode->attributes->tokens[i].type == TOK_IDENT && StringRef(strnode->attributes->tokens[i].text) == "replace_class")
+				replaceClass = true;
+
 	if (currentScope->IsComposite())
 		ntype->qualifiers |= structAccess;
 
@@ -1858,6 +1866,10 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 				(n->nodes.GetSize() >= 2 && !(decl->nodes[0]->qualifiers & (AST_Q_CONSTEXPR | AST_Q_STATIC)));
 		}
 	}
+
+	// we'll succeed now
+	if (replaceClass)
+		replaceClasses.Add(ntype.Get());
 
 	if (!hasInitializedMembers || hasCustomCtor)
 		return ntype.Detach();

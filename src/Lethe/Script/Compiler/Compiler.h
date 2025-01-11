@@ -205,6 +205,9 @@ private:
 	bool floatLitIsDouble;
 	Int classOpen = 0;
 
+	// replace class set; type node ptrs
+	HashSet<AstNode *> replaceClasses;
+
 	bool OpenBuffered(Stream &s, const String &nfilename, Double *ioTime);
 	AstNode *CompileBufferedInternal(Stream &s, const String &nfilename, Double *ioTime);
 
@@ -344,6 +347,9 @@ private:
 
 	// inject array/string scopes
 	void InjectScopes(ErrorHandler &eh);
+
+	// replace classes (replace_class attribute)
+	bool ReplaceClasses(ErrorHandler &eh);
 
 	// conditional compilation:
 
