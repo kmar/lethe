@@ -1165,7 +1165,11 @@ bool Compiler::ReplaceClasses(ErrorHandler &eh)
 		if (!nscope)
 			return eh.Error(txt, "failed to add new scope");
 
-		auto *nclass = it.key->parent->Add(NewAstNode<AstTypeClass>(it.value->location));
+		auto *nclass = it.key->parent->Add(
+			it.value->type == AST_STRUCT ?
+				NewAstNode<AstTypeStruct>(it.value->location) :
+				NewAstNode<AstTypeClass>(it.value->location)
+		);
 		nclass->scopeRef = nscope;
 		nscope->node = nclass;
 
