@@ -61,6 +61,12 @@ public:
 	// can be used to measure IO time
 	AstNode *CompileBuffered(Stream &s, const String &nfilename, Double *ioTime = nullptr );
 
+	// special helpers for a potential autocomplete -> compile with macro expansion only, no AST
+	// note that Compile and CompileBuffer do macro expansion themselves, so these functions shouldn't
+	// be used in that case
+	bool CompileMacroExpansion(Stream &s, const String &nfilename);
+	bool CompileMacroExpansionBuffered(Stream &s, const String &nfilename, Double *ioTime = nullptr);
+
 	bool AddCompiledProgram(AstNode *node);
 
 	// merge with another compiled data
@@ -209,7 +215,11 @@ private:
 	HashSet<AstNode *> replaceClasses;
 
 	bool OpenBuffered(Stream &s, const String &nfilename, Double *ioTime);
-	AstNode *CompileBufferedInternal(Stream &s, const String &nfilename, Double *ioTime);
+	AstNode *CompileInternal(bool nbuffered, Stream &s, const String &nfilename, Double *ioTime);
+
+	bool MacroExpandProgram(const String &nfilename);
+
+	bool CompileMacroExpansionInternal(bool nbuffered, Stream &s, const String &nfilename, Double *ioTime);
 
 	// string table
 	const String &AddString(const char *str);

@@ -900,48 +900,19 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 
 AstNode *Compiler::Compile(Stream &s, const String &nfilename)
 {
-	LETHE_RET_FALSE(Open(s, nfilename));
-
-	Path p = nfilename;
-	imported.Add(AddString(p.Get().Ansi()));
-	UniquePtr<AstNode> res = ParseProgram(0, nfilename);
-	LETHE_RET_FALSE(res);
-
-	while (!import.IsEmpty())
-	{
-		String imp = import.Back();
-		import.Pop();
-
-		VfsFile f(imp);
-		BufferedStream bs(f);
-		LETHE_RET_FALSE(Open(bs, imp));
-
-		UniquePtr<AstNode> tmp = ParseProgram(0, imp);
-		LETHE_RET_FALSE(tmp);
-
-		if (progList.IsEmpty())
-		{
-			TokenLocation loc;
-			loc.line = loc.column = 0;
-			progList = NewAstNode<AstNode>(AST_PROGRAM_LIST, loc);
-		}
-
-		progList->Add(tmp.Detach());
-	}
-
-	return res.Detach();
+	return CompileInternal(false, s, nfilename, nullptr);
 }
 
 AstNode *Compiler::CompileBuffered(Stream &s, const String &nfilename, Double *ioTime)
 {
-	auto res = CompileBufferedInternal(s, nfilename, ioTime);
+	auto *res = CompileInternal(true, s, nfilename, ioTime);
 	tempStream.Clear();
 	return res;
 }
 
-AstNode *Compiler::CompileBufferedInternal(Stream &s, const String &nfilename, Double *ioTime)
+AstNode *Compiler::CompileInternal(bool nbuffered, Stream &s, const String &nfilename, Double *ioTime)
 {
-	LETHE_RET_FALSE(OpenBuffered(s, nfilename, ioTime));
+	LETHE_RET_FALSE(nbuffered ? OpenBuffered(s, nfilename, ioTime) : Open(s, nfilename));
 
 	Path p = nfilename;
 	imported.Add(AddString(p.Get().Ansi()));
@@ -954,7 +925,12 @@ AstNode *Compiler::CompileBufferedInternal(Stream &s, const String &nfilename, D
 		import.Pop();
 
 		VfsFile f(imp);
-		LETHE_RET_FALSE(OpenBuffered(f, imp, ioTime));
+		BufferedStream bs;
+
+		if (!nbuffered)
+			bs.SetStream(f);
+
+		LETHE_RET_FALSE(nbuffered ? OpenBuffered(f, imp, ioTime) : Open(bs, imp));
 
 		UniquePtr<AstNode> tmp = ParseProgram(0, imp);
 		LETHE_RET_FALSE(tmp);
@@ -970,6 +946,85 @@ AstNode *Compiler::CompileBufferedInternal(Stream &s, const String &nfilename, D
 	}
 
 	return res.Detach();
+}
+
+bool Compiler::CompileMacroExpansion(Stream &s, const String &nfilename)
+{
+	return CompileMacroExpansionInternal(false, s, nfilename, nullptr);
+}
+
+bool Compiler::CompileMacroExpansionBuffered(Stream &s, const String &nfilename, Double *ioTime)
+{
+	auto res = CompileMacroExpansionInternal(true, s, nfilename, ioTime);
+	tempStream.Clear();
+	return res;
+}
+
+bool Compiler::MacroExpandProgram(const String &nfilename)
+{
+	Token tok;
+
+	for (;;)
+	{
+		auto tt = lex->GetToken(tok);
+
+		// note: we should probably make sure import can be only called from root or subnamespaces, but we really don't care
+		if (tt == TOK_KEY_IMPORT)
+		{
+			ts->ConsumeToken();
+			const auto &nt = ts->GetToken();
+			LETHE_RET_FALSE(ExpectPrev(nt.type == TOK_STRING || nt.type == TOK_NAME, "expected string or name literal"));
+
+			Path p = nfilename;
+			p.Append("..");
+			p.Append(nt.text);
+
+			String imp = p;
+
+			if (imported.FindIndex(imp) >= 0)
+				continue;
+
+			imp = AddString(imp.Ansi());
+			imported.Add(imp);
+			import.Add(imp);
+		}
+
+		if (tt == TOK_EOF)
+			break;
+
+		if (tt == TOK_INVALID)
+			return Expect(false, "invalid token");
+	}
+
+	return true;
+}
+
+bool Compiler::CompileMacroExpansionInternal(bool nbuffered, Stream &s, const String &nfilename, Double *ioTime)
+{
+	LETHE_RET_FALSE(nbuffered ? OpenBuffered(s, nfilename, ioTime) : Open(s, nfilename));
+
+	Path p = nfilename;
+	imported.Add(AddString(p.Get().Ansi()));
+
+	LETHE_RET_FALSE(MacroExpandProgram(nfilename));
+
+	while (!import.IsEmpty())
+	{
+		String imp = import.Back();
+		import.Pop();
+
+		VfsFile f(imp);
+		BufferedStream bs;
+
+		if (!nbuffered)
+			bs.SetStream(f);
+
+		LETHE_RET_FALSE(nbuffered ? OpenBuffered(f, imp, ioTime) : Open(bs, imp));
+
+		LETHE_RET_FALSE(MacroExpandProgram(imp));
+	}
+
+	return true;
 }
 
 bool Compiler::Merge(Compiler &c)
