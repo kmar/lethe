@@ -7,6 +7,8 @@
 #include "Ast/NamedScope.h"
 #include "Ast/Types/AstTypeEnum.h"
 
+#include "Compiler/Compiler.h"
+
 #include <Lethe/Core/String/StringBuilder.h>
 
 #include <Lethe/Core/Io/MemoryStream.h>
@@ -34,11 +36,32 @@ AutoCompleteScope::~AutoCompleteScope()
 AutoCompleteEngine::AutoCompleteEngine()
 {
 	engine = new ScriptEngine(ENGINE_RELEASE);
+	eh = new ErrorHandler;
 	openFile.Set(this, &AutoCompleteEngine::DefaultOpenFile);
 }
 
 AutoCompleteEngine::~AutoCompleteEngine()
 {
+}
+
+const NamedScope *AutoCompleteEngine::GetTargetScope(const AstNode *nnode) const
+{
+	if (!nnode)
+		return nullptr;
+
+	switch(nnode->type)
+	{
+	case AST_TYPE_STRING:
+		return eh->stringScope;
+	case AST_TYPE_ARRAY:
+		return eh->arrayScope;
+	case AST_TYPE_ARRAY_REF:
+		return eh->arrayRefScope;
+	case AST_TYPE_DYNAMIC_ARRAY:
+		return eh->dynamicArrayScope;
+	}
+
+	return nnode ? nnode->scopeRef : nullptr;
 }
 
 void AutoCompleteEngine::PrettyPrintNode(Int argIndex, const AstNode *node, StringBuilder &sb, const String *memberName)
@@ -287,6 +310,9 @@ bool AutoCompleteEngine::FullUpdate()
 		return false;
 
 	tempEngine.SwapWith(engine);
+
+	engine->GetCompiler().InjectScopes(*eh);
+
 	return true;
 }
 
@@ -581,7 +607,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 						case AST_TYPE_DYNAMIC_ARRAY:
 							targ = resolveTarget(targ->nodes[0]);
 
-							nscope = targ ? targ->scopeRef : nullptr;
+							nscope = GetTargetScope(targ);
 							break;
 
 						default:
@@ -671,7 +697,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 				}
 
 				if (tmp)
-					nscope = tmp->scopeRef;
+					nscope = GetTargetScope(tmp);
 				else
 					nscope = nullptr;
 
@@ -688,7 +714,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 				if (auto *tmp = nscope->FindSymbol(lastIdent, true, true))
 					if (auto *targ = resolveTarget(tmp))
 					{
-						nscope = targ->scopeRef;
+						nscope = GetTargetScope(targ);
 						clearLastIdent();
 						continue;
 					}

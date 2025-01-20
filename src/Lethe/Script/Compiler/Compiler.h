@@ -90,6 +90,9 @@ public:
 		return staticInitCounter;
 	}
 
+	// inject array/string scopes
+	void InjectScopes(ErrorHandler &eh);
+
 private:
 	static const Int MAX_DEPTH = 1024;
 
@@ -354,9 +357,6 @@ private:
 	bool InstantiateTemplates(ErrorHandler &eh);
 
 	static bool GenerateTemplateName(ErrorHandler &eh, const String &qname, StringBuilder &sb, AstNode *instanceNode, bool &nestedTemplate);
-
-	// inject array/string scopes
-	void InjectScopes(ErrorHandler &eh);
 
 	// replace classes (replace_class attribute)
 	bool ReplaceClasses(ErrorHandler &eh);

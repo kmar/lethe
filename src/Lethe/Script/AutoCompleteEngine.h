@@ -6,6 +6,7 @@
 #include <Lethe/Core/Sys/NoCopy.h>
 #include <Lethe/Core/Ptr/RefCounted.h>
 #include <Lethe/Core/Ptr/SharedPtr.h>
+#include <Lethe/Core/Ptr/UniquePtr.h>
 #include <Lethe/Core/String/String.h>
 #include <Lethe/Core/Io/StreamDecl.h>
 #include <Lethe/Core/Thread/Lock.h>
@@ -24,6 +25,7 @@ namespace lethe
 class ScriptEngine;
 class AstNode;
 class NamedScope;
+class ErrorHandler;
 
 struct AutoCompleteLocation : public TokenLocation
 {
@@ -126,6 +128,8 @@ private:
 
 	SharedPtr<ScriptEngine> engine;
 
+	UniquePtr<ErrorHandler> eh;
+
 	Stream *OpenFileInternal(const String &nfilename) const;
 
 	Stream *DefaultOpenFile(const String &nfilename) const;
@@ -133,6 +137,8 @@ private:
 	static void PrettyPrintNode(Int argIndex, const AstNode *node, StringBuilder &sb, const String *memberName = nullptr);
 
 	AutoCompleteScope FindScopeInternal(Int col, Int line, const String &nfilename) const;
+
+	const NamedScope *GetTargetScope(const AstNode *nnode) const;
 };
 
 }
