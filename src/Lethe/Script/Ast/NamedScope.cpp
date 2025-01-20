@@ -190,7 +190,7 @@ AstNode *NamedScope::FindLabel(const String &sname) const
 AstNode *NamedScope::FindSymbol(const StringRef &sname, bool chainbase, bool chainparent) const
 {
 	// because of templates
-	if (nameAlias == sname)
+	if (!nameAlias.IsEmpty() && nameAlias == sname)
 		return node;
 
 	Int idx = members.FindIndex(sname);
