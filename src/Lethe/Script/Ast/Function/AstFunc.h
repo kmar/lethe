@@ -51,12 +51,12 @@ public:
 	SharedPtr<Attributes> attributes;
 
 	// for methods only
-	Int vtblIndex;
+	Int vtblIndex = -1;
 
 	void CopyTo(AstNode *n) const override;
 
 private:
-	Array< Int > forwardRefs;
+	Array<Int> forwardRefs;
 	QDataType typeRef;
 
 	bool ValidateStaticInitSignature(CompiledProgram &p) const;
