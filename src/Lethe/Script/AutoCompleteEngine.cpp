@@ -518,6 +518,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 	Int argIndex = -1;
 
 	bool isFunction = false;
+	bool ignoreHints = false;
 
 	for (;;)
 	{
@@ -555,9 +556,10 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 				break;
 			default:;
 			}
-
 			continue;
 		}
+
+		ignoreHints = false;
 
 		auto olastToken = lastToken;
 		lastToken = tt;
@@ -599,6 +601,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 		{
 			// do something special
 			if (nscope)
+			{
 				if (auto *tmp = nscope->FindSymbol(lastIdent, true, true))
 					if (tmp->type == AST_FUNC || tmp->type == AST_NPROP_METHOD)
 					{
@@ -607,6 +610,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 						isFunction = true;
 						continue;
 					}
+			}
 
 			clearLastIdent();
 			continue;
@@ -695,12 +699,33 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 			continue;
 		}
 
+		// assume var decl comma list
+		if (tt == TOK_COMMA)
+			ignoreHints = true;
+
+		if (tt == TOK_KEY_DEFAULT || (tt >= TOK_OPERATOR && tt < TOK_KEYWORD))
+		{
+			noparent = false;
+			clearLastIdent();
+			continue;
+		}
+
+		// treat remaining type keywords as idents
+		if (tt >= TOK_KEY_TYPE_VOID && tt <= TOK_KEY_TYPE_STRING)
+			tt = TOK_IDENT;
+
 		if (tt == TOK_IDENT)
 		{
+			if (!lastIdent.IsEmpty() && !isFunction)
+				ignoreHints = true;
+
 			lastIdent = tok.text;
 			continue;
 		}
 	}
+
+	if (!isFunction && lastToken == TOK_LBR)
+		nscope = nullptr;
 
 	// finalizing scope
 	Queue<const NamedScope *> squeue;
@@ -719,6 +744,9 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 		break;
 	default:;
 	}
+
+	if (ignoreHints)
+		showHints = false;
 
 	if (showHints && nscope)
 		squeue.PushBack(nscope);
