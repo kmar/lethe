@@ -444,13 +444,13 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 			break;
 
 		case AST_ENUM_ITEM:
-		case AST_ENUM:
 			ahint.hint = AutoCompleteHint::HINT_CONSTANT;
 			break;
 
 		case AST_STRUCT:
 		case AST_CLASS:
 		case AST_TYPEDEF:
+		case AST_ENUM:
 			ahint.hint = AutoCompleteHint::HINT_TYPE;
 			break;
 
@@ -470,6 +470,33 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 			ahint.text = ahint.name;
 
 		ahint.argIndex = argIndex;
+
+		res.Add(ahint);
+	};
+
+	auto addScopeHint = [&](const String &mname, const NamedScope *nscope)
+	{
+		if (processed.FindIndex(mname) >= 0)
+			return;
+
+		processed.Add(mname);
+
+		AutoCompleteHint ahint;
+		ahint.name = ahint.text = mname;
+
+		switch(nscope ? nscope->type : NSCOPE_NONE)
+		{
+		case NSCOPE_STRUCT:
+		case NSCOPE_CLASS:
+			ahint.hint = AutoCompleteHint::HINT_TYPE;
+			break;
+
+		case NSCOPE_NAMESPACE:
+			ahint.hint = AutoCompleteHint::HINT_NAMESPACE;
+			break;
+
+		default:;
+		}
 
 		res.Add(ahint);
 	};
@@ -714,6 +741,10 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 		for (auto &&it : tmp->members)
 			if (isFunction ? it.key == lastIdent : lastIdent.IsEmpty() || it.key.StartsWith(lastIdent))
 				addHint(it.key, it.value, argIndex);
+
+		for (auto &&it : tmp->namedScopes)
+			if (isFunction ? it.key == lastIdent : lastIdent.IsEmpty() || it.key.StartsWith(lastIdent))
+				addScopeHint(it.key, it.value);
 	}
 
 	return res;

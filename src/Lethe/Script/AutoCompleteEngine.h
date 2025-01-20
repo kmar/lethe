@@ -54,7 +54,8 @@ struct AutoCompleteHint
 		HINT_CONSTANT,
 		HINT_VARIABLE,
 		// a type in general
-		HINT_TYPE
+		HINT_TYPE,
+		HINT_NAMESPACE
 	};
 
 	HintType hint = HINT_UNKNOWN;
