@@ -45,6 +45,7 @@ NamedScope::NamedScope(NamedScopeType ntype)
 	, resultPtr(nullptr)
 	, needExtraScope(false)
 	, ctorDefined(false)
+	, virtualScope(false)
 	, blockThis(0)
 	, deferredTop(0x7fffffff)
 {
