@@ -59,6 +59,7 @@ const NamedScope *AutoCompleteEngine::GetTargetScope(const AstNode *nnode) const
 		return eh->arrayRefScope;
 	case AST_TYPE_DYNAMIC_ARRAY:
 		return eh->dynamicArrayScope;
+	default:;
 	}
 
 	return nnode ? nnode->scopeRef : nullptr;
