@@ -165,7 +165,7 @@ Array<T,S,A> &Array<T,S,A>::Reserve(S newReserve)
 	while (newReserve > cap)
 		cap = GrowCapacity(cap);
 
-	return Reallocate(cap, &Array::ReallocateInternal);
+	return Reallocate(cap);
 }
 
 template< typename T, typename S, typename A >
@@ -178,7 +178,7 @@ Array<T,S,A> &Array<T,S,A>::Clear()
 template< typename T, typename S, typename A >
 Array<T,S,A> &Array<T,S,A>::Shrink()
 {
-	return Reallocate(this->size, &Array::ReallocateInternal);
+	return Reallocate(this->size);
 }
 
 template< typename T, typename S, typename A >
@@ -214,7 +214,7 @@ void Array<T,S,A>::ReallocateInternal(T *newData, S newSize)
 }
 
 template< typename T, typename S, typename A >
-Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve, void (Array::*p)(T *, S))
+Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve)
 {
 // FIXME: I was unable to fix this (or Add) using asserts
 // I don't like this hack at all, but at the moment it's the best I've got
@@ -244,7 +244,7 @@ Array<T,S,A> &Array<T,S,A>::Reallocate(S newReserve, void (Array::*p)(T *, S))
 			newSize = 0;		// keep SA happy
 		}
 
-		(this->*p)(newData, newSize);
+		ReallocateInternal(newData, newSize);
 	}
 	else
 		LETHE_ASSERT(newSize == this->size);
