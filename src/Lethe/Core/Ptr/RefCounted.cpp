@@ -6,8 +6,6 @@ namespace lethe
 
 void LETHE_NOINLINE RefCounted::ReleaseAfterStrongZero() const
 {
-	Finalize();
-
 	auto cdel = GetCustomDeleter();
 
 	// postponing delete

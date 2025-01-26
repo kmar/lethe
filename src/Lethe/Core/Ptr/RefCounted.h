@@ -113,9 +113,6 @@ public:
 		return Atomic::Load(self->strongRefCount) != 0;
 	}
 
-	// note: Finalize callback NOT called when object is on stack => only called for dynamically allocated objects!
-	inline virtual void Finalize() const {}
-
 protected:
 	void ResetRefCounters()
 	{
