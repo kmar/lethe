@@ -195,7 +195,7 @@ void Array<T,S,A>::ReallocateInternal(T *newData, S newSize)
 
 	if (this->data)
 	{
-		if (MemCopyTraits<T>::VALUE)
+		if constexpr (MemCopyTraits<T>::VALUE)
 		{
 			if (newSize > 0)
 				MemCpy(newData, this->data, (size_t)newSize*sizeof(T));
