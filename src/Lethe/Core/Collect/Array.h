@@ -285,8 +285,8 @@ protected:
 	};
 
 	// force reserve reallocation
-	LETHE_NOINLINE Array &Reallocate(S newReserve);
-	LETHE_NOINLINE void ReallocateInternal(T *newData, S newSize);
+	LETHE_NOINLINE Array &Reallocate(S newReserve, void (*func)(Array *self, T *newData, S newSize));
+	LETHE_NOINLINE static void ReallocateInternal(Array *self, T *newData, S newSize);
 
 	static inline S GrowCapacity(S cap)
 	{
