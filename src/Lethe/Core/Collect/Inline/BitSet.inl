@@ -355,7 +355,7 @@ BitSetBase<T,S,A> &BitSetBase<T,S,A>::ClearRange(S from, S to)
 	wto *= BIT_DIV;
 
 	for (S i=wto; i<to; i++)
-		SetBit(i);
+		ClearBit(i);
 
 	return *this;
 }
