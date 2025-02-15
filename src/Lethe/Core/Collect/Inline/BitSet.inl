@@ -236,52 +236,31 @@ size_t BitSetBase<T,S,A>::GetMemUsage() const
 }
 
 // range
-// FIXME/TODO: simplify, merge common logic
 template< typename T, typename S, typename A >
 bool BitSetBase<T,S,A>::TestRange(S from, S to) const
 {
 	if (LETHE_UNLIKELY(from >= to))
-		return 0;
+		return false;
 
 	// fast range check
+	S wfroml = from / BIT_DIV;
 	S wfrom = (from + BIT_MASK)/BIT_DIV;
 	S wto = to/BIT_DIV;
 
-	if (wfrom >= wto)
-	{
-		for (S i=from; i<to; i++)
-		{
-			if (TestBit(i))
-				return 1;
-		}
+	auto fromMaskUp = ~(((T)1 << (from & BIT_MASK))-1);
+	auto toMaskDown = ((T)1 << (to & BIT_MASK))-1;
 
-		return 0;
-	}
+	if (wfroml == wto)
+		return (data[wfroml] & (fromMaskUp & toMaskDown)) != 0;
 
 	for (S i=wfrom; i<wto; i++)
-	{
 		if (data[i])
-			return 1;
-	}
+			return true;
 
-	// handle the rest (slow path; could be better actually using masking...)
-	wfrom *= BIT_DIV;
+	if (wfroml != wfrom && (data[wfroml] & fromMaskUp))
+		return true;
 
-	for (S i=from; i<wfrom; i++)
-	{
-		if (TestBit(i))
-			return 1;
-	}
-
-	wto *= BIT_DIV;
-
-	for (S i=wto; i<to; i++)
-	{
-		if (TestBit(i))
-			return 1;
-	}
-
-	return 0;
+	return data[wto] & toMaskDown;
 }
 
 template< typename T, typename S, typename A >
@@ -291,30 +270,26 @@ BitSetBase<T,S,A> &BitSetBase<T,S,A>::SetRange(S from, S to)
 		return *this;
 
 	// fast range check
+	S wfroml = from / BIT_DIV;
 	S wfrom = (from + BIT_MASK)/BIT_DIV;
 	S wto = to/BIT_DIV;
 
-	if (wfrom >= wto)
-	{
-		for (S i=from; i<to; i++)
-			SetBit(i);
+	auto fromMaskUp = ~(((T)1 << (from & BIT_MASK))-1);
+	auto toMaskDown = ((T)1 << (to & BIT_MASK))-1;
 
+	if (wfroml == wto)
+	{
+		data[wfroml] |= fromMaskUp & toMaskDown;
 		return *this;
 	}
 
 	for (S i=wfrom; i<wto; i++)
 		data[i] = ~(T)0;
 
-	// handle the rest (slow path; could be better actually using masking...)
-	wfrom *= BIT_DIV;
+	if (wfroml != wfrom)
+		data[wfroml] |= fromMaskUp;
 
-	for (S i=from; i<wfrom; i++)
-		SetBit(i);
-
-	wto *= BIT_DIV;
-
-	for (S i=wto; i<to; i++)
-		SetBit(i);
+	data[wto] |= toMaskDown;
 
 	return *this;
 }
@@ -332,30 +307,26 @@ BitSetBase<T,S,A> &BitSetBase<T,S,A>::ClearRange(S from, S to)
 		return *this;
 
 	// fast range check
+	S wfroml = from / BIT_DIV;
 	S wfrom = (from + BIT_MASK)/BIT_DIV;
 	S wto = to/BIT_DIV;
 
-	if (wfrom >= wto)
-	{
-		for (S i=from; i<to; i++)
-			ClearBit(i);
+	auto fromMaskUp = ~(((T)1 << (from & BIT_MASK))-1);
+	auto toMaskDown = ((T)1 << (to & BIT_MASK))-1;
 
+	if (wfroml == wto)
+	{
+		data[wfroml] &= ~(fromMaskUp & toMaskDown);
 		return *this;
 	}
 
 	for (S i=wfrom; i<wto; i++)
-		data[i] = (T)0;
+		data[i] = 0;
 
-	// handle the rest (slow path; could be better actually using masking...)
-	wfrom *= BIT_DIV;
+	if (wfroml != wfrom)
+		data[wfroml] &= ~fromMaskUp;
 
-	for (S i=from; i<wfrom; i++)
-		ClearBit(i);
-
-	wto *= BIT_DIV;
-
-	for (S i=wto; i<to; i++)
-		ClearBit(i);
+	data[wto] &= ~toMaskDown;
 
 	return *this;
 }
@@ -367,30 +338,26 @@ BitSetBase<T,S,A> &BitSetBase<T,S,A>::FlipRange(S from, S to)
 		return *this;
 
 	// fast range check
+	S wfroml = from / BIT_DIV;
 	S wfrom = (from + BIT_MASK)/BIT_DIV;
 	S wto = to/BIT_DIV;
 
-	if (wfrom >= wto)
-	{
-		for (S i=from; i<to; i++)
-			FlipBit(i);
+	auto fromMaskUp = ~(((T)1 << (from & BIT_MASK))-1);
+	auto toMaskDown = ((T)1 << (to & BIT_MASK))-1;
 
+	if (wfroml == wto)
+	{
+		data[wfroml] ^= fromMaskUp & toMaskDown;
 		return *this;
 	}
 
 	for (S i=wfrom; i<wto; i++)
 		data[i] ^= ~(T)0;
 
-	// handle the rest (slow path; could be better actually using masking...)
-	wfrom *= BIT_DIV;
+	if (wfroml != wfrom)
+		data[wfroml] ^= fromMaskUp;
 
-	for (S i=from; i<wfrom; i++)
-		FlipBit(i);
-
-	wto *= BIT_DIV;
-
-	for (S i=wto; i<to; i++)
-		FlipBit(i);
+	data[wto] ^= toMaskDown;
 
 	return *this;
 }
