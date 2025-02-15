@@ -168,27 +168,41 @@ void Mutex::Unlock()
 
 // RWMutex
 
+bool RWMutex::TryLockRead()
+{
+	auto tmp = Atomic::Load(data);
+
+	// if write locked or pending or if we'd overflow, wait
+	if ((tmp & (LOCKED_EXCLUSIVE | WANT_EXCLUSIVE)) || !(~tmp & COUNTER_MASK))
+		return false;
+
+	return Atomic::CompareAndSwap(data, tmp, tmp+1);
+}
+
 void RWMutex::LockRead()
 {
 	for (;;)
 	{
-		auto tmp = Atomic::Load(data);
-
-		// if write locked or pending or if we'd overflow, wait
-		if ((tmp & (LOCKED_EXCLUSIVE | WANT_EXCLUSIVE)) || !(~tmp & COUNTER_MASK))
-		{
-			Atomic::Pause();
-			continue;
-		}
-
-		if (Atomic::CompareAndSwap(data, tmp, tmp+1))
+		if (TryLockRead())
 			break;
+
+		Atomic::Pause();
 	}
 }
 
 void RWMutex::UnlockRead()
 {
 	Atomic::Decrement(data);
+}
+
+bool RWMutex::TryLockWrite()
+{
+	auto tmp = Atomic::Load(data);
+
+	if ((tmp & (LOCKED_EXCLUSIVE | COUNTER_MASK)))
+		return false;
+
+	return Atomic::CompareAndSwap(data, tmp, (tmp | LOCKED_EXCLUSIVE) & ~WANT_EXCLUSIVE);
 }
 
 void RWMutex::LockWrite()
@@ -198,14 +212,9 @@ void RWMutex::LockWrite()
 		// attempt to let readers know a prority write lock is desired
 		// we don't reuse the result of atomic or here or it would degrade to a cas (msc)
 		Atomic::Or(data, WANT_EXCLUSIVE);
-		auto tmp = Atomic::Load(data);
 
-		if (!(tmp & (LOCKED_EXCLUSIVE | COUNTER_MASK)))
-		{
-			// try cas, break if done;
-			if (Atomic::CompareAndSwap(data, tmp, (tmp | LOCKED_EXCLUSIVE) & ~WANT_EXCLUSIVE))
-				break;
-		}
+		if (TryLockWrite())
+			break;
 
 		Atomic::Pause();
 	}

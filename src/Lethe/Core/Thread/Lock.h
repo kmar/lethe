@@ -92,9 +92,11 @@ public:
 class LETHE_API RWMutex : NoCopy
 {
 public:
+	bool TryLockRead();
 	void LockRead();
 	void UnlockRead();
 
+	bool TryLockWrite();
 	void LockWrite();
 	void UnlockWrite();
 
