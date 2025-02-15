@@ -13,7 +13,7 @@ struct Bits
 	template< typename T > static inline T GetLowMask(Byte bits)
 	{
 		LETHE_ASSERT(bits <= 8*sizeof(T));
-		return ((T)1 << bits)-1;
+		return (bits >= 8*sizeof(T)) ? ~(T)0 : ((T)1 << bits)-1;
 	}
 
 	// generic bit reversal
