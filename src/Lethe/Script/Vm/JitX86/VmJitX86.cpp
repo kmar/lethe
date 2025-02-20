@@ -875,7 +875,12 @@ void VmJitX86::MulAccum(const RegExpr &nreg, Int scl, bool isTemp, bool isPtr)
 	if (isPtr)
 		targ = targ.ToRegPtr();
 
-	if (IsPowerOfTwo(scl))
+	if (!scl)
+	{
+		// must handle zero explicitly -> shl would miscompile
+		Xor(targ, targ);
+	}
+	else if (IsPowerOfTwo(scl))
 	{
 		// shl eax,const
 		Shl(targ, Log2Int(scl));
