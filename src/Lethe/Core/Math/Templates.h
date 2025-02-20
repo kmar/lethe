@@ -91,8 +91,10 @@ template< typename T > struct AlignOf
 };
 
 // returns true if val is power of two
+// note: only works with non-negative integers
 template< typename T > static inline bool IsPowerOfTwo(const T &val)
 {
+	LETHE_ASSERT(val >= 0);
 	return (val & (val-1)) == 0;
 }
 

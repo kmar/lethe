@@ -880,7 +880,7 @@ void VmJitX86::MulAccum(const RegExpr &nreg, Int scl, bool isTemp, bool isPtr)
 		// must handle zero explicitly -> shl would miscompile
 		Xor(targ, targ);
 	}
-	else if (IsPowerOfTwo(scl))
+	else if (scl > 0 && IsPowerOfTwo(scl))
 	{
 		// shl eax,const
 		Shl(targ, Log2Int(scl));
