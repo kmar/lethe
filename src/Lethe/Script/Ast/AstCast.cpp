@@ -54,6 +54,8 @@ bool AstCast::CodeGen(CompiledProgram &p)
 	if (nodes.GetSize() != 2)
 		return p.Error(this, "invalid cast (parser)");
 
+	auto mark = p.ExprStackMark();
+
 	LETHE_RET_FALSE(nodes[1]->CodeGen(p));
 
 	if (p.exprStack.IsEmpty())
@@ -67,6 +69,14 @@ bool AstCast::CodeGen(CompiledProgram &p)
 
 	// avoid leaks in cast ... new/call
 	FixPointerQualifiers(p, src, nodes[1]);
+
+	// we're allowing void casts now
+	if (dst.GetTypeEnum() == DT_NONE)
+	{
+		// void cast to clean up
+		p.ExprStackCleanupTo(mark);
+		return true;
+	}
 
 	LETHE_RET_FALSE(p.EmitConv(this, src, dst, false));
 
