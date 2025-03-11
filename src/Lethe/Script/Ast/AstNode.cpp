@@ -574,6 +574,31 @@ bool AstNode::IsConstant() const
 	return type >= AST_CONST_BOOL && type <= AST_CONST_STRING;
 }
 
+bool AstNode::HasSideEffects() const
+{
+	if (IsConstant())
+		return false;
+
+	if (!nodes.IsEmpty())
+		return true;
+
+	if (type != AST_IDENT || !target)
+		return true;
+
+	switch(target->type)
+	{
+	case AST_ARG:
+		// arg load never has a side effect
+		return false;
+	case AST_VAR_DECL:
+		// no side effects unless virtual prop
+		if (!(target->qualifiers & AST_Q_PROPERTY))
+			return false;
+	default:
+		return true;
+	}
+}
+
 Int AstNode::ToBoolConstant(const CompiledProgram &)
 {
 	return -1;

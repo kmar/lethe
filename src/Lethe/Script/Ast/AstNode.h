@@ -415,6 +415,9 @@ public:
 	// returns 1 if AST node is a constant (=literal)
 	bool IsConstant() const;
 
+	// returns true if node potentially has side effects
+	bool HasSideEffects() const;
+
 	// used to optimize if/while/...
 	// 0  = evaluates to false
 	// 1  = evalutes to true

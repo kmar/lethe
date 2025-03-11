@@ -54,26 +54,11 @@ bool AstCast::CodeGen(CompiledProgram &p)
 	if (nodes.GetSize() != 2)
 		return p.Error(this, "invalid cast (parser)");
 
-	auto dst = GetTypeDesc(p);
-	bool isVoidCast = dst.GetTypeEnum() == DT_NONE;
+	bool isVoidCast = nodes[0]->type == AST_TYPE_VOID;
 
 	// is it a simple cast without side effects?
-	if (isVoidCast && nodes[1]->type == AST_IDENT && nodes[1]->target)
-	{
-		auto *tnode = nodes[1]->target;
-
-		switch(tnode->type)
-		{
-		case AST_ARG:
-			// if so then skip generating any code
-			return true;
-		case AST_VAR_DECL:
-			// make sure it's not a virtual prop
-			if (!(tnode->qualifiers & AST_Q_PROPERTY))
-				return true;
-		default:;
-		}
-	}
+	if (isVoidCast && !nodes[1]->HasSideEffects())
+		return true;
 
 	auto mark = p.ExprStackMark();
 
@@ -82,10 +67,12 @@ bool AstCast::CodeGen(CompiledProgram &p)
 	if (!isVoidCast && p.exprStack.IsEmpty())
 		return p.Error(this, "cast expression must return a value");
 
-	auto src = nodes[1]->GetTypeDesc(p);
+	auto dst = GetTypeDesc(p);
 
 	if (dst.IsArray() && dst.GetTypeEnum() != DT_ARRAY_REF)
 		return p.Error(this, "cannot cast to array type");
+
+	auto src = nodes[1]->GetTypeDesc(p);
 
 	// avoid leaks in cast ... new/call
 	FixPointerQualifiers(p, src, nodes[1]);
@@ -100,7 +87,7 @@ bool AstCast::CodeGen(CompiledProgram &p)
 
 	LETHE_RET_FALSE(p.EmitConv(this, src, dst, false));
 
-	// TODO: this is suboptiomal and could be peephole optimized if last opcode is load
+	// TODO: this is suboptimal and could be peephole optimized if last opcode is load
 	if (src.GetTypeEnum() != dst.GetTypeEnum())
 	{
 		switch(dst.GetTypeEnum())
