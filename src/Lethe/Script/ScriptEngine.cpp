@@ -191,6 +191,9 @@ nodiscard native string func_name_from_delegate(void delegate() dg);
 nodiscard native static bool class_name_is(name test, name n);
 nodiscard native static bool class_name_is_anyof(name test, const name[] n);
 
+// mark args/vars as unused to avoid compiler warnings
+native __intrinsic void unused(...);
+
 namespace __int
 {
 	nodiscard inline noinit int abs(int x) {return x < 0 ? -x : x;}

@@ -713,6 +713,22 @@ bool AstCall::CodeGenIntrinsic(CompiledProgram &p, AstNode *fdef)
 		return true;
 	}
 
+	if (name == "unused")
+	{
+		// here we simply "voidcast" everything
+		for (Int i=1; i<nodes.GetSize(); i++)
+		{
+			if (nodes[i]->HasSideEffects())
+			{
+				auto mark = p.ExprStackMark();
+				LETHE_RET_FALSE(nodes[i]->CodeGen(p));
+				p.ExprStackCleanupTo(mark);
+			}
+		}
+
+		return true;
+	}
+
 	return p.Error(fdef, String::Printf("intrinsic function not found: %s", name.Ansi()));
 }
 
