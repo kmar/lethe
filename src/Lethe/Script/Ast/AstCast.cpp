@@ -54,15 +54,35 @@ bool AstCast::CodeGen(CompiledProgram &p)
 	if (nodes.GetSize() != 2)
 		return p.Error(this, "invalid cast (parser)");
 
+	auto dst = GetTypeDesc(p);
+	bool isVoidCast = dst.GetTypeEnum() == DT_NONE;
+
+	// is it a simple cast without side effects?
+	if (isVoidCast && nodes[1]->type == AST_IDENT && nodes[1]->target)
+	{
+		auto *tnode = nodes[1]->target;
+
+		switch(tnode->type)
+		{
+		case AST_ARG:
+			// if so then skip generating any code
+			return true;
+		case AST_VAR_DECL:
+			// make sure it's not a virtual prop
+			if (!(tnode->qualifiers & AST_Q_PROPERTY))
+				return true;
+		default:;
+		}
+	}
+
 	auto mark = p.ExprStackMark();
 
 	LETHE_RET_FALSE(nodes[1]->CodeGen(p));
 
-	if (p.exprStack.IsEmpty())
+	if (!isVoidCast && p.exprStack.IsEmpty())
 		return p.Error(this, "cast expression must return a value");
 
 	auto src = nodes[1]->GetTypeDesc(p);
-	const QDataType &dst = GetTypeDesc(p);
 
 	if (dst.IsArray() && dst.GetTypeEnum() != DT_ARRAY_REF)
 		return p.Error(this, "cannot cast to array type");
@@ -71,7 +91,7 @@ bool AstCast::CodeGen(CompiledProgram &p)
 	FixPointerQualifiers(p, src, nodes[1]);
 
 	// we're allowing void casts now
-	if (dst.GetTypeEnum() == DT_NONE)
+	if (isVoidCast)
 	{
 		// void cast to clean up
 		p.ExprStackCleanupTo(mark);
