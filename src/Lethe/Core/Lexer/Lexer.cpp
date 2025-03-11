@@ -92,6 +92,7 @@ const Lexer::LexerKeyword Lexer::KEYWORDS_LETHE[] =
 	{"statebreak", TOK_KEY_STATEBREAK},
 	{"nontrivial", TOK_KEY_NONTRIVIAL},
 	{"nodiscard", TOK_KEY_NODISCARD},
+	{"maybe_unused", TOK_KEY_MAYBE_UNUSED},
 	{"macro", TOK_KEY_MACRO},
 	{"endmacro", TOK_KEY_ENDMACRO},
 	{"endif", TOK_KEY_ENDIF},

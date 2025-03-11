@@ -200,8 +200,8 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 	{
 		// local
 
-		if (nodes[0]->type == AST_IDENT && !(flags & AST_F_REFERENCED) && !(varType->qualifiers & AST_Q_CONST)
-				&& !(tdesc.qualifiers & (AST_Q_CTOR | AST_Q_DTOR)))
+		if (nodes[0]->type == AST_IDENT && !(flags & AST_F_REFERENCED) && !(varType->qualifiers & AST_Q_MAYBE_UNUSED)
+				&& !(varType->qualifiers & AST_Q_CONST) && !(tdesc.qualifiers & (AST_Q_CTOR | AST_Q_DTOR)))
 		{
 			if (!tdesc.IsSmartPointer() || nodes.GetSize() <= 1)
 			{
@@ -337,7 +337,8 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 	{
 		scopeRef->blockThis += isStatic;
 
-		if (nodes[0]->type == AST_IDENT && !(flags & AST_F_REFERENCED) && !(varType->qualifiers & AST_Q_CONST))
+		if (nodes[0]->type == AST_IDENT && !(flags & AST_F_REFERENCED) && !(varType->qualifiers & AST_Q_MAYBE_UNUSED)
+			&& !(varType->qualifiers & AST_Q_CONST))
 		{
 			p.Warning(this, String::Printf("unreferenced global variable: %s",
 										   AstStaticCast<const AstText *>(nodes[0])->text.Ansi()), WARN_UNREFERENCED);

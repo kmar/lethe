@@ -22,7 +22,7 @@ AstLabel::AstLabel(const String &ntext, const TokenLocation &nloc)
 
 bool AstLabel::BeginCodegen(CompiledProgram &p)
 {
-	if (!(flags & AST_F_REFERENCED))
+	if (!(flags & AST_F_REFERENCED) && !(qualifiers & AST_Q_MAYBE_UNUSED))
 	{
 		p.Warning(this, String::Printf("unreferenced label `%s'", text.Ansi()));
 		// don't report more

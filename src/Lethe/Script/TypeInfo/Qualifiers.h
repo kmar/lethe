@@ -87,7 +87,9 @@ enum AstQualifier : ULong
 	AST_Q_OPERATOR = (ULong)1 << 51,
 	// deprecated function
 	AST_Q_DEPRECATED = (ULong)1 << 52,
-	// note: 11 left
+	// maybe unused (prevents compiler warnings)
+	AST_Q_MAYBE_UNUSED = (ULong)1 << 53,
+	// note: 10 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |

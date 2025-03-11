@@ -456,7 +456,7 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 	for (auto *arg : nodes[IDX_ARGS]->nodes)
 	{
 		// ignore ellipsis/referenced args
-		if (arg->type != AST_ARG || (arg->flags & AST_F_REFERENCED))
+		if (arg->type != AST_ARG || (arg->flags & AST_F_REFERENCED) || (arg->nodes[AstArg::IDX_TYPE]->qualifiers & AST_Q_MAYBE_UNUSED))
 			continue;
 
 		auto *node = AstStaticCast<AstArg *>(arg);
