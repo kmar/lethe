@@ -12,6 +12,12 @@ public:
 
 	typedef AstNode Super;
 
+	enum
+	{
+		IDX_TYPE = 0,
+		IDX_NAME = 1
+	};
+
 	AstArg(const TokenLocation &nloc) : Super(AST_ARG, nloc) {}
 
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;

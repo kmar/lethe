@@ -1,5 +1,6 @@
 #include "AstFunc.h"
 #include "AstCall.h"
+#include "AstArg.h"
 #include "../NamedScope.h"
 #include "../AstExpr.h"
 #include <Lethe/Script/Ast/ControlFlow/AstReturn.h>
@@ -446,6 +447,27 @@ bool AstFunc::TypeGen(CompiledProgram &p)
 
 	if ((tdesc.qualifiers & AST_Q_NOINIT) && tdesc.GetTypeEnum() < DT_INT && tdesc.GetTypeEnum() > DT_NONE)
 		p.Warning(this, "noinit ignored for elementary types smaller than int", WARN_NOINIT_SMALL);
+
+	if (IDX_BODY >= nodes.GetSize())
+		return true;
+
+	// warn about unreferenced args
+	// not sure this is great in general, but whatever
+	for (auto *arg : nodes[IDX_ARGS]->nodes)
+	{
+		// ignore ellipsis/referenced args
+		if (arg->type != AST_ARG || (arg->flags & AST_F_REFERENCED))
+			continue;
+
+		auto *node = AstStaticCast<AstArg *>(arg);
+
+		if (node->nodes[IDX_NAME])
+		{
+			auto *aname = arg->nodes[AstArg::IDX_NAME];
+			const auto *text = AstStaticCast<AstText *>(aname)->text.Ansi();
+			p.Warning(aname, String::Printf("unreferenced parameter: %s", text), WARN_UNREFERENCED);
+		}
+	}
 
 	return true;
 }
