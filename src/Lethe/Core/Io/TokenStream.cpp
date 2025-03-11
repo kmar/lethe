@@ -531,7 +531,8 @@ void TokenStream::PushMacroArg(Int start, Int end)
 	Int astart = macroTokens.GetSize();
 
 	for (Int i=start; i<end; i++)
-		macroTokens.Add(macroArgTokens[i]);
+		if (IsValidArrayIndex(i, macroArgTokens.GetSize()))
+			macroTokens.Add(macroArgTokens[i]);
 
 	macroTokenStack.Add(MacroStack{astart, macroTokens.GetSize(), astart, astart, macroArgTokens.GetSize(), String()});
 }
