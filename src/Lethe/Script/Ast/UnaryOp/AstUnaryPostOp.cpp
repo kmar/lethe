@@ -19,7 +19,7 @@ bool AstUnaryPostOp::CodeGen(CompiledProgram &p)
 	}
 
 	LETHE_RET_FALSE(nodes[0]->CodeGenRef(p));
-	const QDataType &dt = nodes[0]->GetTypeDesc(p);
+	const QDataType dt = nodes[0]->GetTypeDesc(p);
 
 	bool pop = ShouldPop();
 

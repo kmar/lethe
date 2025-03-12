@@ -275,8 +275,8 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 
 	LETHE_ASSERT(parent);
 
-	const QDataType &t0 = nodes[0]->GetTypeDesc(p);
-	const QDataType &t1 = nodes[1]->GetTypeDesc(p);
+	const QDataType t0 = nodes[0]->GetTypeDesc(p);
+	const QDataType t1 = nodes[1]->GetTypeDesc(p);
 	DataTypeEnum tdt = DataType::ComposeTypeEnum(t0.GetTypeEnumUnderlying(), t1.GetTypeEnumUnderlying());
 
 	// convert nodes to type

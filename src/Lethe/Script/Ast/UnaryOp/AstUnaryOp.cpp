@@ -23,7 +23,7 @@ bool AstUnaryOp::FoldConst(const CompiledProgram &p)
 		return res;
 
 	LETHE_ASSERT(parent);
-	const QDataType &dtn = nodes[0]->GetTypeDesc(p);
+	const QDataType dtn = nodes[0]->GetTypeDesc(p);
 
 	switch(type)
 	{

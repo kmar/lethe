@@ -428,7 +428,7 @@ bool AstAssignOp::CodeGenCommon(CompiledProgram &p, bool needConv, bool asRef, b
 	}
 
 	auto src = nodes[needConv]->GetTypeDesc(p);
-	const QDataType &dst = nodes[0]->GetTypeDesc(p);
+	const QDataType dst = nodes[0]->GetTypeDesc(p);
 
 	if (needConv)
 		src = p.exprStack.Back();

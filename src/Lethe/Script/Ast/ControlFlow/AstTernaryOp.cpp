@@ -87,8 +87,8 @@ bool AstTernaryOp::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr
 {
 	// [0] = cond, [1] = true_expr, [2] = false_expr
 
-	const QDataType &dt0 = nodes[1]->GetTypeDesc(p);
-	const QDataType &dt1 = nodes[2]->GetTypeDesc(p);
+	const QDataType dt0 = nodes[1]->GetTypeDesc(p);
+	const QDataType dt1 = nodes[2]->GetTypeDesc(p);
 	const DataType &dst = p.Coerce(dt0.GetType(), dt1.GetType());
 	auto dstq = (dt0.qualifiers & AST_Q_CONST) | (dt1.qualifiers & AST_Q_CONST);
 
@@ -158,8 +158,8 @@ bool AstTernaryOp::CodeGen(CompiledProgram &p)
 {
 	// [0] = cond, [1] = true_expr, [2] = false_expr
 
-	const QDataType &dt0 = nodes[1]->GetTypeDesc(p);
-	const QDataType &dt1 = nodes[2]->GetTypeDesc(p);
+	const QDataType dt0 = nodes[1]->GetTypeDesc(p);
+	const QDataType dt1 = nodes[2]->GetTypeDesc(p);
 	const auto dst = GetTypeDesc(p);
 
 	bool voidExpr = dt0.GetTypeEnum() == DT_NONE && dt1.GetTypeEnum() == DT_NONE;
