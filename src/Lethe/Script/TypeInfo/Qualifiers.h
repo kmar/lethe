@@ -89,12 +89,17 @@ enum AstQualifier : ULong
 	AST_Q_DEPRECATED = (ULong)1 << 52,
 	// maybe unused (prevents compiler warnings)
 	AST_Q_MAYBE_UNUSED = (ULong)1 << 53,
-	// note: 10 left
+	// thread-unsafe function
+	AST_Q_THREAD_UNSAFE = (ULong)1 << 54,
+	// thread-call function (cannot call thread-unsafe functions)
+	AST_Q_THREAD_CALL = (ULong)1 << 55,
+	// note: 8 left
 
 	// func decl inherit mask
 	AST_Q_FUNC_MASK	= AST_Q_STATIC | AST_Q_NATIVE | AST_Q_VIRTUAL | AST_Q_FINAL | AST_Q_CTOR | AST_Q_DTOR |
 					  AST_Q_PUBLIC | AST_Q_PROTECTED | AST_Q_PRIVATE | AST_Q_METHOD | AST_Q_OVERRIDE | AST_Q_FORMAT | AST_Q_INLINE |
-					  AST_Q_INTRINSIC | AST_Q_ASSERT | AST_Q_LATENT | AST_Q_STATE | AST_Q_STATEBREAK | AST_Q_DEPRECATED,
+					  AST_Q_INTRINSIC | AST_Q_ASSERT | AST_Q_LATENT | AST_Q_STATE | AST_Q_STATEBREAK | AST_Q_DEPRECATED |
+					  AST_Q_THREAD_UNSAFE | AST_Q_THREAD_CALL,
 	// include mask for type comparison
 	AST_Q_TYPE_CMP_MASK = AST_Q_REFERENCE | AST_Q_CONST
 };

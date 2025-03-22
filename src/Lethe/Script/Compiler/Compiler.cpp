@@ -835,6 +835,8 @@ AstNode *Compiler::ParseProgram(Int depth, const String &nfilename)
 		case TOK_KEY_OVERRIDE:
 		case TOK_KEY_EDITABLE:
 		case TOK_KEY_PLACEABLE:
+		case TOK_KEY_THREAD_UNSAFE:
+		case TOK_KEY_THREAD_CALL:
 			// qualifiers...
 			qualifiers |= ParseQualifiers();
 			// fall through

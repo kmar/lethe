@@ -128,6 +128,14 @@ ULong Compiler::ParseQualifiers(bool ref)
 			res |= AST_Q_PLACEABLE;
 			break;
 
+		case TOK_KEY_THREAD_UNSAFE:
+			res |= AST_Q_THREAD_UNSAFE;
+			break;
+
+		case TOK_KEY_THREAD_CALL:
+			res |= AST_Q_THREAD_CALL;
+			break;
+
 		case TOK_AND:
 			if (ref)
 				res |= AST_Q_REFERENCE;
@@ -602,7 +610,7 @@ AstNode *Compiler::ParseTypeWithQualifiers(Int depth, ULong nqualifiers, bool in
 		nres = NewAstNode<AstTypeDelegate>(res->location);
 
 	// copy __format to func ptrs as well
-	nres->qualifiers = res->qualifiers & (AST_Q_FORMAT);
+	nres->qualifiers = res->qualifiers & (AST_Q_FORMAT | AST_Q_THREAD_UNSAFE);
 
 	nres->Add(res.Detach());
 	nres->Add(args.Detach());

@@ -1690,6 +1690,10 @@ bool QDataType::CanAssign(const QDataType &o, bool allowPointers, bool strictStr
 	if (o.GetTypeEnum() == DT_NULL)
 		return true;
 
+	// if other is thread unsafe, so must be funcptr/delegate
+	if (o.qualifiers & AST_Q_THREAD_UNSAFE)
+		LETHE_RET_FALSE(qualifiers & AST_Q_THREAD_UNSAFE);
+
 	if (dte == DT_FUNC_PTR)
 	{
 		LETHE_RET_FALSE(o.GetTypeEnum() == dte);

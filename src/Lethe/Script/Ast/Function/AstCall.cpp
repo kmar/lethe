@@ -491,6 +491,11 @@ bool AstCall::TypeGen(CompiledProgram &p)
 		}
 	}
 
+	// propagate thread unsafe qualifier
+	if (fntarg && (fntarg->qualifiers & AST_Q_THREAD_UNSAFE))
+		if (auto *fnode = FindEnclosingFunction())
+			fnode->qualifiers |= AST_Q_THREAD_UNSAFE;
+
 	return Super::TypeGen(p);
 }
 
@@ -1098,6 +1103,14 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 			if (!fdef)
 				return p.Error(this, "function type not found");
 		}
+	}
+
+	if (fdef->qualifiers & AST_Q_THREAD_UNSAFE)
+	{
+		// validate unsafe call
+		if (auto *fnode = FindEnclosingFunction())
+			if (fnode && (fnode->qualifiers & AST_Q_THREAD_CALL))
+				return p.Error(this, String::Printf("attempting to call thread-unsafe function `%s'", fname.Ansi()));
 	}
 
 	AstFuncBase *fn = AstStaticCast<AstFuncBase *>(fdef);

@@ -156,9 +156,8 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 
 		if (mnode)
 		{
-			// copy state for state method
-			if (mnode->qualifiers & AST_Q_STATE)
-				n->qualifiers |= AST_Q_STATE;
+			// copy state for state method and thread qualifiers
+			n->qualifiers |= mnode->qualifiers & (AST_Q_STATE | AST_Q_THREAD_CALL | AST_Q_THREAD_UNSAFE);
 
 			// examine qualifiers
 			if (mnode->qualifiers & AST_Q_FINAL)
