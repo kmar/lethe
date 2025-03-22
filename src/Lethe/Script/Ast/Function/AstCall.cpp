@@ -1021,6 +1021,7 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	bool resSlice = false;
 	bool firstArgElem = false;
 	bool secondArgElem = false;
+	bool constNativePropMethod = false;
 
 	if (fdef && fdef->type == AST_NPROP_METHOD)
 	{
@@ -1031,7 +1032,8 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		resElem = (fdef->flags & AST_F_RES_ELEM) != 0;
 		resSlice = (fdef->flags & AST_F_RES_SLICE) != 0;
 
-		Int constFlags = fdef->qualifiers & AST_Q_CONST;
+		auto constFlags = fdef->qualifiers & AST_Q_CONST;
+		constNativePropMethod = constFlags != 0;
 		// got native property...
 		auto fnameNode = AstStaticCast<AstText *>(fdef);
 		const auto &fnameText = fnameNode->text;
@@ -1308,6 +1310,10 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 			auto etdesc = nodes[0]->nodes[0]->GetTypeDesc(p);
 			LETHE_ASSERT(etdesc.IsArray());
+
+			if (etdesc.IsConst() && !constNativePropMethod)
+				return p.Error(nodes[0], "cannot modify a constant");
+
 			tdesc = etdesc.GetType().elemType;
 
 			// this is necessary because we pass smart ptrs without refcounting!
