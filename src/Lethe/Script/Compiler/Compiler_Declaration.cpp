@@ -402,6 +402,40 @@ bool Compiler::ValidateVirtualProp(const AstNode *pfun, bool isGetter)
 AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &nname, Int depth,
 								bool refFirstInit, bool initOnly)
 {
+	auto *res = ParseVarDeclInternal(ntype, nname, depth, refFirstInit, initOnly);
+
+	if (!res)
+		return res;
+
+	auto *vlist = AstStaticCast<AstVarDeclList *>(res);
+
+	if (!vlist->attributes)
+		return res;
+
+	bool isReadOnly = false;
+
+	for (auto &&it : vlist->attributes->tokens)
+	{
+		if (it.type == TOK_IDENT && StringRef(it.text) == "readonly")
+		{
+			isReadOnly = true;
+			break;
+		}
+	}
+
+	if (!isReadOnly)
+		return res;
+
+	// got readonly attribute, mark vars as const
+	for (Int i=1; i<vlist->nodes.GetSize(); i++)
+		vlist->nodes[i]->qualifiers |= AST_Q_CONST;
+
+	return res;
+}
+
+AstNode *Compiler::ParseVarDeclInternal(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &nname, Int depth,
+								bool refFirstInit, bool initOnly)
+{
 	LETHE_RET_FALSE(CheckDepth(depth));
 
 	const bool isStateVar = (ntype->qualifiers & AST_Q_STATE) != 0;

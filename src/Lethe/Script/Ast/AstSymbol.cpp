@@ -333,6 +333,10 @@ bool AstSymbol::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 	const NamedScope *lscopeRef = target->scopeRef;
 	QDataType dt = target->GetTypeDesc(p);
 
+	// because of readonly fields
+	if (target->type == AST_VAR_DECL)
+		dt.qualifiers |= target->qualifiers & AST_Q_CONST;
+
 	if (!allowConst && dt.IsConst() && !(qualifiers & AST_Q_CAN_MODIFY_CONSTANT))
 		return p.Error(this, "cannot modify a constant");
 

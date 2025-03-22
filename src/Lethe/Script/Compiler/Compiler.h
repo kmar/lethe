@@ -299,8 +299,11 @@ private:
 						   UniquePtr<AstNode> &nname, Int depth);
 	AstNode *ParseInitializerList(Int depth);
 	AstNode *ParseVarDecl(UniquePtr<AstNode> &ntype,
-						  UniquePtr<AstNode> &nname, Int depth, bool refFirstInit = 0,
-						  bool initOnly = 0);
+						  UniquePtr<AstNode> &nname, Int depth, bool refFirstInit = false,
+						  bool initOnly = false);
+	AstNode *ParseVarDeclInternal(UniquePtr<AstNode> &ntype,
+						  UniquePtr<AstNode> &nname, Int depth, bool refFirstInit,
+						  bool initOnly);
 	AstNode *ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth);
 	// returns refptr to type root (with qualifiers)
 	AstNode *ParseArrayType(UniquePtr<AstNode> &ntype, Int depth);

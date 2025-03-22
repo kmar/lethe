@@ -149,7 +149,14 @@ bool AstDotOp::ResolveNode(const ErrorHandler &e)
 
 QDataType AstDotOp::GetTypeDesc(const CompiledProgram &p) const
 {
-	return nodes[IDX_RIGHT]->GetTypeDesc(p);
+	auto res = nodes[IDX_RIGHT]->GetTypeDesc(p);
+
+	// because of readonly fields
+	for (auto *n : nodes)
+		if (n->target && n->target->type == AST_VAR_DECL)
+			res.qualifiers |= n->target->qualifiers & AST_Q_CONST;
+
+	return res;
 }
 
 bool AstDotOp::CodeGen(CompiledProgram &p)
