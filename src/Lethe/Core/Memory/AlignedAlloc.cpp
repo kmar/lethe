@@ -55,8 +55,9 @@ static void SetNativePtr(void *block, void *ptr)
 }
 #endif
 
-void *FallbackAlignedAlloc::Alloc(size_t size, size_t align)
+void *FallbackAlignedAlloc::Alloc(size_t size, size_t align, size_t groupKey)
 {
+	(void)groupKey;
 #if LETHE_USE_HEAP
 	return Heap::Get().Alloc(size, align);
 #else
@@ -79,8 +80,9 @@ void *FallbackAlignedAlloc::Alloc(size_t size, size_t align)
 #endif
 }
 
-void *FallbackAlignedAlloc::Realloc(void *ptr, size_t newSize, size_t align)
+void *FallbackAlignedAlloc::Realloc(void *ptr, size_t newSize, size_t align, size_t groupKey)
 {
+	(void)groupKey;
 #if LETHE_USE_HEAP
 
 	if (ptr && Heap::Get().SmartRealloc(ptr, newSize, align))
@@ -88,7 +90,7 @@ void *FallbackAlignedAlloc::Realloc(void *ptr, size_t newSize, size_t align)
 
 #endif
 	(void)ptr;
-	return Alloc(newSize, align);
+	return Alloc(newSize, align, groupKey);
 }
 
 void FallbackAlignedAlloc::Free(void *ptr)

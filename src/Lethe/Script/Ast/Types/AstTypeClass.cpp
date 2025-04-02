@@ -219,6 +219,16 @@ bool AstTypeClass::TypeGen(CompiledProgram &p)
 		if (!(it->flags & AST_F_LOCK))
 			LETHE_RET_FALSE(it->TypeGen(p));
 
+	// generate class name group key
+
+	const auto *tmp = typeRef.ref;
+
+	// find non-state base first
+	while (tmp->structQualifiers & AST_Q_STATE)
+		tmp = &tmp->baseType.GetType();
+
+	const_cast<DataType *>(typeRef.ref)->classNameGroupKey = Hash(tmp ? tmp->className : className);
+
 	return true;
 }
 
@@ -521,6 +531,7 @@ bool AstTypeClass::InjectBaseStates(CompiledProgram &p)
 		ntype->baseType = thisType;
 		ntype->name = newName;
 		ntype->className = newClsName;
+		ntype->classNameGroupKey = thisType.GetType().classNameGroupKey;
 
 		if (p.typeHash.FindIndex(newName) >= 0)
 			return p.Error(this, "cannot inherit base state: type already defined");

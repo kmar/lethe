@@ -16,9 +16,9 @@ public:
 	~ObjectHeap();
 
 	// allocate/deallocate/reallocate
-	void *Alloc(size_t size, size_t align = 16);
+	void *Alloc(size_t size, size_t align = 8, UInt groupKey = 0);
 	void Dealloc(void *ptr);
-	void *Realloc(void *ptr, size_t newSize, size_t align = 16);
+	void *Realloc(void *ptr, size_t newSize, size_t align = 8, UInt groupKey = 0);
 
 	// get number of allocated blocks
 	inline size_t GetCount() const

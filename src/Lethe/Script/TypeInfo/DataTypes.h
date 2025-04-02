@@ -288,6 +288,9 @@ public:
 	// find method name for delegate
 	String FindMethodName(const ScriptDelegate &dg, const CompiledProgram &prog) const;
 
+	// for object heap
+	UInt classNameGroupKey;
+
 	// for composite types, bytecode index for ctor/assignment/dtor (and vector counterparts)
 	// note: funAssign for pointers has &dst, src; for everything else &dst, &src
 	// funCmp is special __cmp function for structs so that we can compare in C++ when sorting arrays etc.

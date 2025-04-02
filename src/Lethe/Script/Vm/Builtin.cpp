@@ -364,7 +364,7 @@ Int Opcode_New_Internal(Stack &stk)
 	if (dt)
 	{
 		// FIXME: better
-		auto ptr = ObjectHeap::Get().Alloc(dt->size, dt->align);
+		auto ptr = ObjectHeap::Get().Alloc(dt->size, dt->align, dt->classNameGroupKey);
 		MemSet(ptr, 0, dt->size);
 		::new(ptr) BaseObject;
 		stk.PushPtr(ptr);

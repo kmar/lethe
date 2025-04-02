@@ -12,9 +12,9 @@ namespace lethe
 LETHE_SINGLETON_INSTANCE(ObjectHeap)
 
 // allocate/deallocate
-void *ObjectHeap::Alloc(size_t size, size_t align)
+void *ObjectHeap::Alloc(size_t size, size_t align, UInt groupKey)
 {
-	void *res = ObjectAllocator.CallAlloc(size, align);
+	void *res = ObjectAllocator.CallAlloc(size, align, groupKey);
 	UInt inc = Atomic::Increment(count);
 	(void)inc;
 	LETHE_ASSERT(inc);
@@ -28,10 +28,10 @@ void ObjectHeap::Dealloc(void *ptr)
 	Atomic::Decrement(count);
 }
 
-void *ObjectHeap::Realloc(void *ptr, size_t newSize, size_t align)
+void *ObjectHeap::Realloc(void *ptr, size_t newSize, size_t align, UInt groupKey)
 {
 	LETHE_ASSERT(newSize > 0);
-	return ObjectAllocator.CallRealloc(ptr, newSize, align);
+	return ObjectAllocator.CallRealloc(ptr, newSize, align, groupKey);
 }
 
 ObjectHeap::ObjectHeap() : count(0)
