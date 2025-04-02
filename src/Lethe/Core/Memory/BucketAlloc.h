@@ -45,7 +45,7 @@ public:
 	void Reset();
 
 	static void *ThreadAlloc(BucketAlloc *allocators);
-	static void ThreadFree(void *obj, Int nalign);
+	static void ThreadFree(void *obj);
 
 	static ULong GetUsage();
 
@@ -172,7 +172,7 @@ private: \
 		CustomDeleter_((const obj *)ptr); \
 	} \
 	void CustomDeleter_(const obj *ptr) { \
-		lethe::BucketAlloc::ThreadFree((void *)ptr, (Int)lethe::AlignOf<obj>::align); \
+		lethe::BucketAlloc::ThreadFree((void *)ptr); \
 	} \
 	obj ::CustomDeleterFunc obj ::GetCustomDeleter() const \
 	{ \
@@ -209,7 +209,7 @@ public: \
 		CustomDeleter_((const obj *)ptr); \
 	} \
 	static void CustomDeleter_(const obj *ptr) { \
-		lethe::BucketAlloc::ThreadFree((void *)ptr, (Int)lethe::AlignOf<obj>::align); \
+		lethe::BucketAlloc::ThreadFree((void *)ptr); \
 	} \
 	CustomDeleterFunc GetCustomDeleter() const ovr \
 	{ \

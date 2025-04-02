@@ -30,6 +30,7 @@ void BucketAlloc::Construct(const char *nobjName, IntPtr nelemSize, IntPtr nbuck
 	flags = nflags;
 
 	LETHE_ASSERT(nelemSize > 0 && nbucketSize > 0);
+	LETHE_ASSERT(IsPowerOfTwo(nalign));
 	IntPtr u = sizeof(UIntPtr);
 	elemAlign = Max<IntPtr>(u, nalign);
 
@@ -37,8 +38,9 @@ void BucketAlloc::Construct(const char *nobjName, IntPtr nelemSize, IntPtr nbuck
 	bsize = (Int)(dummy.data - reinterpret_cast<const Byte *>(&dummy));
 
 	dataOfs = Int((bsize + (elemAlign-1))/elemAlign * elemAlign - bsize);
-	hdrSize = Int((sizeof(BucketObject) - sizeof(void *) + (elemAlign-1))/elemAlign * elemAlign);
-	elemSizeHdr = ((hdrSize + nelemSize) + elemAlign-1)/elemAlign * elemAlign;
+	hdrSize = Int(sizeof(BucketObject) - sizeof(void *));
+	dataOfs += Int(elemAlign - hdrSize);
+	elemSizeHdr = ((elemAlign + nelemSize) + elemAlign-1)/elemAlign * elemAlign;
 	freeHead = freeTail = nullptr;
 	bucketHead = bucketTail = nullptr;
 	lastEmptyBucket = nullptr;
@@ -203,13 +205,12 @@ void *BucketAlloc::ThreadAlloc(BucketAlloc *allocators)
 	return allocators[idx].Alloc();
 }
 
-void BucketAlloc::ThreadFree(void *ptr, Int nalign)
+void BucketAlloc::ThreadFree(void *ptr)
 {
 	if (!ptr)
 		return;
 
-	LETHE_ASSERT(IsPowerOfTwo(nalign));
-	auto ohdrSize = Int((sizeof(BucketObject) - sizeof(void *) + ((size_t)nalign-1)) & ~((size_t)nalign-1));
+	auto ohdrSize = sizeof(BucketObject) - sizeof(void *);
 	BucketObject *bobj = reinterpret_cast<BucketObject *>(static_cast<char *>(ptr) - ohdrSize);
 	bobj->bucket->allocator->Free(ptr);
 }
