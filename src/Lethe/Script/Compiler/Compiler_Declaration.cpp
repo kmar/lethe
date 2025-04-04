@@ -404,7 +404,7 @@ AstNode *Compiler::ParseVarDecl(UniquePtr<AstNode> &ntype, UniquePtr<AstNode> &n
 {
 	auto *res = ParseVarDeclInternal(ntype, nname, depth, refFirstInit, initOnly);
 
-	if (!res)
+	if (!res || res->type != AST_VAR_DECL_LIST)
 		return res;
 
 	auto *vlist = AstStaticCast<AstVarDeclList *>(res);
