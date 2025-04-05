@@ -443,10 +443,14 @@ bool AstTypeStruct::TypeGen(CompiledProgram &p)
 		// copy editable qualifier to members
 		mtype.qualifiers |= qualifiers & AST_Q_EDITABLE;
 
-		if (mn->qualifiers & AST_Q_NATIVE)
-			++nativeMembers;
-		else
-			++scriptMembers;
+		// don't count virtual props as member fields
+		if (!(mn->qualifiers & AST_Q_PROPERTY))
+		{
+			if (mn->qualifiers & AST_Q_NATIVE)
+				++nativeMembers;
+			else
+				++scriptMembers;
+		}
 
 		if (nativeMembers && scriptMembers)
 			return p.Error(n, "cannot mix native and non-native members");
