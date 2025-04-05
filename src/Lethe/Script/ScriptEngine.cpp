@@ -628,6 +628,17 @@ void *ScriptEngine::GetClassVtable(Name n) const
 	return program->cpool.data.GetData() + dt->vtblOffset;
 }
 
+bool ScriptEngine::SetUserPtrVtable(Name clsname, const void *userPtr)
+{
+	auto *vtbl = GetClassVtable(clsname);
+	LETHE_RET_FALSE(vtbl);
+
+	auto **tmp = reinterpret_cast<const void **>(vtbl);
+	tmp[-4] = userPtr;
+
+	return true;
+}
+
 ScriptContext &ScriptEngine::GetStockContext()
 {
 	return *stockCtx;
@@ -636,6 +647,7 @@ ScriptContext &ScriptEngine::GetStockContext()
 void ScriptEngine::SetupVtbl(void *clsPtr)
 {
 	auto pcls = static_cast<void **>(clsPtr);
+	pcls[-3] = nullptr;
 	pcls[-2] = this;
 
 	auto lambda = [](const void *inst)

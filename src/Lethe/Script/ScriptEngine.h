@@ -128,6 +128,14 @@ public:
 
 	const Array<String> &GetConstStrings() const;
 
+	// get/set user data relative to script vtable
+	inline const void *GetUserPtrVtable(const void **scriptVtable) const
+	{
+		return scriptVtable[-4];
+	}
+
+	bool SetUserPtrVtable(Name clsname, const void *userPtr);
+
 	void *GetClassVtable(Name n) const;
 
 	// bind native function (fully qualified name)

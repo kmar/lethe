@@ -268,6 +268,8 @@ bool AstTypeClass::VtblGen(CompiledProgram &p)
 
 	if (vtblOffset < 0)
 	{
+		// reserve space for user ptr (vtbl index -4)
+		p.cpool.AllocGlobal(qdtJit);
 		// reserve space for engine refptr (vtbl index -3) and script instance deleter (vtbl index-2)
 		p.cpool.AllocGlobal(qdtJit);
 		p.cpool.AllocGlobal(qdtJit);
@@ -432,6 +434,7 @@ bool AstTypeClass::InjectBaseStates(CompiledProgram &p)
 	// PROBLEM: vtblgen is called multiple times!
 
 	// vtbl:
+	// -4 = user-defined ptr (may be to used to link native RTTI)
 	// -3 = engine ptr
 	// -2 = script instance deleter
 	// -1 = class type ptr
@@ -477,6 +480,8 @@ bool AstTypeClass::InjectBaseStates(CompiledProgram &p)
 
 		if (ntypePtr)
 		{
+			// [-4] = user ptr
+			p.cpool.AllocGlobal(ptrType);
 			// [-3] = engine refptr
 			p.cpool.AllocGlobal(ptrType);
 			// [-2] = deleter
