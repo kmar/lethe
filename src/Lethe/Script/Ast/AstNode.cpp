@@ -594,6 +594,7 @@ bool AstNode::HasSideEffects() const
 		// no side effects unless virtual prop
 		if (!(target->qualifiers & AST_Q_PROPERTY))
 			return false;
+		// fallthrough
 	default:
 		return true;
 	}
