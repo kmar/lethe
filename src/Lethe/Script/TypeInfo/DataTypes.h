@@ -218,6 +218,8 @@ public:
 	Int arrayDims;
 	// type index within program
 	Int typeIndex;
+	// state support, classes only
+	Int currentStateDelegateOffset;
 	// for class: cached class name
 	mutable Name className;
 	// elem type ref for arrays

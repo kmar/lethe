@@ -1195,10 +1195,9 @@ void Opcode_SetStateLabel(Stack &stk)
 	{
 		// the DUMBEST part comes now, we need to find variable to store to
 		const auto *dt = stk.GetProgram().FindClass(clsname);
-		const auto *member = dt->FindMember("current_state_delegate");
 
-		if (member)
-			*(ScriptDelegate *)(static_cast<Byte *>(sd.instancePtr) + member->offset) = sd;
+		if (dt->currentStateDelegateOffset >= 0)
+			*(ScriptDelegate *)(static_cast<Byte *>(sd.instancePtr) + dt->currentStateDelegateOffset) = sd;
 	}
 
 /*	// TODO: check stack level (this will be tricky because there can be random garbage at the start)

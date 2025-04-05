@@ -398,6 +398,13 @@ bool AstTypeClass::CodeGenComposite(CompiledProgram &p)
 		p.fixupStateMap[CompiledProgram::PackNames(typeRef.ref->name, localName)] = cname;
 	}
 
+	// precache current_state_delegate offset, if any
+	if (const auto *member = typeRef.ref->FindMember("current_state_delegate"))
+	{
+		if (member && member->type.GetTypeEnum() == DT_DELEGATE)
+			const_cast<DataType *>(typeRef.ref)->currentStateDelegateOffset = (Int)member->offset;
+	}
+
 	// generate pointer dtors...
 	return ptrTypeRef.ref->GenDtor(p) && weakPtrTypeRef.ref->GenDtor(p);
 }
