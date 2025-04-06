@@ -159,8 +159,8 @@ public:
 	}
 
 	// custom state delegate support
-	ScriptDelegate *GetStateDelegateRef() const {return stateDelegateRef;}
-	void SetStateDelegateRef(ScriptDelegate *nref);
+	inline ScriptDelegate *GetStateDelegateRef() const {return stateDelegateRef;}
+	inline void SetStateDelegateRef(ScriptDelegate *nref) {stateDelegateRef = nref;}
 
 private:
 	friend class Builtin;

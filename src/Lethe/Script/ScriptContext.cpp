@@ -540,9 +540,4 @@ String ScriptContext::GetFunctionSignature(const StringRef &funcName) const
 	return GetEngine().GetFunctionSignature(funcName);
 }
 
-void ScriptContext::SetStateDelegateRef(ScriptDelegate *nref)
-{
-	stateDelegateRef = nref;
-}
-
 }
