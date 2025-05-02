@@ -26,6 +26,7 @@ struct AttributeToken
 
 	AttributeToken() = default;
 	AttributeToken(const AttributeToken &) = default;
+	AttributeToken &operator =(const AttributeToken &) = default;
 	AttributeToken(const Token &tok)
 	{
 		location = tok.location;
