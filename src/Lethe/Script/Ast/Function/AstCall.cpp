@@ -842,13 +842,13 @@ void AstCall::CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attri
 	{
 		const auto &tok = tokens[i];
 
-		if (tok.type != TOK_IDENT || StringRef(tok.text) != "deprecated")
+		if (tok.type != TOK_IDENT || tok.text != "deprecated")
 			continue;
 
 		String suffix;
 
 		if (i+2 < tokens.GetSize() && tokens[i+1].type == TOK_LBR && tokens[i+2].type == TOK_STRING)
-			p.Warning(this, String::Printf("%s", tokens[i+2].text), WARN_DEPRECATED);
+			p.Warning(this, String::Printf("%s", tokens[i+2].text.Ansi()), WARN_DEPRECATED);
 
 		return;
 	}

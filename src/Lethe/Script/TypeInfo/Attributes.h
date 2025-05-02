@@ -11,10 +11,35 @@ namespace lethe
 
 LETHE_API_BEGIN
 
+struct AttributeToken
+{
+	// location
+	TokenLocation location;
+	// token type
+	TokenType type;
+	// token text
+	String text;
+	// token number
+	TokenNumber number;
+	// optional suffixes (bit flags)
+	UInt numberFlags;
+
+	AttributeToken() = default;
+	AttributeToken(const AttributeToken &) = default;
+	AttributeToken(const Token &tok)
+	{
+		location = tok.location;
+		type = tok.type;
+		text = tok.text;
+		number = tok.number;
+		numberFlags = tok.numberFlags;
+	}
+};
+
 struct LETHE_API Attributes : RefCounted
 {
 	// attributes are pre-parsed as lexer tokens
-	Array<Token> tokens;
+	Array<AttributeToken> tokens;
 };
 
 LETHE_API_END

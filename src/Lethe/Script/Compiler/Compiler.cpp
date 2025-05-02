@@ -320,7 +320,12 @@ Attributes *Compiler::ParseAttributes()
 
 		count += t.type == TOK_LARR;
 
-		res->tokens.Add(t);
+		AttributeToken at(t);
+
+		if (!at.text.IsEmpty())
+			at.text = AddStringRef(at.text);
+
+		res->tokens.Add(at);
 	}
 
 	return res.Detach();

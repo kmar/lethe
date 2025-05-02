@@ -35,6 +35,8 @@ struct AutoCompleteLocation : public TokenLocation
 	bool operator !() const {return !IsValid();}
 };
 
+LETHE_API_BEGIN
+
 struct LETHE_API AutoCompleteScope
 {
 	~AutoCompleteScope();
@@ -140,5 +142,7 @@ private:
 
 	const NamedScope *GetTargetScope(const AstNode *nnode) const;
 };
+
+LETHE_API_END
 
 }
