@@ -791,7 +791,7 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 			squeue.PushBack(tmp->parent);
 
 		if (tmp->base)
-			squeue.PushBack(tmp->base);
+			squeue.PushFront(tmp->base);
 
 		for (auto &&it : tmp->members)
 			if (isFunction ? it.key == lastIdent : lastIdent.IsEmpty() || it.key.StartsWith(lastIdent))
