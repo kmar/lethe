@@ -34,8 +34,12 @@ bool AstTypeFuncPtr::GetTemplateTypeText(StringBuilder &sb) const
 	nodes[0]->AppendTypeQualifiers(sb);
 	LETHE_RET_FALSE(nodes[0]->GetTemplateTypeText(sb));
 
-	auto *args = GetArgs()->nodes[0];
 	sb.AppendFormat(type == AST_TYPE_DELEGATE ? " delegate(" : " function(");
+
+	auto *args = GetArgs();
+
+	if (!args->nodes.IsEmpty())
+		args = args->nodes[0];
 
 	for (Int i=0; i<args->nodes.GetSize(); i+=2)
 	{
