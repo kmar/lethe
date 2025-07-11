@@ -650,6 +650,13 @@ Array<AutoCompleteHint> AutoCompleteEngine::GetHints(Int col, Int line, const St
 			if (nscope)
 				nscope = nscope->FindThis(true);
 
+			if (lex.PeekToken(tok) == TOK_DOT)
+			{
+				lex.ConsumeToken();
+				lastToken = TOK_DOT;
+				noparent = true;
+			}
+
 			continue;
 		}
 
