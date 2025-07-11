@@ -15,7 +15,7 @@ bool AstCast::FoldConst(const CompiledProgram &p)
 		return res;
 
 	nodes[1]->qualifiers |= AST_Q_NO_WARNINGS;
-	auto dte = GetTypeDesc(p).GetTypeEnum();
+	auto dte = GetTypeDesc(p).GetTypeEnumUnderlying();
 
 	if (dte == DT_NONE)
 		return res;
