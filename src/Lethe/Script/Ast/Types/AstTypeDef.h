@@ -19,6 +19,8 @@ public:
 	const AstNode *GetTypeNode() const override;
 	AstNode *GetResolveTarget() const override;
 
+	bool GetTemplateTypeText(StringBuilder &sb) const override;
+
 	bool IsElemType() const override;
 
 	bool TypeGenDef(CompiledProgram &p) override;
@@ -29,5 +31,17 @@ public:
 	QDataType GetTypeDesc(const CompiledProgram &p) const override;
 };
 
+// virtual alias for template params
+class LETHE_API AstTypeDefTemplateParam : public AstTypeDef
+{
+public:
+	LETHE_AST_NODE(AstTypeDefTemplateParam)
+
+	typedef AstTypeDef Super;
+
+	AstTypeDefTemplateParam(const TokenLocation &nloc) : Super(nloc) {}
+
+	bool GetTemplateTypeText(StringBuilder &) const override {return false;}
+};
 
 }

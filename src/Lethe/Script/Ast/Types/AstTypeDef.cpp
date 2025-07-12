@@ -65,6 +65,18 @@ AstNode *AstTypeDef::GetResolveTarget() const
 	return res;
 }
 
+bool AstTypeDef::GetTemplateTypeText(StringBuilder &sb) const
+{
+	if (qualifiers & AST_Q_TYPEDEF_LOCK)
+		return false;
+
+	qualifiers |= AST_Q_TYPEDEF_LOCK;
+	auto res = nodes[0]->GetTemplateTypeText(sb);
+	qualifiers &= ~AST_Q_TYPEDEF_LOCK;
+
+	return res;
+}
+
 QDataType AstTypeDef::GetTypeDesc(const CompiledProgram &p) const
 {
 	return nodes[0]->GetTypeDesc(p);

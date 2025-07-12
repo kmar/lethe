@@ -459,6 +459,17 @@ bool DataType::IsIndexableStruct() const
 	return true;
 }
 
+bool DataType::IsEnumFlags() const
+{
+	LETHE_RET_FALSE(attributes);
+
+	for (auto &&it : attributes->tokens)
+		if (it.type == TOK_IDENT && it.text == "flags")
+			return true;
+
+	return false;
+}
+
 void DataType::GenBaseChain() const
 {
 	isa.Clear();
@@ -1894,12 +1905,36 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 		default:;
 		}
 
+		bool found = false;
+
 		for (auto &&m : members)
 		{
 			if (m.offset == val)
 			{
+				found = true;
 				sb += m.name;
 				break;
+			}
+		}
+
+		if (found)
+			break;
+
+		// probably enum flags
+		bool first = true;
+
+		for (auto &&m : members)
+		{
+			if (m.offset & val)
+			{
+				val &= ~m.offset;
+
+				if (!first)
+					sb += "/";
+
+				first = false;
+
+				sb += m.name;
 			}
 		}
 	}

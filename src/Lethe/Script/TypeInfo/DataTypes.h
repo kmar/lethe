@@ -332,6 +332,9 @@ public:
 	// is indexable struct type?
 	bool IsIndexableStruct() const;
 
+	// is enum flags?
+	bool IsEnumFlags() const;
+
 	// has array ref with any non-const element?
 	bool HasArrayRefWithNonConstElem() const;
 

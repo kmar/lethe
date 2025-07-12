@@ -219,12 +219,13 @@ AstNode *AstScopeResOp::ResolveScope(const NamedScope *scope, Int idx, ULong sto
 
 					auto *nextScope = tmp->scopeRef;
 
-					if (tmp->qualifiers & AST_Q_ENUM_CLASS)
+					if (tmp->type == AST_ENUM)
 					{
 						// special handling for enum classes...
-						LETHE_ASSERT(tmp->type == AST_ENUM);
 						auto eidx = tmp->scopeRef->namedScopes.FindIndex(AstStaticCast<AstText *>(tmp->nodes[0])->text);
-						nextScope = tmp->scopeRef->namedScopes.GetValue(eidx);
+
+						if (eidx >= 0)
+							nextScope = tmp->scopeRef->namedScopes.GetValue(eidx);
 					}
 
 					// try to go deeper

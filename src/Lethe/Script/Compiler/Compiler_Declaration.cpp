@@ -1241,7 +1241,6 @@ AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
 	{
 		enumClass = true;
 		ts->ConsumeToken();
-		ntype->qualifiers |= AST_Q_ENUM_CLASS;
 	}
 
 	auto opos = ts->GetPosition();
@@ -1460,6 +1459,7 @@ AstNode *Compiler::ParseQualifiedDecl(ULong qualifiers, Int depth)
 	case TOK_KEY_ENUM:
 	{
 		UniquePtr<AstNode> tmp = NewAstNode<AstTypeEnum>(t.location);
+
 		Swap(AstStaticCast<AstTypeEnum *>(tmp.Get())->attributes, attributes);
 
 		// copy qualifiers
@@ -1644,7 +1644,7 @@ AstNode *Compiler::ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth)
 			AstTypeStruct::TemplateArg arg;
 			arg.name = argname;
 
-			arg.typedefNode = AstStaticCast<AstTypeDef *>(NewAstNode<AstTypeDef>(it->location));
+			arg.typedefNode = AstStaticCast<AstTypeDef *>(NewAstNode<AstTypeDefTemplateParam>(it->location));
 			arg.typedefNode->Add(NewAstNode<AstTypeVoid>(it->location));
 
 			auto *tdefName = NewAstText<AstText>(argname.Ansi(), AST_IDENT,  it->location);

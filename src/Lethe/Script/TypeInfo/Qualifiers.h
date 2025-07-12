@@ -52,8 +52,8 @@ enum AstQualifier : ULong
 	// tagged instantiated templates
 	AST_Q_TEMPLATE_INSTANTIATED = (ULong)1 << 34,
 	AST_Q_TYPEDEF_LOCK = (ULong)1 << 35,
-	// used to mark enum class
-	AST_Q_ENUM_CLASS = (ULong)1 << 36,
+	// unused qualifier (for now, can be reused for something else later)
+	AST_Q_RESERVED = (ULong)1 << 36,
 	// raw pointer
 	AST_Q_RAW = (ULong)1 << 37,
 	// marking end_state deferred statement
