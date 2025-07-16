@@ -461,7 +461,7 @@ bool DataType::IsIndexableStruct() const
 
 bool DataType::IsEnumFlags() const
 {
-	LETHE_RET_FALSE(attributes);
+	LETHE_RET_FALSE(type == DT_ENUM && attributes);
 
 	for (auto &&it : attributes->tokens)
 		if (it.type == TOK_IDENT && it.text == "flags")
@@ -1455,6 +1455,11 @@ bool QDataType::IsMethodPtr() const
 bool QDataType::IsProperty() const
 {
 	return (qualifiers & AST_Q_PROPERTY) != 0;
+}
+
+bool QDataType::IsEnumFlags() const
+{
+	return ref->IsEnumFlags();
 }
 
 const DataType *QDataType::GetEnumType() const

@@ -147,6 +147,8 @@ struct LETHE_API QDataType
 	bool IsMethodPtr() const;
 	// is virtual property?
 	bool IsProperty() const;
+	// is enum flags?
+	bool IsEnumFlags() const;
 
 	// try to get underlying type for enums, returns nullptr if not an enum
 	const DataType *GetEnumType() const;

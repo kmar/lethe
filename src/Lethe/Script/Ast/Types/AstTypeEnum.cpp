@@ -22,6 +22,8 @@ bool AstTypeEnum::BeginCodegen(CompiledProgram &p)
 	dt->size = underlying->size;
 	dt->align = underlying->align;
 
+	dt->attributes = attributes;
+
 	if (!underlying->IsInteger())
 		return p.Error(nodes[IDX_UNDERLYING], "underlying type must be an integer");
 
@@ -80,5 +82,10 @@ bool AstTypeEnum::GetTemplateTypeText(StringBuilder &sb) const
 	return nodes[0]->GetTemplateTypeText(sb);
 }
 
+void AstTypeEnum::CopyTo(AstNode *n) const
+{
+	Super::CopyTo(n);
+	AstStaticCast<AstTypeEnum *>(n)->attributes = attributes;
+}
 
 }

@@ -33,6 +33,8 @@ public:
 	bool GetTemplateTypeText(StringBuilder &sb) const override;
 
 	SharedPtr<Attributes> attributes;
+
+	void CopyTo(AstNode *n) const override;
 };
 
 LETHE_API_END

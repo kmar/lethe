@@ -62,10 +62,14 @@ bool AstUnaryOp::FoldConst(const CompiledProgram &p)
 		return 1;
 
 	case AST_UOP_NOT:
+	{
 		if (dtn.GetTypeEnum() >= DT_FLOAT)
 			return res;
 
-		if (nodes[0]->GetTypeDesc(p).GetTypeEnum() < DT_INT)
+		auto qdt = nodes[0]->GetTypeDesc(p);
+
+		// allow ~ to keep type if enum flags
+		if (qdt.GetTypeEnum() < DT_INT && !qdt.IsEnumFlags())
 			LETHE_RET_FALSE(nodes[0]->ConvertConstTo(DT_INT, p));
 
 		if (dtn.GetTypeEnum() >= DT_LONG)
@@ -76,7 +80,8 @@ bool AstUnaryOp::FoldConst(const CompiledProgram &p)
 		LETHE_VERIFY(parent->ReplaceChild(this, nodes[0]));
 		nodes.Clear();
 		delete this;
-		return 1;
+		return true;
+	}
 
 	case AST_UOP_LNOT:
 		if (!nodes[0]->ConvertConstTo(DT_BOOL, p))

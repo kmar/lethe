@@ -290,7 +290,7 @@ private:
 
 	AstNode *ParseVarDeclOrExpr(Int depth, bool refFirstInit = 0, bool initOnly = 1);
 
-	AstNode *ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth);
+	AstNode *ParseEnumDecl(bool enumFlags, UniquePtr<AstNode> &ntype, Int depth);
 	AstNode *ParseStructDecl(UniquePtr<AstNode> &ntype, Int depth);
 	AstNode *ParseClassDecl(UniquePtr<AstNode> &ntype, Int depth);
 

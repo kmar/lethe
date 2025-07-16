@@ -22,28 +22,28 @@ namespace lethe
 
 AstTypeBool AstBinaryOp::boolType(TokenLocation{0, 0, String()});
 
-static AstNode *AstCreateConstNode(DataTypeEnum dt, const TokenLocation &loc)
+static AstNode *AstCreateConstNode(DataTypeEnum dt, const TokenLocation &loc, const DataType *baseRef)
 {
 	switch(dt)
 	{
 	case DT_BOOL:
-		return new AstConstBool(loc);
+		return new AstConstBool(loc, baseRef);
 
 	case DT_BYTE:
 	case DT_SBYTE:
 	case DT_SHORT:
 	case DT_USHORT:
 	case DT_INT:
-		return new AstConstInt(loc);
+		return new AstConstInt(loc, baseRef);
 
 	case DT_UINT:
-		return new AstConstUInt(loc);
+		return new AstConstUInt(loc, baseRef);
 
 	case DT_LONG:
-		return new AstConstLong(loc);
+		return new AstConstLong(loc, baseRef);
 
 	case DT_ULONG:
-		return new AstConstULong(loc);
+		return new AstConstULong(loc, baseRef);
 
 	case DT_FLOAT:
 		return new AstConstFloat(loc);
@@ -279,6 +279,20 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 	const QDataType t1 = nodes[1]->GetTypeDesc(p);
 	DataTypeEnum tdt = DataType::ComposeTypeEnum(t0.GetTypeEnumUnderlying(), t1.GetTypeEnumUnderlying());
 
+	auto *et0 = t0.GetEnumType();
+	bool force = false;
+
+	if (et0)
+	{
+		auto *et1 = t1.GetEnumType();
+
+		if (et0 == et1 && et0->IsEnumFlags())
+		{
+			// we have same enum flags => allow binary ops with const fold
+			force = true;
+		}
+	}
+
 	// convert nodes to type
 	LETHE_RET_FALSE(nodes[0]->ConvertConstTo(tdt, p));
 	LETHE_RET_FALSE(nodes[1]->ConvertConstTo(tdt, p));
@@ -289,7 +303,7 @@ bool AstBinaryOp::FoldConst(const CompiledProgram &p)
 	if (isCmp)
 		CmpWarn(p, t0, t1, tdt);
 
-	UniquePtr<AstNode> res = AstCreateConstNode(isCmp ? DT_BOOL : tdt, location);
+	UniquePtr<AstNode> res = AstCreateConstNode(isCmp ? DT_BOOL : tdt, location, force ? et0 : nullptr);
 
 	const char *warn = nullptr;
 
@@ -439,6 +453,17 @@ QDataType AstBinaryOp::GetTypeDesc(const CompiledProgram &p) const
 
 		if (op)
 			return op->nodes[AstFunc::IDX_RET]->GetTypeDesc(p);
+	}
+
+	if (auto *et0 = dt0.GetEnumType())
+	{
+		auto *et1 = dt1.GetEnumType();
+
+		if (et0 == et1 && et0->IsEnumFlags())
+		{
+			// if both are enum flags, just keep dt0
+			return dt0;
+		}
 	}
 
 	return QDataType::MakeType(

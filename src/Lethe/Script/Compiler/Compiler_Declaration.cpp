@@ -1228,7 +1228,7 @@ AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)
 	return ParseVarDecl(ntype, name, depth+1);
 }
 
-AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
+AstNode *Compiler::ParseEnumDecl(bool enumFlags, UniquePtr<AstNode> &ntype, Int depth)
 {
 	LETHE_RET_FALSE(CheckDepth(depth));
 	// after enum keyword
@@ -1300,10 +1300,10 @@ AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
 	// expect lblock
 	LETHE_RET_FALSE(ExpectPrev(ts->GetToken().type == TOK_LBLOCK, "expected `{`"));
 
-	ntype->num.ul = 0;
-	bool itemValueKnown = 1;
+	ntype->num.ul = enumFlags ? 1 : 0;
+	bool itemValueKnown = true;
 
-	AstText *lastItem = 0;
+	AstText *lastItem = nullptr;
 
 	for (;;)
 	{
@@ -1348,7 +1348,8 @@ AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
 			AstNode *val = NewAstNode<AstConstULong>(nt.location);
 			val->num.ul = ntype->num.ul;
 			item->Add(val);
-			item->num.ul = ntype->num.ul++;
+			item->num.ul = ntype->num.ul;
+			if (enumFlags) ntype->num.ul <<= 1; else ++ntype->num.ul;
 			item->flags |= AST_F_RESOLVED;
 		}
 		else
@@ -1356,13 +1357,29 @@ AstNode *Compiler::ParseEnumDecl(UniquePtr<AstNode> &ntype, Int depth)
 			// FIXME: better
 			AstText *prevSrc = lastItem;
 			LETHE_RET_FALSE(prevSrc);
-			AstNode *dummyInit = NewAstNode<AstBinaryOp>(AST_OP_ADD, nt.location);
+			AstNode *dummyInit = NewAstNode<AstBinaryOp>(enumFlags ? AST_OP_SHL : AST_OP_ADD, nt.location);
 			AstText *prev = NewAstText<AstSymbol>(prevSrc->text.Ansi(), nt.location);
 			AstNode *incr = NewAstNode<AstConstInt>(nt.location);
+
 			incr->num.i = 1;
 
 			dummyInit->Add(prev);
 			dummyInit->Add(incr);
+
+			if (enumFlags)
+			{
+				// handle zero value
+				// so basically we want (prev << 1) + !prev;
+				auto *dummyInit2 = NewAstNode<AstBinaryOp>(AST_OP_ADD, nt.location);
+				dummyInit2->Add(dummyInit);
+				auto *notNode = NewAstNode<AstUnaryLNot>(nt.location);
+				auto *sym = NewAstText<AstSymbol>(prevSrc->text.Ansi(), nt.location);
+				notNode->Add(sym);
+				dummyInit2->Add(notNode);
+				dummyInit = dummyInit2;
+			}
+
+
 			item->Add(dummyInit);
 		}
 
@@ -1460,12 +1477,26 @@ AstNode *Compiler::ParseQualifiedDecl(ULong qualifiers, Int depth)
 	{
 		UniquePtr<AstNode> tmp = NewAstNode<AstTypeEnum>(t.location);
 
+		bool enumFlags = false;
+
+		if (attributes)
+		{
+			for (auto &&it : attributes->tokens)
+			{
+				if (it.type == TOK_IDENT && it.text == "flags")
+				{
+					enumFlags = true;
+					break;
+				}
+			}
+		}
+
 		Swap(AstStaticCast<AstTypeEnum *>(tmp.Get())->attributes, attributes);
 
 		// copy qualifiers
 		tmp->qualifiers |= qualifiers;
 		ts->ConsumeToken();
-		return ParseEnumDecl(tmp, depth+1);
+		return ParseEnumDecl(enumFlags, tmp, depth+1);
 	}
 
 	default:
