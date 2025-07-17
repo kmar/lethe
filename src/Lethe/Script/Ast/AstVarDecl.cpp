@@ -228,7 +228,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 			if (tdesc.IsReference() && tdesc.GetType() != nodes[1]->GetTypeDesc(p).GetType())
 				return p.Error(this, "incompatible types");
 
-			LETHE_RET_FALSE(nodes[1]->ConvertConstTo(tdesc.GetTypeEnum(), p));
+			LETHE_RET_FALSE(nodes[1]->ConvertConstTo(tdesc.GetTypeEnumUnderlying(), p));
 
 			if (p.GetJitFriendly() && ((tdesc.IsReference() && !tdesc.IsConst()) || tdesc.HasArrayRefWithNonConstElem()))
 			{
@@ -368,7 +368,7 @@ bool AstVarDecl::CodeGen(CompiledProgram &p)
 
 		if (!isInitializerList && nodes.GetSize() > 1)
 		{
-			LETHE_RET_FALSE(nodes[1]->ConvertConstTo(tdesc.GetTypeEnum(), p));
+			LETHE_RET_FALSE(nodes[1]->ConvertConstTo(tdesc.GetTypeEnumUnderlying(), p));
 
 			if (nodes[1]->IsConstant())
 			{
