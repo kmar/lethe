@@ -581,7 +581,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 	}
 
 	p.FlushOpt();
-	p.EmitFunc(String::Printf("$ctor$%s", typeName.Ansi()), 0);
+	p.EmitFunc(String::Printf(".ctor.%s", typeName.Ansi()), 0);
 
 	AstFunc *cctor = AstStaticCast<AstFunc *>(ctorRef);
 
@@ -699,7 +699,7 @@ bool DataType::GenCtor(CompiledProgram &p) const
 		return 1;
 
 	p.FlushOpt();
-	p.EmitFunc(String::Printf("$vctor$%s", typeName.Ansi()), 0);
+	p.EmitFunc(String::Printf(".vctor.%s", typeName.Ansi()), 0);
 
 	funVCtor = p.instructions.GetSize();
 
@@ -816,7 +816,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 	else
 	{
 		p.FlushOpt();
-		p.EmitFunc(String::Printf("$dtor$%s", typeName.Ansi()), 0);
+		p.EmitFunc(String::Printf(".dtor.%s", typeName.Ansi()), 0);
 
 		// for composite types, dtor expects pointer on top of stack
 
@@ -1004,7 +1004,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 			return true;
 
 		p.FlushOpt();
-		p.EmitFunc(String::Printf("$vdtor$%s", typeName.Ansi()), 0);
+		p.EmitFunc(String::Printf(".vdtor.%s", typeName.Ansi()), 0);
 
 		funVDtor = p.instructions.GetSize();
 
@@ -1058,7 +1058,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 	// note: for pointers, src is value, not ptr!
 
 	p.FlushOpt();
-	p.EmitFunc(String::Printf("$copy$%s", typeName.Ansi()), 0);
+	p.EmitFunc(String::Printf(".copy.%s", typeName.Ansi()), 0);
 
 	// this check allows for custom __copy function
 	if (funAssign < 0)
@@ -1209,7 +1209,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 #undef GENDT_FLUSH_COPY
 
 	p.FlushOpt();
-	p.EmitFunc(String::Printf("$vcopy$%s", typeName.Ansi()), 0);
+	p.EmitFunc(String::Printf(".vcopy.%s", typeName.Ansi()), 0);
 
 	funVAssign = p.instructions.GetSize();
 

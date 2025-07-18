@@ -763,7 +763,7 @@ AstNode *Compiler::ParseVarDeclInternal(UniquePtr<AstNode> &ntype, UniquePtr<Ast
 				vd->qualifiers &= ~AST_Q_LOCAL_INT;
 				auto *varname = AstStaticCast<AstText *>(vd->nodes[0]);
 				sb.Clear();
-				sb.Format("%s$%s", varname->text.Ansi(), fscope->name.Ansi());
+				sb.Format("%s.%s", varname->text.Ansi(), fscope->name.Ansi());
 
 				auto newname = AddStringRef(sb.Get());
 
@@ -1199,7 +1199,7 @@ AstNode *Compiler::ParseFuncOrVarDecl(UniquePtr<AstNode> &ntype, Int depth)
 
 		if (currentScope->IsGlobal() && (fn == "__init" || fn == "__exit"))
 		{
-			fn = String::Printf("%s$%d", fn.Ansi(), Atomic::Increment(*pstaticInitCounter));
+			fn = String::Printf("%s.%d", fn.Ansi(), Atomic::Increment(*pstaticInitCounter));
 		}
 
 		UniquePtr<AstNode> fdecl = ParseFuncDecl(ntype, name, depth+1);

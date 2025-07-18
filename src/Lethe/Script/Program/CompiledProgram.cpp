@@ -861,7 +861,7 @@ void CompiledProgram::Finalize()
 	if (!globalDestInstr.IsEmpty())
 	{
 		FlushOpt();
-		EmitFunc("$$global_dtor", 0);
+		EmitFunc("..global_dtor", 0);
 		globalDestIndex = instructions.GetSize();
 
 		Int start = instructions.GetSize();

@@ -902,7 +902,7 @@ bool AstNode::CodeGenGlobalCtor(CompiledProgram &p)
 	if (type == AST_PROGRAM_LIST)
 	{
 		p.globalConstIndex = p.instructions.GetSize();
-		p.EmitFunc("$$global_ctor", 0);
+		p.EmitFunc("..global_ctor", 0);
 	}
 
 	for (Int i=0; i<nodes.GetSize(); i++)

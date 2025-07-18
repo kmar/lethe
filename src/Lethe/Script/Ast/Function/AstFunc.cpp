@@ -578,7 +578,7 @@ bool AstFunc::CodeGen(CompiledProgram &p)
 		else
 		{
 			if (qualifiers & AST_Q_CTOR)
-				p.EmitFunc(fname + "$ctor", this, typeRef.GetName());
+				p.EmitFunc(fname + ".ctor", this, typeRef.GetName());
 			else
 				p.EmitFunc(fname, this, typeRef.GetName());
 		}
@@ -925,7 +925,7 @@ skipNrvo:;
 		p.EndStackFrame();
 
 		// handle static global exit functions
-		if (fname.StartsWith("__exit$"))
+		if (fname.StartsWith("__exit."))
 		{
 			LETHE_RET_FALSE(ValidateStaticInitSignature(p));
 			p.EmitGlobalDestCall(startPC);
@@ -941,7 +941,7 @@ bool AstFunc::CodeGenGlobalCtorStatic(CompiledProgram &p)
 	auto *ftext = AstStaticCast<const AstText *>(nodes[IDX_NAME]);
 	const auto &fname = ftext->text;
 
-	if (fname.StartsWith("__init$"))
+	if (fname.StartsWith("__init."))
 	{
 		LETHE_RET_FALSE(ValidateStaticInitSignature(p));
 		forwardRefs.Add(p.EmitForwardJump(OPC_CALL));
