@@ -142,6 +142,7 @@ void Lexer::InitMode()
 
 	if (mode == LEXM_LETHE || mode == LEXM_LETHE_DOUBLE)
 	{
+		extraIdent = '$';
 		keywords = KEYWORDS_LETHE;
 		keywordCount = (Int)ArraySize(KEYWORDS_LETHE)-1;
 		numSuffix = true;
@@ -173,6 +174,7 @@ Lexer::Lexer(LexerMode nlexm)
 	, keywords(0)
 	, keywordCount(0)
 	, minKeywordLength(0)
+	, extraIdent('_')
 	, numSuffix(false)
 	, numSuffixDouble(false)
 	, disablePeek(false)
@@ -442,7 +444,7 @@ TokenType Lexer::PeekIdent(Int ch, Token &tok)
 		tok.AddTextChar((char)ch);
 		ch = str->GetByte();
 	}
-	while (ch == '_' || (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
+	while (ch == extraIdent || ch == '_' || (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
 
 	str->UngetByte(ch);
 	tok.FinishText();
@@ -1092,6 +1094,11 @@ TokenType Lexer::PeekToken(Token &tok)
 			str->UngetByte(ch);
 			return PeekNum(tok);
 
+		case '$':
+			if (extraIdent != '$')
+				break;
+
+			[[fallthrough]];
 		case '_':
 			return PeekIdent(ch, tok);
 		}

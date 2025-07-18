@@ -96,6 +96,8 @@ private:
 
 	Int minKeywordLength;
 
+	char extraIdent;
+
 	// parse number suffixes?
 	bool numSuffix;
 	// special mode for script where 2.3 is float by default instead of float
