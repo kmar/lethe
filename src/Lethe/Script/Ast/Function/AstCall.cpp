@@ -1172,6 +1172,13 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 
 			bool forceZeroInit = (fn->flags & AST_F_NRVO) != 0 && !(tdesc.qualifiers & AST_Q_NOINIT);
 
+			if (!forceZeroInit && fn->offset < 0)
+			{
+				// FIXME: forcing zero init here because if you call a function that hasn't been generated yet, the NRVO flag is not set
+				// this costs performance but for now I prefer stability - should definitely fix this properly later!
+				forceZeroInit = true;
+			}
+
 			// force zero init on small numbers
 			forceZeroInit = forceZeroInit || tdesc.GetTypeEnum() < DT_INT;
 
