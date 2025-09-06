@@ -453,13 +453,18 @@ bool Compiler::ParseMacro(Int depth, bool conditionalOnly)
 	}
 	else if (nt.type == TOK_KEY_ELSE)
 	{
+		auto elseLoc = nt.location;
+
 		ts->ConsumeToken();
 		ifType = IFT_ELSE;
 
 		if (conditionalStack.IsEmpty())
 			return ExpectPrev(false, "unexpected conditional else");
 
-		if (ts->PeekToken().type == TOK_KEY_IF)
+		const auto &nt2 = ts->PeekToken();
+		// we need to restrict the if to be on the same line as else to avoid parsing problems
+		// it feels a bit hacky but whatever
+		if (nt2.type == TOK_KEY_IF && nt2.location.line == elseLoc.line && nt2.location.file == elseLoc.file)
 		{
 			ts->ConsumeToken();
 			ifType = IFT_ELSEIF;
