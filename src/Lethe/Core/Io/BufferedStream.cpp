@@ -57,7 +57,8 @@ bool BufferedStream::SetStream(Stream &refs)
 	stream = &refs;
 	flags = refs.GetFlags();
 
-	cpos = (flags & SF_SEEKABLE) ? stream->Tell() : -1;
+	// note: we assume cpos is 0 for non-seekable streams instead of -1
+	cpos = (flags & SF_SEEKABLE) ? stream->Tell() : 0;
 
 	return SetBufferSize(buffSize);
 }
