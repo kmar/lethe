@@ -448,6 +448,9 @@ bool CompiledProgram::ReturnScope(bool retOpt)
 {
 	NamedScope *cscope = curScope;
 
+	auto oexprStackOfs = exprStackOfs;
+	LETHE_DEFER(exprStackOfs = oexprStackOfs);
+
 	for (Int i=scopeStack.GetSize()-1; i>=0; i--)
 	{
 		ScopeDesc sd = scopeStack[i];
@@ -481,6 +484,8 @@ bool CompiledProgram::ReturnScope(bool retOpt)
 			// emit_cleanup!
 			cscope->GenDestructors(*this);
 			Emit(OPC_POP + (UInt((cscope->varOfs - vofsBase)/Stack::WORD_SIZE) << 8));
+			// must adjust exprStackOfs temporarily because of defer!
+			exprStackOfs -= cscope->varOfs - vofsBase;
 		}
 
 		if (cscope->type == NSCOPE_FUNCTION)
