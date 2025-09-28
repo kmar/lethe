@@ -323,7 +323,7 @@ native void __da_assign(int aref);
 // push/insert/...
 native void __da_push(int elem);
 native void __da_push_unique(int elem);
-native void __da_insert(int elem, int before);
+native void __da_insert(int before, int elem);
 nodiscard native int __da_find(int elem);
 nodiscard native int __da_lower_bound(int elem);
 nodiscard native int __da_upper_bound(int elem);
