@@ -230,6 +230,18 @@ ScopeGuard<F> MakeScopeGuard(F nfunc) { return ScopeGuard<F>(nfunc); }
 
 #define LETHE_DEFER(x) auto LETHE_CONCAT_MACROS(_defer_, __COUNTER__) = lethe::MakeScopeGuard([&](){x;})
 
+enum CPUTierFlags
+{
+	// (x86) hyperthreading
+	CPU_TIER_HYPERTHREADING = 1 << 0,
+	// x86 SSE 4.1
+	CPU_TIER_SSE4_1 = 1 << 1,
+	// x86 SSE 4.2
+	CPU_TIER_SSE4_2 = 1 << 2,
+	// SSE popcnt
+	CPU_TIER_POPCNT = 1 << 3,
+};
+
 struct LETHE_API Platform
 {
 	// get number of physical processor cores; 0 if unknown
@@ -248,6 +260,9 @@ struct LETHE_API Platform
 
 	static void Init();
 	static void Done();
+
+	// get CPU tier flags
+	static unsigned GetCPUTier();
 
 private:
 	static void AdjustForHyperthreading();

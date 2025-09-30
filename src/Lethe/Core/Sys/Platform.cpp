@@ -30,24 +30,21 @@ typedef BOOL (WINAPI *LPFN_GLPI)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, PDWORD);
 UINT winOldErrorMode;
 #endif
 
-void Platform::AdjustForHyperthreading()
+unsigned Platform::GetCPUTier()
 {
+	unsigned res = 0;
 #if	LETHE_CPU_X86
-	bool hyperThreading = 0;
+	int id[4] = {0, 0, 0, 0};
 #	if LETHE_COMPILER_MSC
-	int id[4] = {0};
 	__cpuid(id, 0);
 	int nids = id[0];
 
 	if (nids >= 2)
 	{
-		id[2] = id[3] = 0;
 		__cpuid(id, 1);
-		hyperThreading = (id[3] & (1<<28)) != 0;
 	}
 
 #	else
-	int id[4] = {0};
 	asm(
 		"cpuid":
 		"=a" (id[0]),
@@ -60,7 +57,6 @@ void Platform::AdjustForHyperthreading()
 
 	if (nids >= 2)
 	{
-		id[2] = id[3] = 0;
 		asm(
 			"cpuid":
 			"=a" (id[0]),
@@ -69,15 +65,30 @@ void Platform::AdjustForHyperthreading()
 			"=d" (id[3]) :
 			"a" (1), "c" (0)
 		);
-		hyperThreading = (id[3] & (1<<28)) != 0;
 	}
 
 #	endif
+	if ((id[2] & (1<<19)) != 0)
+		res |= CPU_TIER_SSE4_1;
 
-	if (hyperThreading)
-		physCores = Max(1, physCores / 2);
+	if ((id[2] & (1<<20)) != 0)
+		res |= CPU_TIER_SSE4_2;
 
+	if ((id[2] & (1<<23)) != 0)
+		res |= CPU_TIER_POPCNT;
+
+	if ((id[3] & (1<<28)) != 0)
+		res |= CPU_TIER_HYPERTHREADING;
 #endif
+	return res;
+}
+
+void Platform::AdjustForHyperthreading()
+{
+	auto tier = GetCPUTier();
+
+	if (tier & CPU_TIER_HYPERTHREADING)
+		physCores = Max(1, physCores / 2);
 }
 
 void Platform::Init()
