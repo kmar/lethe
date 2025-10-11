@@ -1140,6 +1140,9 @@ void objFindMemberOffset(Stack &stk)
 	auto mname = ap.Get<Name>();
 	auto &res = ap.Get<Int>();
 
+	StackArray<char, 256> mnameBuf;
+	mname.ToCharBuffer(mnameBuf);
+
 	res = -1;
 
 	auto *obj = (BaseObject *)stk.GetThis();
@@ -1149,7 +1152,7 @@ void objFindMemberOffset(Stack &stk)
 	{
 		for (auto &&it : objCls->members)
 		{
-			if (it.name == mname)
+			if (it.name == mnameBuf.GetData())
 			{
 				res = (Int)it.offset;
 				return;
