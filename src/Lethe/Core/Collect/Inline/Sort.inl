@@ -139,7 +139,7 @@ void MergeSort<T,S>::SortRecursive(T *ptr, S size, T *scratch, const C &cmp)
 {
 	if (size <= INSERTION_THRESHOLD)
 	{
-		InsertionSort<T,S>::Sort(ptr, size);
+		InsertionSort<T,S>::Sort(ptr, size, cmp);
 		return;
 	}
 
