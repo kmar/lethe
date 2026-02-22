@@ -381,13 +381,7 @@ int CharConv::UTF8ToAnsi(const char *src, int srcSizeChars, char *dstch, int dst
 		// encode in UTF-8
 
 		if (dstMaxBytes <= 0)
-		{
-			// just count bytes
-			while (srcSizeChars--)
-				res += GetUTF8Length(*src++);
-
-			return res;
-		}
+			return srcSizeChars;
 
 		const Byte *de = dst + dstMaxBytes;
 
