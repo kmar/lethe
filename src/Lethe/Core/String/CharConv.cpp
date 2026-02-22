@@ -84,10 +84,12 @@ int CharConv::DecodeUTF8(const Byte *&src, const Byte * const srcend)
 		if (src >= srcend)
 			return -1;
 
-		char c = *src++;
+		char c = *src;
 
 		if ((c & 0xc0) != 0x80)
 			return -1;
+
+		++src;
 
 		ch <<= 6;
 		ch |= c & 0x3f;
