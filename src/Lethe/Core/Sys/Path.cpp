@@ -50,6 +50,19 @@ Path &Path::Make(const String &pth)
 // normalize path
 void Path::Normalize(String &pth)
 {
+	auto opth = pth;
+	NormalizeInternal(pth);
+
+	if (pth == opth)
+		return;
+
+	// this still happens sometimes
+	if (pth.EndsWith('/'))
+		NormalizeInternal(pth);
+}
+
+void Path::NormalizeInternal(String &pth)
+{
 	// first, convert backslashes to slashes
 	pth.Replace('\\', '/');
 
@@ -212,6 +225,11 @@ void Path::Normalize(String &pth)
 		}
 	}
 #endif
+}
+
+Path &Path::Append(const char *pth)
+{
+	return Append(String(pth));
 }
 
 // append path (string)
@@ -394,7 +412,7 @@ bool Path::MakeRelative(const String &refpth)
 	finalPath = path.finalPath;
 	path.finalPath.Clear();
 	Normalize();
-	return 1;
+	return true;
 }
 
 String Path::GetExt() const
@@ -405,6 +423,9 @@ String Path::GetExt() const
 
 String Path::GetFilename() const
 {
+	if (finalPath.IsEmpty())
+		return String();
+
 	Path tmp(*this), tmp2(*this);
 	tmp.Append("..");
 	tmp2.MakeRelative(tmp);

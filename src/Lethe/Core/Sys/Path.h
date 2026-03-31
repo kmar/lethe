@@ -35,9 +35,13 @@ public:
 
 	// append path (string)
 	Path &Append(const String &pth);
+	Path &Append(const char *pth);
 
 	// get (normalized) path string
 	const String &Get() const;
+
+	// is empty (null) path?
+	bool IsEmpty() const {return finalPath.IsEmpty();}
 
 	// normalize path string: convert backslashes to slashes, remove trailing whitespace,
 	// remove quotes, remove trailing slash etc.
@@ -69,6 +73,8 @@ private:
 
 	Int FindPrefix() const;
 	Int GetExtPos() const;
+
+	static void NormalizeInternal(String &pth);
 };
 
 }
