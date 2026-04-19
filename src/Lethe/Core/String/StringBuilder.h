@@ -2,6 +2,7 @@
 
 #include "../Common.h"
 #include "../Collect/Array.h"
+#include "../Sys/NoCopy.h"
 
 #include <stdarg.h>
 
@@ -15,7 +16,7 @@ LETHE_API_BEGIN
 
 // temporary string buffer (useful for building strings)
 // do NOT use this as struct/class members
-class LETHE_API StringBuilder
+class LETHE_API StringBuilder : NoCopy
 {
 public:
 

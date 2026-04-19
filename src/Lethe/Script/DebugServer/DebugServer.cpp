@@ -267,7 +267,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			auto ctxs = GetEngine().GetContexts();
 
 			StringBuilder sb;
-			sb = "getcontexts\n";
+			sb += "getcontexts\n";
 
 			for (auto &&it : ctxs)
 				sb.AppendFormat("%s\n", it->GetName().Ansi());
@@ -279,7 +279,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 		if (buf == "getinternalscript")
 		{
 			StringBuilder sb;
-			sb = "internalscript\n";
+			sb += "internalscript\n";
 			sb += GetEngine().GetInternalProgram();
 
 			nsocket->SendData(sb.Get());
@@ -291,7 +291,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			auto sz = GetEngine().GetByteCodeSize();
 
 			StringBuilder sb;
-			sb = "disassembly\n";
+			sb += "disassembly\n";
 
 			for (Int i=0; i<sz; i++)
 			{
@@ -315,7 +315,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			if (pc.IsEmpty())
 			{
 				StringBuilder sb;
-				sb = "invalid_breakpoint\n";
+				sb += "invalid_breakpoint\n";
 				sb += cmds[1];
 				sb += '\n';
 				sb += cmds[2];
@@ -360,7 +360,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			auto ctxs = GetEngine().GetContexts();
 
 			StringBuilder sb;
-			sb = "getcallstack\n";
+			sb += "getcallstack\n";
 
 			for (auto &&it : ctxs)
 			{
@@ -385,7 +385,7 @@ void DebugServer::ClientThreadProc(Thread *nthread, Socket *nsocket)
 			auto ctxs = GetEngine().GetContexts();
 
 			StringBuilder sb;
-			sb = "getglobals\n";
+			sb += "getglobals\n";
 
 			if (ctxs.IsEmpty())
 				continue;

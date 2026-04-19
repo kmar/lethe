@@ -71,13 +71,14 @@ void FormatInvalid(StringBuilder &str)
 String FormatStr(const Stack &stk, Int &ofs)
 {
 	ofs = 0;
-	auto sb = FormatStrBuilder(stk, ofs);
+	StringBuilder sb;
+	FormatStrBuilder(sb, stk, ofs);
 	return sb.Get();
 }
 
-StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
+void FormatStrBuilder(StringBuilder &res, const Stack &stk, Int &ofs)
 {
-	StringBuilder res;
+	res.Clear();
 	auto str = stk.GetString(ofs);
 	ofs += Stack::STRING_WORDS;
 	auto numArgs = stk.GetSignedInt(ofs++);
@@ -167,7 +168,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(DT_INT, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			WChar tmp[2] = { 0, 0 };
@@ -184,7 +185,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(isLong ? DT_LONG : DT_INT, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			fmt = 'd';
@@ -214,7 +215,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(isLong ? DT_LONG : DT_INT, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			fmt = 'u';
@@ -244,7 +245,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(isLong ? DT_LONG : DT_INT, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			fmt = 'x';
@@ -273,7 +274,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(isLong ? DT_DOUBLE: DT_FLOAT, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			// float/double
@@ -302,7 +303,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(DT_STRING, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			auto tmp = stk.GetString(ofs);
@@ -319,7 +320,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(DT_NAME, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			Name n;
@@ -337,7 +338,7 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 			if (!FormatCheckType(DT_STRONG_PTR, stk.GetPtr(ofs++)))
 			{
 				FormatInvalid(res);
-				return res;
+				return;
 			}
 
 			auto ptr = stk.GetPtr(ofs++);
@@ -374,8 +375,6 @@ StringBuilder FormatStrBuilder(const Stack &stk, Int &ofs)
 	}
 
 	flushStr(wc);
-
-	return res;
 }
 
 void AnalyzeFormatStr(const String &str, Array<DataTypeEnum> &types)
