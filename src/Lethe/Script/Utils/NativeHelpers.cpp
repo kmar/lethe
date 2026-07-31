@@ -789,8 +789,7 @@ void daSlice(Stack &stk)
 	auto data = darr->data;
 	auto size = darr->size;
 
-	if (to < 0)
-		to = size;
+	to = (Int)Min((UInt)to, (UInt)size);
 
 	if (from < 0)
 		from = 0;
