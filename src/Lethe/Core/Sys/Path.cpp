@@ -376,6 +376,13 @@ bool Path::MakeRelative(const String &refpth)
 			break;
 	}
 
+	// if both paths are equal, simply clear finalPath
+	if (i == path.finalPath.GetLength() && i == finalPath.GetLength())
+	{
+		finalPath.Clear();
+		return true;
+	}
+
 	int perfect = 0;
 
 	if (i == path.finalPath.GetLength() && i < finalPath.GetLength() && finalPath[i] == '/')
