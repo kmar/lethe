@@ -101,6 +101,8 @@ struct LETHE_API QDataType
 	bool IsConst() const;
 	// is reference?
 	bool IsReference() const;
+	// is reference type?
+	bool IsReferenceType() const;
 	// static storage?
 	bool IsStatic() const;
 	// elementary type?

@@ -48,6 +48,7 @@ Compiler::Compiler(Threaded, AtomicInt *pstaticInitCtr)
 	, staticInitCounter(0)
 	, pstaticInitCounter(pstaticInitCtr)
 	, floatLitIsDouble(false)
+	, memorySafety(false)
 {
 	globalScope = new NamedScope(NSCOPE_GLOBAL);
 }
@@ -61,6 +62,7 @@ Compiler::Compiler()
 	, staticInitCounter(0)
 	, pstaticInitCounter(&staticInitCounter)
 	, floatLitIsDouble(false)
+	, memorySafety(false)
 {
 	globalScope = new NamedScope(NSCOPE_GLOBAL);
 	InitNativeTypeScopes();
@@ -91,6 +93,11 @@ void Compiler::InitTokenStream()
 void Compiler::SetFloatLiteralIsDouble(bool nfloatLitIsDouble)
 {
 	floatLitIsDouble = nfloatLitIsDouble;
+}
+
+void Compiler::SetMemorySafety(bool nmemSafety)
+{
+	memorySafety = nmemSafety;
 }
 
 bool Compiler::Open(Stream &s, const String &nfilename)

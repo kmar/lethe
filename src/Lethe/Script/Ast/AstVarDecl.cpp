@@ -50,6 +50,9 @@ bool AstVarDecl::CodeGenComposite(CompiledProgram &p)
 	auto varType = parent->nodes[0];
 	auto tdesc = varType->GetTypeDesc(p);
 
+	if (p.GetMemorySafety() && tdesc.IsReferenceType())
+		return p.Error(varType, "cannot declare reference variables in safe mode");
+
 	bool isInitializerList = nodes.GetSize() > 1 && nodes[1]->type == AST_INITIALIZER_LIST;
 	bool isStatic = (varType->qualifiers & AST_Q_STATIC) != 0;
 

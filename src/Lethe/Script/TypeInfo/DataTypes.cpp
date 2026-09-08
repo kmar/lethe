@@ -1307,6 +1307,11 @@ bool QDataType::IsReference() const
 	return (qualifiers & AST_Q_REFERENCE) != 0;
 }
 
+bool QDataType::IsReferenceType() const
+{
+	return IsReference() || HasArrayRef();
+}
+
 bool QDataType::IsStatic() const
 {
 	return (qualifiers & AST_Q_STATIC) != 0;

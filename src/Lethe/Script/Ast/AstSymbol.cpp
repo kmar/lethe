@@ -405,6 +405,14 @@ bool AstSymbol::CodeGenRef(CompiledProgram &p, bool allowConst, bool derefPtr)
 
 	if (isStatic || lscopeRef->IsGlobal())
 	{
+		if (p.GetMemorySafety() && !(dt.qualifiers & AST_Q_CONST) && scopeRef->FindThis())
+		{
+			const bool ok = dt.IsElementary() || (dt.IsArray() && dt.GetType().elemType.IsElementary());
+
+			if (!ok)
+				return p.Error(this, "cannot access non-const global symbol of non-elementary type from member function in safe mode");
+		}
+
 		if (dt.IsReference() || deref)
 		{
 			p.EmitI24(OPC_GLOADPTR, frameOfs);
@@ -619,6 +627,9 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 
 			if (!thisScope)
 				return p.Error(this, "this not accessible - can't create delegate");
+
+			if (p.GetMemorySafety())
+				return p.Error(this, "delegates not supported in safe mode");
 
 			bool structFlag = thisScope->type != NSCOPE_CLASS;
 

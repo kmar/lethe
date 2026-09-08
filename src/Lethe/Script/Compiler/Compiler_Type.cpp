@@ -505,6 +505,9 @@ AstNode *Compiler::ParseTypeWithQualifiers(Int depth, ULong nqualifiers, bool in
 
 	ULong qualifiers = ParseQualifiers() | nqualifiers;
 
+	if (memorySafety && (qualifiers & AST_Q_RAW))
+		LETHE_RET_FALSE(ExpectPrev(false, "raw pointers not allowed in safe mode"));
+
 	if ((qualifiers & (AST_Q_RAW | AST_Q_WEAK)) == (AST_Q_RAW | AST_Q_WEAK))
 		LETHE_RET_FALSE(ExpectPrev(false, "raw and weak are mutually exclusive"));
 

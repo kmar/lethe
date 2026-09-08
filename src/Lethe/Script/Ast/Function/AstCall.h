@@ -75,6 +75,8 @@ protected:
 	Int GenTempCopy(CompiledProgram &p, Int resultBaseOffset, Int resultWords, bool resultZeroed, Int actual, const Array<TempArg> &tempArgs);
 
 	void CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attributes *attrs);
+
+	bool ValidateSafeScriptCall(const CompiledProgram &p, const AstFuncBase *fn);
 };
 
 LETHE_API_END

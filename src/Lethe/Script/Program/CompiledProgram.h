@@ -262,6 +262,15 @@ public:
 		return emitOptBase < instructions.GetSize();
 	}
 
+	inline bool GetMemorySafety() const
+	{
+		return memSafe;
+	}
+	inline void SetMemorySafety(bool nmemSafe = true)
+	{
+		memSafe = nmemSafe;
+	}
+
 	inline bool GetUnsafe() const
 	{
 		return unsafe;
@@ -480,6 +489,7 @@ private:
 	Int emitOptBase;
 	Int jumpOptBase;
 
+	bool memSafe;
 	bool unsafe;
 	// JIT-friendly mode generates special opcodes for floats
 	bool jitFriendly;

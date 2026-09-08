@@ -854,6 +854,24 @@ void AstCall::CheckDeprecatedCall(CompiledProgram &p, AstNode *fdef, const Attri
 	}
 }
 
+bool AstCall::ValidateSafeScriptCall(const CompiledProgram &p, const AstFuncBase *fn)
+{
+	// check args
+	auto *res = fn->GetResult();
+	auto *args = fn->GetArgs();
+
+	for (auto &&n : args->nodes)
+	{
+		auto tdesc = n->GetTypeDesc(p);
+
+		if (tdesc.IsReferenceType())
+			return false;
+	}
+
+	auto tdesc = res->GetTypeDesc(p);
+	return !tdesc.IsReferenceType();
+}
+
 bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 {
 	p.SetLocation(location);
@@ -1559,6 +1577,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	// emit call
 	if (fn->type == AST_TYPE_DELEGATE)
 	{
+		if (p.GetMemorySafety() && !ValidateSafeScriptCall(p, fn))
+			return p.Error(this, "unable to call script function with references from script in safe mode");
+
 		p.Emit(OPC_PUSHTHIS);
 		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_FUNC_PTR]));
 		// call delegate
@@ -1572,6 +1593,9 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	}
 	else if (fn->type == AST_TYPE_FUNC_PTR)
 	{
+		if (p.GetMemorySafety() && !ValidateSafeScriptCall(p, fn))
+			return p.Error(this, "unable to call script function with references from script in safe mode");
+
 		// call function ptr
 		LETHE_RET_FALSE(nodes[0]->CodeGen(p));
 		p.Emit(OPC_FCALL);
@@ -1580,6 +1604,8 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	else
 	{
 		// standard function
+		if (p.GetMemorySafety() && !(fn->qualifiers & AST_Q_NATIVE) && !ValidateSafeScriptCall(p, fn))
+			return p.Error(this, "unable to call script function with references from script in safe mode");
 
 		bool forceVirtual = (fn->qualifiers & AST_Q_VIRTUAL) && !(nodes[0]->GetTypeDesc(p).qualifiers & AST_Q_NON_VIRT);
 

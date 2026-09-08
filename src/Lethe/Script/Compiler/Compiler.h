@@ -46,6 +46,7 @@ public:
 	~Compiler();
 
 	void SetFloatLiteralIsDouble(bool nfloatLitIsDouble);
+	void SetMemorySafety(bool nmemSafety);
 
 	// made public for testing
 	bool Open(Stream &s, const String &nfilename);
@@ -212,6 +213,8 @@ private:
 	UniquePtr<CompiledProgram> tempProgram;
 
 	bool floatLitIsDouble;
+	// memory safe subset?
+	bool memorySafety;
 	Int classOpen = 0;
 
 	// replace class set; type node ptrs

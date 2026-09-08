@@ -44,6 +44,12 @@ enum EngineMode
 	ENGINE_DEBUG_NOBREAK
 };
 
+enum EngineSafetyMode
+{
+	ENGINE_UNSAFE,
+	ENGINE_MEMORY_SAFE_SUBSET
+};
+
 struct ScriptContextDebugData
 {
 	AtomicInt stepCmd = 0;

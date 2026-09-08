@@ -208,6 +208,9 @@ bool AstDotOp::CodeGenInternal(CompiledProgram &p)
 				return true;
 		}
 
+		if (p.GetMemorySafety())
+			return p.Error(right, "delegates not supported in safe mode");
+
 		// check if struct
 		auto *fscope = fn->scopeRef->FindThis();
 		bool structFlag = fscope && fscope->type != NSCOPE_CLASS;

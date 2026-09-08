@@ -81,7 +81,7 @@ class LETHE_API ScriptEngine : public NoCopy, public RefCounted
 	friend class ScriptContext;
 public:
 	// wraps script program (and shared JIT)
-	ScriptEngine(EngineMode emode);
+	ScriptEngine(EngineMode emode, EngineSafetyMode = ENGINE_UNSAFE);
 	virtual ~ScriptEngine();
 
 	// get actual script engine mode, if JIT is not available

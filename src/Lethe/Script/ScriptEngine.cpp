@@ -43,7 +43,7 @@ void ScriptEngine::SetFloatLiteralIsDouble(bool nfloatLitIsDouble)
 	floatLitIsDouble = nfloatLitIsDouble;
 }
 
-ScriptEngine::ScriptEngine(EngineMode emode)
+ScriptEngine::ScriptEngine(EngineMode emode, EngineSafetyMode smode)
 	: mode(emode)
 {
 	// check if JIT available
@@ -59,6 +59,7 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 	MemSet(&compileStats, 0, sizeof(compileStats));
 
 	compiler = new Compiler;
+	compiler->SetMemorySafety(smode == ENGINE_MEMORY_SAFE_SUBSET);
 	compiler->SetFloatLiteralIsDouble(floatLitIsDouble);
 	compiler->onError.Set(this, &Self::OnError);
 	compiler->onWarning.Set(this, &Self::OnWarning);
@@ -66,7 +67,8 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 	compiler->onResolve.Set(this, &Self::OnResolve);
 
 	program = new CompiledProgram(mode == ENGINE_JIT);
-	program->SetUnsafe(mode == ENGINE_JIT || mode == ENGINE_RELEASE);
+	program->SetMemorySafety(smode == ENGINE_MEMORY_SAFE_SUBSET);
+	program->SetUnsafe(smode == ENGINE_MEMORY_SAFE_SUBSET ? false : mode == ENGINE_JIT || mode == ENGINE_RELEASE);
 	program->onError.Set(this, &Self::OnError);
 	program->onWarning.Set(this, &Self::OnWarning);
 	program->engineRef = this;
@@ -76,6 +78,7 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 	const char * const boolStr[2] = {"false", "true"};
 
 	const char * const boolTable[] = {
+		boolStr[program->GetMemorySafety()],
 		boolStr[!program->GetUnsafe()],
 #if LETHE_OS_WINDOWS
 		"true",
@@ -87,10 +90,10 @@ ScriptEngine::ScriptEngine(EngineMode emode)
 	};
 
 	internalProg.Format(
-		"constexpr bool DEBUG = %s;\nconstexpr bool OS_WINDOWS = %s;constexpr bool BIG_ENDIAN = %s;constexpr bool JIT = %s;\n"
-		"macro __DEBUG=%s; macro __OS_WINDOWS = %s; macro __BIG_ENDIAN = %s; macro __JIT = %s; macro __LITTLE_ENDIAN=(!__BIG_ENDIAN);\n",
-		boolTable[0], boolTable[1], boolTable[2], boolTable[3],
-		boolTable[0], boolTable[1], boolTable[2], boolTable[3]
+		"constexpr bool MEMORY_SAFETY = %s;\nconstexpr bool DEBUG = %s;\nconstexpr bool OS_WINDOWS = %s;constexpr bool BIG_ENDIAN = %s;constexpr bool JIT = %s;\n"
+		"macro __MEMORY_SAFETY=%s; macro __DEBUG=%s; macro __OS_WINDOWS = %s; macro __BIG_ENDIAN = %s; macro __JIT = %s; macro __LITTLE_ENDIAN=(!__BIG_ENDIAN);\n",
+		boolTable[0], boolTable[1], boolTable[2], boolTable[3], boolTable[4],
+		boolTable[0], boolTable[1], boolTable[2], boolTable[3], boolTable[4]
 	);
 
 	// define some useful type aliases
@@ -336,8 +339,10 @@ nodiscard native const_byte[] to_bytes(...);
 native void memset(byte[] dst, int filler = 0, int limit = 0x7fffffff);
 nodiscard native int memcmp(const byte[] src0, const byte[] src1, int limit = 0x7fffffff);
 native void memcpy(byte[] dst, const byte[] src, int limit = 0x7fffffff);
+macro if(!__MEMORY_SAFETY)
 // unsafe!
 nodiscard native byte[] to_bytes_mutable(...);
+macro endif
 
 // is null (empty) struct? - no base, no members
 nodiscard native bool is_null_struct_type(name type);
