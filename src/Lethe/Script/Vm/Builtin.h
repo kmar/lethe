@@ -160,7 +160,9 @@ enum
 	BUILTIN_SLICEFWD_INPLACE,
 	BUILTIN_SLICEFWD,
 
-	BUILTIN_MARK_STRUCT_DELEGATE
+	BUILTIN_MARK_STRUCT_DELEGATE,
+	// for memory safe mode, we can only call delegate if instance ptr is non-null
+	BUILTIN_VALIDATE_DG
 };
 
 class LETHE_API Builtin

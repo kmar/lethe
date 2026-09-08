@@ -1578,12 +1578,19 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 	if (fn->type == AST_TYPE_DELEGATE)
 	{
 		if (p.GetMemorySafety() && !ValidateSafeScriptCall(p, fn))
-			return p.Error(this, "unable to call script function with references from script in safe mode");
+			return p.Error(this, "unable to call script delegate with references from script in safe mode");
+
+		if (p.GetMemorySafety() && !scopeRef->FindThis())
+			return p.Error(this, "unable to call script delegate from static functions in safe mode");
 
 		p.Emit(OPC_PUSHTHIS);
 		p.PushStackType(QDataType::MakeConstType(p.elemTypes[DT_FUNC_PTR]));
 		// call delegate
 		LETHE_RET_FALSE(nodes[0]->CodeGen(p));
+
+		if (p.GetMemorySafety())
+			p.EmitI24(OPC_BMCALL, BUILTIN_VALIDATE_DG);
+
 		p.Emit(OPC_LOADTHIS_IMM);
 		p.EmitI24(OPC_POP, 1);
 		p.Emit(OPC_FCALL_DG);

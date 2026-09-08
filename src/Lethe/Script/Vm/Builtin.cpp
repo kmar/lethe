@@ -1264,6 +1264,18 @@ void Opcode_MarkStructDg(Stack &stk)
 	stk.SetPtr(1, (const void *)val);
 }
 
+// safe mode validation
+void Opcode_ValidateDg(Stack &stk)
+{
+	// get instance pointer
+	auto *ptr = stk.GetPtr(0);
+
+	if (ptr != stk.GetThis())
+		ptr = nullptr;
+
+	stk.SetPtr(0, ptr);
+}
+
 typedef void (*BuiltinCallback)(Stack &);
 
 struct BuiltinTable
@@ -1420,6 +1432,7 @@ static const BuiltinTable BUILTIN_TABLE[] =
 	{ BUILTIN_SLICEFWD,          "*SLICEFWD",           Opcode_SliceFwd         },
 
 	{ BUILTIN_MARK_STRUCT_DELEGATE, "*MARK_STR_DG",     Opcode_MarkStructDg     },
+	{ BUILTIN_VALIDATE_DG,       "*VALIDATE_DG",        Opcode_ValidateDg       },
 
 	{ -1, 0, 0 }
 };

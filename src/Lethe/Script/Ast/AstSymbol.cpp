@@ -628,9 +628,6 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 			if (!thisScope)
 				return p.Error(this, "this not accessible - can't create delegate");
 
-			if (p.GetMemorySafety())
-				return p.Error(this, "delegates not supported in safe mode");
-
 			bool structFlag = thisScope->type != NSCOPE_CLASS;
 
 			if (fn->vtblIndex >= 0 && !(qualifiers & AST_Q_NON_VIRT))
