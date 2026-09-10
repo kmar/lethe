@@ -347,8 +347,13 @@ int CharConv::AnsiToUTF8(const char *srcch, int srcSizeBytes, char *dst, int dst
 	if (dstMaxBytes <= 0)
 	{
 		// just count
-		int uni = tbl[*src++];
-		res += GetUTF8Length(uni);
+		while (srcSizeBytes--)
+		{
+			int uni = tbl[*src++];
+			res += GetUTF8Length(uni);
+		}
+
+		return res;
 	}
 
 	const Byte *de = d + dstMaxBytes;
