@@ -1390,6 +1390,17 @@ bool AstCall::CodeGenCommon(CompiledProgram &p, bool keepRef, bool derefPtr)
 		if (p.exprStack.IsEmpty())
 			return p.Error(argValue, "argument expression must return a value");
 
+		// in safe mode, we want to refcount all the time
+		// note: ellipsis can only work in native code so we don't bother here
+		// also: don't do this for native calls!
+		if (!isRef && !isEllipsis && p.GetMemorySafety() && tdesc.IsPointer() && (tdesc.qualifiers & AST_Q_SKIP_DTOR) && !(fn->qualifiers & AST_Q_NATIVE))
+		{
+			tdesc.qualifiers &= ~AST_Q_SKIP_DTOR;
+			p.exprStack.Back().qualifiers &= ~AST_Q_SKIP_DTOR;
+
+			p.EmitAddRef(p.exprStack.Back());
+		}
+
 		auto top = p.exprStack.Back();
 
 		if (!top.IsReference() && (top.qualifiers & AST_Q_NOCOPY) && !top.IsPointer())
