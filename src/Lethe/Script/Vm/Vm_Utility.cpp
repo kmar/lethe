@@ -686,12 +686,12 @@ Array<String> Vm::GetThis(Int pc, Int startpc, Int maxVarTextLen) const
 			++pushThisCount;
 		else if (opc == OPC_POPTHIS)
 		{
+			if (loadThisCount >= 0 && pushThisCount == loadThisCount)
+				loadThisCount = -1;
+
 			--pushThisCount;
 			// if this fails, this analysis doesn't work
 			LETHE_ASSERT(pushThisCount >= 0);
-
-			if (loadThisCount >= 0 && pushThisCount == loadThisCount)
-				loadThisCount = -1;
 		}
 	}
 
