@@ -173,9 +173,11 @@ __intrinsic class object
 	// set vtable
 	native bool vtable(name className);
 
+macro if(!__MEMORY_SAFETY)
 	// state helpers
 	native final void set_state_delegate_ref(void delegate() &ref);
 	native final void reset_state_delegate_ref();
+macro endif
 
 	// nonstatic member helpers
 	// returns empty name if invalid
@@ -1042,7 +1044,7 @@ String ScriptEngine::FindMethodName(ScriptDelegate dg) const
 {
 	auto *obj = static_cast<ScriptBaseObject *>(dg.instancePtr);
 
-	if (!obj || !program || dg.IsStruct())
+	if (!obj || !program || dg.IsStruct() || dg.Expired())
 		return String();
 
 	const auto *dt = obj->GetScriptClassType();

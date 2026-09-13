@@ -299,7 +299,31 @@ bool AstAssignOp::CodeGenDoAssign(AstNode *n, CompiledProgram &p, const QDataTyp
 		p.EmitBackwardJump(OPC_CALL, lv.GetType().funAssign);
 		p.EmitU24(OPC_POP, toPop);
 	}
-	else if (dte == DT_ARRAY_REF || dte == DT_DELEGATE)
+	else if (dte == DT_DELEGATE)
+	{
+		Int toPop = 1 + pop;
+
+		if (!rhs.IsReference())
+		{
+			LETHE_ASSERT(rhs.GetTypeEnum() == DT_DELEGATE || rhs.GetTypeEnum() == DT_FUNC_PTR || rhs.GetTypeEnum() == DT_NULL);
+			p.EmitI24(OPC_LPUSHADR, 1);
+			p.Emit(OPC_LSWAPPTR);
+			toPop += 1 + pop;
+		}
+
+		p.EmitBackwardJump(OPC_CALL, lv.GetType().funAssign);
+
+
+		if (pop)
+		{
+			p.EmitI24(OPC_LPUSHPTR, 1);
+			p.EmitBackwardJump(OPC_CALL, lv.GetType().funDtor);
+			++toPop;
+		}
+
+		p.EmitU24(OPC_POP, toPop);
+	}
+	else if (dte == DT_ARRAY_REF)
 	{
 		if (!rhs.IsReference())
 			p.EmitU24(OPC_LPUSHADR, 1);

@@ -58,12 +58,30 @@ enum DataTypeEnum
 
 class DataType;
 
-struct ScriptDelegate : public lethe::ScriptDelegateBase
+LETHE_API_BEGIN
+
+struct LETHE_API ScriptDelegate : public lethe::ScriptDelegateBase
 {
-	inline void Clear()
+	ScriptDelegate() = default;
+
+	~ScriptDelegate();
+
+	inline ScriptDelegate(const ScriptDelegate &o)
 	{
-		instancePtr = funcPtr = nullptr;
+		*this = o;
 	}
+
+	ScriptDelegate &operator =(const ScriptDelegate &o);
+
+	void SwapWith(ScriptDelegate &o)
+	{
+		Swap(instancePtr, o.instancePtr);
+		Swap(funcPtr, o.funcPtr);
+	}
+
+	void Clear();
+
+	bool Expired() const;
 
 	inline bool IsEmpty() const
 	{
@@ -80,8 +98,6 @@ struct ScriptDelegate : public lethe::ScriptDelegateBase
 		return !IsEmpty() && ((UIntPtr)funcPtr & 2) != 0;
 	}
 };
-
-LETHE_API_BEGIN
 
 struct LETHE_API QDataType
 {

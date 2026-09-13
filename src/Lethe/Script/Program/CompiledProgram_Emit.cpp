@@ -1243,6 +1243,16 @@ void CompiledProgram::EmitInternal(UInt ins)
 
 void CompiledProgram::EmitAddRef(QDataType dt)
 {
+	if (dt.GetTypeEnum() == DT_NULL)
+		return;
+
+	if (dt.GetTypeEnum() == DT_DELEGATE || dt.GetTypeEnum() == DT_FUNC_PTR)
+	{
+		// special handling for non-struct delegates
+		EmitI24(OPC_BCALL, BUILTIN_DG_ADDREF);
+		return;
+	}
+
 	if (dt.GetTypeEnum() != DT_RAW_PTR)
 	{
 		// special post handling of pointers...
@@ -1682,6 +1692,14 @@ bool CompiledProgram::EmitConv(AstNode *n, const QDataType &srcq, const QDataTyp
 
 		if (dst.type == DT_BOOL && src.type == DT_DELEGATE)
 		{
+			// copy
+			EmitI24(OPC_LPUSHPTR, 1);
+			EmitI24(OPC_LPUSHPTR, 1);
+			// we always ref so clear
+			EmitI24(OPC_LPUSHADR, 0);
+			EmitBackwardJump(OPC_CALL, src.funDtor);
+			EmitI24(OPC_POP, 3);
+
 			EmitI24(OPC_POP, 1);
 			Emit(OPC_CONV_PTOB);
 			return true;

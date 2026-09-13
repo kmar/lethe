@@ -654,7 +654,14 @@ bool AstSymbol::CodeGenInternal(CompiledProgram &p)
 			p.Emit(OPC_PUSHTHIS_TEMP);
 
 			if (structFlag)
+			{
+				if (p.GetMemorySafety())
+					return p.Error(this, "cannot use struct delegates in safe mode");
+
 				p.EmitI24(OPC_BCALL, BUILTIN_MARK_STRUCT_DELEGATE);
+			}
+			else
+				p.EmitI24(OPC_BCALL, BUILTIN_ADD_WEAK);
 
 			p.PushStackType(fn->GetTypeDesc(p));
 			return true;

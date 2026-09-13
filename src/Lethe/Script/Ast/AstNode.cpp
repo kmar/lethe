@@ -1053,6 +1053,9 @@ bool AstNode::EmitPtrLoad(const QDataType &dt, CompiledProgram &p)
 		{
 			p.EmitI24(OPC_PLOADPTR_IMM, (Int)sizeof(void *));
 			p.EmitI24(OPC_LSTOREPTR, 2);
+			// careful here! we must fix weak after load, potentially
+			p.EmitI24(OPC_BCALL, BUILTIN_FIX_DG);
+			p.EmitI24(OPC_BCALL, BUILTIN_DG_ADDREF);
 		}
 		else
 		{

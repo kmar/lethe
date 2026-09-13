@@ -404,6 +404,8 @@ public:
 	Int strongVDtor;
 	Int weakDtor;
 	Int weakVDtor;
+	Int dgDtor;
+	Int dgVDtor;
 
 	enum InternalFunc
 	{

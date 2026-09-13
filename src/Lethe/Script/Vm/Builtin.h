@@ -161,8 +161,14 @@ enum
 	BUILTIN_SLICEFWD,
 
 	BUILTIN_MARK_STRUCT_DELEGATE,
-	// for memory safe mode, we can only call delegate if instance ptr is non-null
-	BUILTIN_VALIDATE_DG
+
+	// fix weakptr for delegates
+	BUILTIN_FIX_DG,
+	BUILTIN_DG_ADDREF,
+
+	// delegate dtors/copying etc.
+	BUILTIN_PDELDG_NP,
+	BUILTIN_PCOPYDG,
 };
 
 class LETHE_API Builtin

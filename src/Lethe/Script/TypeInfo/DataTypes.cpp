@@ -16,6 +16,59 @@
 namespace lethe
 {
 
+// ScriptDelegate
+
+ScriptDelegate::~ScriptDelegate()
+{
+	Clear();
+}
+
+ScriptDelegate &ScriptDelegate::operator =(const ScriptDelegate &o)
+{
+	if (&o == this)
+		return *this;
+
+	Clear();
+
+	instancePtr = o.instancePtr;
+	funcPtr = o.funcPtr;
+
+	if (!IsStruct() && instancePtr)
+	{
+		auto *pobj = static_cast<BaseObject *>(instancePtr);
+
+		if (pobj)
+			if (!Atomic::Increment(pobj->weakRefCount))
+				LETHE_VERIFY(false && "weak refcount overflow");
+	}
+
+	return *this;
+}
+
+void ScriptDelegate::Clear()
+{
+	if (!IsStruct())
+	{
+		auto *pobj = static_cast<AtomicPointer<BaseObject>*>(static_cast<void *>(&instancePtr));
+
+		if (auto *tmp = pobj->Exchange(nullptr))
+			if (!Atomic::Decrement(tmp->weakRefCount))
+				ObjectHeap::Get().Dealloc(tmp);
+	}
+
+	instancePtr = funcPtr = nullptr;
+}
+
+bool ScriptDelegate::Expired() const
+{
+	if (!instancePtr || IsStruct())
+		return false;
+
+	auto *obj = static_cast<BaseObject*>(instancePtr);
+	return Atomic::Load(obj->strongRefCount) == 0;
+}
+
+
 LETHE_BUCKET_ALLOC_DEF(DataType)
 
 // DataType
@@ -766,6 +819,10 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		else if (type == DT_STRONG_PTR)
 			skipDtor = p.strongDtor >= 0;
 	}
+	else if (type == DT_DELEGATE)
+	{
+		skipDtor = p.dgDtor >= 0;
+	}
 	else if (type != DT_STRING && elemType.GetTypeEnum() != DT_NONE)
 	{
 		elem = &elemType.GetType();
@@ -810,8 +867,8 @@ bool DataType::GenDtor(CompiledProgram &p) const
 
 	if (skipDtor)
 	{
-		funDtor = type == DT_WEAK_PTR ? p.weakDtor : p.strongDtor;
-		funVDtor = type == DT_WEAK_PTR ? p.weakVDtor : p.strongVDtor;
+		funDtor = type == DT_DELEGATE ? p.dgDtor : type == DT_WEAK_PTR ? p.weakDtor : p.strongDtor;
+		funVDtor = type == DT_DELEGATE ? p.dgVDtor : type == DT_WEAK_PTR ? p.weakVDtor : p.strongVDtor;
 	}
 	else
 	{
@@ -823,7 +880,7 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		// TODO: optimize: if derived members have nothing that needs dtors, just map to base type's dtors
 
 		// now, must chain dtors; dtors occur in reverse order so...
-		AstFunc *cdtor = AstStaticCast<AstFunc *>(funcRef);
+		AstFunc *cdtor = type != DT_DELEGATE ? AstStaticCast<AstFunc *>(funcRef) : nullptr;
 
 		funDtor = p.instructions.GetSize();
 
@@ -888,6 +945,10 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		if (type == DT_STRING)
 		{
 			p.EmitI24(OPC_BCALL, BUILTIN_PDELSTR_NP);
+		}
+		else if (type == DT_DELEGATE)
+		{
+			p.EmitI24(OPC_BCALL, BUILTIN_PDELDG_NP);
 		}
 		else if (IsPointer())
 		{
@@ -1034,6 +1095,11 @@ bool DataType::GenDtor(CompiledProgram &p) const
 
 		p.Emit(OPC_RET);
 
+		if (type == DT_DELEGATE)
+		{
+			p.dgDtor = funDtor;
+			p.dgVDtor = funVDtor;
+		}
 		if (IsPointer())
 		{
 			// cache dtors
@@ -1148,6 +1214,12 @@ bool DataType::GenDtor(CompiledProgram &p) const
 		p.EmitI24(OPC_LPUSHPTR, firstArg + 1);
 		p.EmitI24(OPC_LPUSHPTR, firstArg + 1);
 		p.EmitI24(OPC_BCALL, BUILTIN_PCOPYSTR);
+	}
+	else if (type == DT_DELEGATE)
+	{
+		p.EmitI24(OPC_LPUSHPTR, firstArg + 1);
+		p.EmitI24(OPC_LPUSHPTR, firstArg + 1);
+		p.EmitI24(OPC_BCALL, BUILTIN_PCOPYDG);
 	}
 	else if (IsPointer())
 	{
@@ -1549,10 +1621,10 @@ bool QDataType::HasDtor() const
 	if (qualifiers & (AST_Q_SKIP_DTOR | AST_Q_PROPERTY))
 		return false;
 
-	if ((qualifiers & AST_Q_DTOR) || dte == DT_STRING || dte == DT_STRONG_PTR || dte == DT_WEAK_PTR || dte == DT_CLASS)
+	if ((qualifiers & AST_Q_DTOR) || dte == DT_STRING || dte == DT_STRONG_PTR || dte == DT_WEAK_PTR || dte == DT_CLASS || dte == DT_DELEGATE)
 		return true;
 
-	if (IsReference() || dte < DT_STRING || dte == DT_FUNC_PTR || dte == DT_DELEGATE || dte == DT_ARRAY_REF)
+	if (IsReference() || dte < DT_STRING || dte == DT_FUNC_PTR || dte == DT_ARRAY_REF)
 		return false;
 
 	if (IsArray())
@@ -2188,18 +2260,24 @@ void DataType::GetVariableTextInternal(Int bitfld, bool skipReadCheck, HashSet<c
 		{
 			if (type == DT_DELEGATE)
 			{
+				auto *dg = static_cast<const ScriptDelegate *>(ptr);
 				auto vidx = (UIntPtr)funptr;
-				sb += String::Printf((vidx & 2) ?
-					"struct: 0x" LETHE_FORMAT_UINTPTR_HEX " " :
-					"obj: 0x" LETHE_FORMAT_UINTPTR_HEX " ", (UIntPtr)ptrval);
+
+				if (dg && dg->Expired())
+				{
+					sb += "null (expired)";
+					break;
+				}
+
+				sb.AppendFormat((vidx & 2) ? "struct: 0x" LETHE_FORMAT_UINTPTR_HEX " " : "obj: 0x" LETHE_FORMAT_UINTPTR_HEX " ", (UIntPtr)ptrval);
 
 				if (vidx & 1)
-					sb += String::Printf("vtblidx: %d", int(vidx >> 2));
+					sb.AppendFormat("vtblidx: %d", int(vidx >> 2));
 				else
 				{
 					vidx &= ~(UIntPtr)3;
 					funptr = (const void *)vidx;
-					sb += String::Printf("funptr: 0x" LETHE_FORMAT_UINTPTR_HEX, (UIntPtr)funptr);
+					sb.AppendFormat("funptr: 0x" LETHE_FORMAT_UINTPTR_HEX, (UIntPtr)funptr);
 				}
 			}
 			else
@@ -2272,7 +2350,7 @@ String DataType::FindMethodName(Int idx) const
 
 String DataType::FindMethodName(const ScriptDelegate &dg, const CompiledProgram &prog) const
 {
-	if (!dg.instancePtr)
+	if (!dg.instancePtr || dg.Expired())
 		return String();
 
 	// decode

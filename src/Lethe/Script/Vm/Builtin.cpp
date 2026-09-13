@@ -101,6 +101,26 @@ void Opcode_VCopyStr(Stack &stk)
 		*vstr++ = *sstr++;
 }
 
+void Opcode_PDelDG_NP(Stack &stk)
+{
+	void *ptr = stk.GetPtr(0);
+	ScriptDelegate *vdg = static_cast<ScriptDelegate *>(ptr);
+
+	if (vdg)
+		vdg->~ScriptDelegate();
+}
+
+void Opcode_PCopyDG(Stack &stk)
+{
+	void *dptr = stk.GetPtr(0);
+	const void *sptr = stk.GetPtr(1);
+	stk.Pop(2);
+	auto *ddg = static_cast<ScriptDelegate *>(dptr);
+	const auto *sdg = static_cast<const ScriptDelegate *>(sptr);
+	*ddg = *sdg;
+}
+
+
 void Opcode_LPushName_Const(Stack &stk)
 {
 	UInt offset = stk.GetInt(0);
@@ -642,6 +662,11 @@ void Opcode_CmpDG_Eq(Stack &stk)
 	auto p1 = stk.GetPtr(1);
 	auto p2 = stk.GetPtr(2);
 	auto p3 = stk.GetPtr(3);
+
+	// we always add ref so clear locals here
+	static_cast<ScriptDelegate *>(static_cast<void *>(stk.GetTop()))->Clear();
+	static_cast<ScriptDelegate *>(static_cast<void *>(stk.GetTop()+2))->Clear();
+
 	stk.Pop(4);
 	stk.PushInt(p0 == p2 && p1 == p3);
 }
@@ -652,6 +677,11 @@ void Opcode_CmpDG_Ne(Stack &stk)
 	auto p1 = stk.GetPtr(1);
 	auto p2 = stk.GetPtr(2);
 	auto p3 = stk.GetPtr(3);
+
+	// we always add ref so clear locals here
+	static_cast<ScriptDelegate *>(static_cast<void *>(stk.GetTop()))->Clear();
+	static_cast<ScriptDelegate *>(static_cast<void *>(stk.GetTop()+2))->Clear();
+
 	stk.Pop(4);
 	stk.PushInt(p0 != p2 || p1 != p3);
 }
@@ -1185,6 +1215,12 @@ void Opcode_SetStateLabel(Stack &stk)
 	auto *fptr = ctx.GetEngine().MethodIndexToPointer(idx);
 	ScriptDelegate sd;
 	sd.instancePtr = stk.GetThis();
+	// add weak ref!
+
+	if (auto *objp = static_cast<BaseObject *>(sd.instancePtr))
+		if (!Atomic::Increment(objp->weakRefCount))
+			LETHE_VERIFY(false && "weak refcount overflow");
+
 	sd.funcPtr = const_cast<void *>(fptr);
 
 	auto *statedg = ctx.GetStateDelegateRef();
@@ -1264,16 +1300,32 @@ void Opcode_MarkStructDg(Stack &stk)
 	stk.SetPtr(1, (const void *)val);
 }
 
-// safe mode validation
-void Opcode_ValidateDg(Stack &stk)
+void Opcode_FixDg(Stack &stk)
 {
 	// get instance pointer
-	auto *ptr = stk.GetPtr(0);
+	auto *dg = static_cast<ScriptDelegate *>(static_cast<void *>(stk.GetTop()));
+	auto *obj = static_cast<BaseObject *>(dg->instancePtr);
 
-	if (ptr != stk.GetThis())
-		ptr = nullptr;
+	if (!obj || dg->IsStruct())
+		return;
 
-	stk.SetPtr(0, ptr);
+	// if expired, clear
+	if (Atomic::Load(obj->strongRefCount) == 0)
+		dg->instancePtr = dg->funcPtr = nullptr;
+}
+
+void Opcode_DgAddRef(Stack &stk)
+{
+	// get instance pointer
+	auto *dg = static_cast<ScriptDelegate *>(static_cast<void *>(stk.GetTop()));
+	auto *obj = static_cast<BaseObject *>(dg->instancePtr);
+
+	if (!obj || dg->IsStruct())
+		return;
+
+	// if expired, clear
+	if (Atomic::Increment(obj->weakRefCount) == 0)
+		LETHE_VERIFY(false && "weak ref count overflow");
 }
 
 typedef void (*BuiltinCallback)(Stack &);
@@ -1432,7 +1484,11 @@ static const BuiltinTable BUILTIN_TABLE[] =
 	{ BUILTIN_SLICEFWD,          "*SLICEFWD",           Opcode_SliceFwd         },
 
 	{ BUILTIN_MARK_STRUCT_DELEGATE, "*MARK_STR_DG",     Opcode_MarkStructDg     },
-	{ BUILTIN_VALIDATE_DG,       "*VALIDATE_DG",        Opcode_ValidateDg       },
+	{ BUILTIN_FIX_DG,            "*FIX_DG",             Opcode_FixDg            },
+	{ BUILTIN_DG_ADDREF,         "*DG_ADDREF",          Opcode_DgAddRef         },
+
+	{ BUILTIN_PDELDG_NP,         "*PDELDG_NP",          Opcode_PDelDG_NP        },
+	{ BUILTIN_PCOPYDG,           "*PCOPYDG",            Opcode_PCopyDG          },
 
 	{ -1, 0, 0 }
 };

@@ -237,7 +237,14 @@ bool AstDotOp::CodeGenInternal(CompiledProgram &p)
 		p.PopStackType(1);
 
 		if (structFlag)
+		{
+			if (p.GetMemorySafety())
+				return p.Error(this, "cannot use struct delegates in safe mode");
+
 			p.EmitI24(OPC_BCALL, BUILTIN_MARK_STRUCT_DELEGATE);
+		}
+		else
+			p.EmitI24(OPC_BCALL, BUILTIN_ADD_WEAK);
 
 		p.PushStackType(fn->GetTypeDesc(p));
 		return true;

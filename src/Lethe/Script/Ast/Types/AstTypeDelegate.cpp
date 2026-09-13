@@ -15,7 +15,8 @@ bool AstTypeDelegate::TypeGen(CompiledProgram &p)
 
 	typeRef.qualifiers = qualifiers;
 	typeRef.ref = p.AddType(GenFuncType(this, p, nodes[0], nodes[1]->nodes, true));
-	return true;
+
+	return typeRef.ref->GenDtor(p);
 }
 
 const AstNode *AstTypeDelegate::GetTypeNode() const
