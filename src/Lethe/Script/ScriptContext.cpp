@@ -17,6 +17,7 @@ ScriptContext::ScriptContext(Int stkSize)
 	: vmJit(nullptr)
 	, mode(ENGINE_JIT)
 	, mutex(Mutex::Recursive())
+	, stateDelegateRef(nullptr)
 {
 	if (stkSize <= 0)
 		stkSize = 65536;
