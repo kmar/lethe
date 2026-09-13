@@ -1095,17 +1095,6 @@ void objFixStateName(Stack &stk)
 	res = it == smap.End() ? sname : it->value;
 }
 
-void objSetStateDelegateRef(Stack &stk)
-{
-	ArgParserMethod ap(stk);
-	stk.GetContext().SetStateDelegateRef(ap.Get<ScriptDelegate *>());
-}
-
-void objResetStateDelegateRef(Stack &stk)
-{
-	stk.GetContext().SetStateDelegateRef(nullptr);
-}
-
 void objMemberNameFromOffset(Stack &stk)
 {
 	// stack: [0] = pushed this, [1] = offset, [2] = result (name)
@@ -1747,8 +1736,6 @@ void NativeHelpers::Init(CompiledProgram &p)
 	p.cpool.BindNativeFunc("object::class_name", objGetClassName);
 	p.cpool.BindNativeFunc("object::nonstate_class_name", objGetNonStateClassName);
 	p.cpool.BindNativeFunc("object::fix_state_name", objFixStateName);
-	p.cpool.BindNativeFunc("object::set_state_delegate_ref", objSetStateDelegateRef);
-	p.cpool.BindNativeFunc("object::reset_state_delegate_ref", objResetStateDelegateRef);
 	p.cpool.BindNativeFunc("object::member_name_from_offset", objMemberNameFromOffset);
 	p.cpool.BindNativeFunc("object::find_member_offset", objFindMemberOffset);
 

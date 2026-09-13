@@ -1223,18 +1223,11 @@ void Opcode_SetStateLabel(Stack &stk)
 
 	sd.funcPtr = const_cast<void *>(fptr);
 
-	auto *statedg = ctx.GetStateDelegateRef();
+	// the DUMBEST part comes now, we need to find variable to store to
+	const auto *dt = stk.GetProgram().FindClass(clsname);
 
-	if (statedg)
-		*statedg = sd;
-	else
-	{
-		// the DUMBEST part comes now, we need to find variable to store to
-		const auto *dt = stk.GetProgram().FindClass(clsname);
-
-		if (dt->currentStateDelegateOffset >= 0)
-			*(ScriptDelegate *)(static_cast<Byte *>(sd.instancePtr) + dt->currentStateDelegateOffset) = sd;
-	}
+	if (dt && dt->currentStateDelegateOffset >= 0)
+		*(ScriptDelegate *)(static_cast<Byte *>(sd.instancePtr) + dt->currentStateDelegateOffset) = sd;
 
 /*	// TODO: check stack level (this will be tricky because there can be random garbage at the start)
 	auto *stktop = stk.GetTop();

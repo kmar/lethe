@@ -164,10 +164,6 @@ public:
 		return debugData;
 	}
 
-	// custom state delegate support
-	inline ScriptDelegate *GetStateDelegateRef() const {return stateDelegateRef;}
-	inline void SetStateDelegateRef(ScriptDelegate *nref) {stateDelegateRef = nref;}
-
 private:
 	friend class Builtin;
 
@@ -226,8 +222,6 @@ private:
 	EngineMode mode;
 
 	mutable Mutex mutex;
-
-	ScriptDelegate *stateDelegateRef;
 
 	void OnRuntimeError(const char *msg);
 	bool OnDebugBreak(ScriptContext &ctx, ExecResult &res);

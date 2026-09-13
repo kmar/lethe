@@ -173,12 +173,6 @@ __intrinsic class object
 	// set vtable
 	native bool vtable(name className);
 
-macro if(!__MEMORY_SAFETY)
-	// state helpers
-	native final void set_state_delegate_ref(void delegate() &ref);
-	native final void reset_state_delegate_ref();
-macro endif
-
 	// nonstatic member helpers
 	// returns empty name if invalid
 	nodiscard native final name member_name_from_offset(int offset) const;
